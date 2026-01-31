@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Telegram Roulette</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #121212;
+            color: white;
+            text-align: center;
+            padding-top: 50px;
+        }
+        button {
+            font-size: 20px;
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: none;
+            background: #ff9800;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 30px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🎡 Рулетка подарков</h1>
+
+<button onclick="spin()">Крутить</button>
+
+<div id="result"></div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const prizes = [
+        "🎁 Маленький подарок",
+        "🎁 Средний подарок",
+        "🎁 Большой подарок",
+        "❌ Ничего не выпало"
+    ];
+
+    function spin() {
+        const randomIndex = Math.floor(Math.random() * prizes.length);
+        const prize = prizes[randomIndex];
+
+        document.getElementById("result").innerText = "Результат: " + prize;
+
+        // В будущем тут будет отправка результата боту
+        // tg.sendData(prize);
+    }
+</script>
+
+</body>
+</html>
