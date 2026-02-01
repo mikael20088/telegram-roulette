@@ -1,59 +1,59 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Telegram Roulette</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #121212;
-            color: white;
-            text-align: center;
-            padding-top: 50px;
-        }
-        button {
-            font-size: 20px;
-            padding: 15px 30px;
-            border-radius: 10px;
-            border: none;
-            background: #ff9800;
-            cursor: pointer;
-        }
-        #result {
-            margin-top: 30px;
-            font-size: 24px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Рулетка</title>
+<style>
+  body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #B0B0B0, #D8BFD8, #FFD700);
+    font-family: Arial, sans-serif;
+  }
+
+  .roulette-container {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    border: 10px solid #fff;
+    background: radial-gradient(circle, #fff 70%, #000 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+
+  .arrow {
+    position: absolute;
+    top: -20px;
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 30px solid red;
+  }
+</style>
 </head>
 <body>
 
-<h1>🎡 Рулетка подарков</h1>
-
-<button onclick="spin()">Крутить</button>
-
-<div id="result"></div>
+<div class="roulette-container" id="roulette">
+  <div class="arrow"></div>
+  <span style="position:absolute; color:#000; font-weight:bold;">🎁</span>
+</div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+const roulette = document.getElementById('roulette');
 
-    const prizes = [
-        "🎁 Маленький подарок",
-        "🎁 Средний подарок",
-        "🎁 Большой подарок",
-        "❌ Ничего не выпало"
-    ];
-
-    function spin() {
-        const randomIndex = Math.floor(Math.random() * prizes.length);
-        const prize = prizes[randomIndex];
-
-        document.getElementById("result").innerText = "Результат: " + prize;
-
-        // В будущем тут будет отправка результата боту
-        // tg.sendData(prize);
-    }
+roulette.addEventListener('click', () => {
+  const spin = Math.floor(Math.random() * 3600) + 720;
+  roulette.style.transform = rotate(${spin}deg);
+});
 </script>
 
 </body>
