@@ -2,11 +2,15 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Рулетка</title>
 <style>
-  body {
-    height: 100vh;
+  /* Фон и тело страницы */
+  html, body {
+    height: 100%;
+    min-height: 100vh;
     margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,9 +18,10 @@
     font-family: Arial, sans-serif;
   }
 
+  /* Контейнер рулетки */
   .roulette-container {
-    width: 300px;
-    height: 300px;
+    width: 90vw;          /* почти вся ширина экрана */
+    height: 90vw;         /* квадратный блок */
     border-radius: 50%;
     border: 10px solid #fff;
     background: radial-gradient(circle, #fff 70%, #000 100%);
@@ -25,18 +30,27 @@
     align-items: center;
     position: relative;
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
     transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
   }
 
+  /* Стрелка сверху */
   .arrow {
     position: absolute;
-    top: -20px;
+    top: -25px;
     width: 0;
     height: 0;
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-bottom: 30px solid red;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 40px solid red;
+  }
+
+  /* Символ подарка в центре */
+  .gift {
+    position: absolute;
+    color: #000;
+    font-weight: bold;
+    font-size: 3em;
   }
 </style>
 </head>
@@ -44,14 +58,15 @@
 
 <div class="roulette-container" id="roulette">
   <div class="arrow"></div>
-  <span style="position:absolute; color:#000; font-weight:bold;">🎁</span>
+  <div class="gift">🎁</div>
 </div>
 
 <script>
 const roulette = document.getElementById('roulette');
 
 roulette.addEventListener('click', () => {
-  const spin = Math.floor(Math.random() * 3600) + 720;
+  // Случайное количество градусов для кручения
+  const spin = Math.floor(Math.random() * 3600) + 720; // 2–10 оборотов
   roulette.style.transform = rotate(${spin}deg);
 });
 </script>
