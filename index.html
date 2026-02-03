@@ -1,75 +1,129 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Рулетка</title>
-<style>
-  /* Фон и тело страницы */
-  html, body {
-    height: 100%;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #B0B0B0, #D8BFD8, #FFD700);
-    font-family: Arial, sans-serif;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Telegram Roulette</title>
 
-  /* Контейнер рулетки */
-  .roulette-container {
-    width: 90vw;          /* почти вся ширина экрана */
-    height: 90vw;         /* квадратный блок */
-    border-radius: 50%;
-    border: 10px solid #fff;
-    background: radial-gradient(circle, #fff 70%, #000 100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    cursor: pointer;
-    box-shadow: 0 0 25px rgba(0,0,0,0.5);
-    transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
-  }
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0f0f0f;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
 
-  /* Стрелка сверху */
-  .arrow {
-    position: absolute;
-    top: -25px;
-    width: 0;
-    height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 40px solid red;
-  }
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      padding: 15px;
+      box-sizing: border-box;
+    }
 
-  /* Символ подарка в центре */
-  .gift {
-    position: absolute;
-    color: #000;
-    font-weight: bold;
-    font-size: 3em;
-  }
-</style>
+    .header {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .balance {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #ffd700;
+    }
+
+    .roulette-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .roulette-container {
+      width: 70vw;
+      height: 70vw;
+      max-width: 300px;
+      max-height: 300px;
+      border-radius: 50%;
+      border: 8px solid #ffffff;
+      background: radial-gradient(circle, #ffffff 65%, #000000 100%);
+      position: relative;
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+      box-shadow: 0 0 25px rgba(0,0,0,0.6);
+    }
+
+    .arrow {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 30px solid red;
+    }
+
+    .gift {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px;
+    }
+
+    .spin-btn {
+      width: 100%;
+      max-width: 300px;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #ffd700, #ff9900);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .spin-btn:active {
+      transform: scale(0.97);
+    }
+  </style>
 </head>
+
 <body>
+  <div class="app">
 
-<div class="roulette-container" id="roulette">
-  <div class="arrow"></div>
-  <div class="gift">🎁</div>
-</div>
+    <div class="header">🎰 Telegram Roulette</div>
 
-<script>
-const roulette = document.getElementById('roulette');
+    <div class="balance">
+      Баланс: <span id="balance">100</span> 💰
+    </div>
 
-roulette.addEventListener('click', () => {
-  // Случайное количество градусов для кручения
-  const spin = Math.floor(Math.random() * 3600) + 720; // 2–10 оборотов
-  roulette.style.transform = rotate(${spin}deg);
-});
-</script>
+    <div class="roulette-wrapper">
+      <div class="roulette-container" id="roulette">
+        <div class="arrow"></div>
+        <div class="gift">🎁</div>
+      </div>
+    </div>
 
+    <button class="spin-btn" id="spinBtn">
+      Крутить
+    </button>
+
+  </div>
+
+  <script>
+    const roulette = document.getElementById('roulette');
+    const spinBtn = document.getElementById('spinBtn');
+
+    spinBtn.addEventListener('click', () => {
+      const spin = Math.floor(Math.random() * 3600) + 720;
+      roulette.style.transform = rotate(${spin}deg);
+    });
+  </script>
 </body>
 </html>
