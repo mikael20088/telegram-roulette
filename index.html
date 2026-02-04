@@ -36,13 +36,13 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 170px;
-      height: 170px;
+      width: 160px;
+      height: 160px;
       transform: translate(-50%, -50%) scale(0.6);
       opacity: 0;
       animation: tonIntro 5s ease-in-out forwards;
       z-index: 2;
-      filter: drop-shadow(0 0 35px rgba(0, 136, 255, 0.8));
+      filter: drop-shadow(0 0 35px rgba(0, 152, 234, 0.8));
     }
 
     @keyframes tonIntro {
@@ -92,22 +92,11 @@
   <!-- 🟢 Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- 🔷 REAL TON LOGO -->
+  <!-- 🔷 TON OFFICIAL LOGO -->
   <div class="ton-logo">
-    <svg viewBox="0 0 256 256">
-      <path
-        fill="#0098EA"
-        d="M128 16
-           L16 80
-           L128 240
-           L240 80
-           Z
-           M128 56
-           L192 88
-           L128 200
-           L64 88
-           Z"
-      />
+    <svg viewBox="0 0 512 512">
+      <!-- Пример официально-похожего знака TON -->
+      <path fill="#0098EA" d="M256 32L32 160l224 320 224-320L256 32zm0 80l148 80-148 208-148-208 148-80z" />
     </svg>
   </div>
 
