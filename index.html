@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Telegram Mini App</title>
+  <title>TON Mini App</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -18,30 +18,33 @@
     }
 
     #app {
+      position: relative;
       width: 100%;
       height: 100%;
-      position: relative;
     }
 
-    /* ❤️ Сердце (интро) */
-    .heart {
+    /* 🟢 Matrix canvas */
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* 💎 TON logo */
+    .ton-logo {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 180px;
-      height: 180px;
-      transform: translate(-50%, -50%) scale(1);
+      width: 160px;
+      height: 160px;
+      transform: translate(-50%, -50%) scale(0.6);
       opacity: 0;
-      animation: heartIntro 5s ease-in-out forwards;
-      filter: drop-shadow(0 0 25px rgba(255, 80, 120, 0.8));
+      animation: tonIntro 5s ease-in-out forwards;
+      z-index: 2;
+      filter: drop-shadow(0 0 30px rgba(0, 255, 180, 0.6));
     }
 
-    .heart svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    @keyframes heartIntro {
+    @keyframes tonIntro {
       0% {
         transform: translate(-50%, -50%) scale(0.6);
         opacity: 0;
@@ -49,11 +52,8 @@
       15% {
         opacity: 1;
       }
-      50% {
-        transform: translate(-50%, -50%) scale(1.05);
-      }
-      80% {
-        transform: translate(-50%, -50%) scale(0.9);
+      70% {
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
       }
       100% {
@@ -62,7 +62,7 @@
       }
     }
 
-    /* 👤 Аватар сверху */
+    /* 👤 Avatar */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -74,6 +74,7 @@
       transform: translateX(-50%);
       opacity: 0;
       transition: opacity 0.6s ease;
+      z-index: 3;
     }
 
     .avatar-top img {
@@ -85,46 +86,77 @@
 </head>
 
 <body>
-  <div id="app">
+<div id="app">
 
-    <!-- ❤️ Сердце -->
-    <div class="heart" id="heart">
-      <svg viewBox="0 0 512 512">
-        <path fill="#ff4d6d" d="
-          M256 464
-          S32 304 32 160
-          C32 96 80 48 144 48
-          C192 48 224 80 256 112
-          C288 80 320 48 368 48
-          C432 48 480 96 480 160
-          C480 304 256 464 256 464
-        "/>
-      </svg>
-    </div>
+  <!-- 🟢 Matrix -->
+  <canvas id="matrix"></canvas>
 
-    <!-- 👤 Аватар -->
-    <div class="avatar-top" id="avatar"></div>
-
+  <!-- 💎 TON logo -->
+  <div class="ton-logo">
+    <svg viewBox="0 0 512 512">
+      <path fill="#00f2c9" d="M256 32L32 160l224 320 224-320L256 32zm0 79l148 79-148 207-148-207 148-79z"/>
+    </svg>
   </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const tg = Telegram.WebApp;
-      tg.ready();
+  <!-- 👤 Avatar -->
+  <div class="avatar-top" id="avatar"></div>
 
-      const user = tg.initDataUnsafe?.user;
-      if (!user || !user.photo_url) return;
+</div>
 
-      const avatar = document.getElementById("avatar");
-      const img = document.createElement("img");
-      img.src = user.photo_url;
-      avatar.appendChild(img);
+<script>
+/* 🟢 MATRIX EFFECT */
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
 
-      // После окончания анимации сердца (5 секунд)
-      setTimeout(() => {
-        avatar.style.opacity = "1";
-      }, 5000);
-    });
-  </script>
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+const drops = Array(Math.floor(columns)).fill(1);
+
+function drawMatrix() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#00ff88";
+  ctx.font = fontSize + "px monospace";
+
+  for (let i = 0; i < drops.length; i++) {
+    const text = letters[Math.floor(Math.random() * letters.length)];
+    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+      drops[i] = 0;
+    }
+    drops[i]++;
+  }
+}
+
+const matrixInterval = setInterval(drawMatrix, 50);
+
+/* TELEGRAM */
+document.addEventListener("DOMContentLoaded", () => {
+  const tg = Telegram.WebApp;
+  tg.ready();
+
+  const user = tg.initDataUnsafe?.user;
+  if (!user || !user.photo_url) return;
+
+  const avatar = document.getElementById("avatar");
+  const img = document.createElement("img");
+  img.src = user.photo_url;
+  avatar.appendChild(img);
+
+  // after intro
+  setTimeout(() => {
+    clearInterval(matrixInterval);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    avatar.style.opacity = "1";
+  }, 5000);
+});
+</script>
+
 </body>
 </html>
