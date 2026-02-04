@@ -23,25 +23,26 @@
       height: 100%;
     }
 
-    /* 🟢 Matrix canvas */
+    /* 🟢 Matrix */
     canvas {
       position: absolute;
       top: 0;
       left: 0;
+      z-index: 1;
     }
 
-    /* 💎 TON logo */
+    /* 🔷 TON LOGO */
     .ton-logo {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 160px;
-      height: 160px;
+      width: 170px;
+      height: 170px;
       transform: translate(-50%, -50%) scale(0.6);
       opacity: 0;
       animation: tonIntro 5s ease-in-out forwards;
       z-index: 2;
-      filter: drop-shadow(0 0 30px rgba(0, 255, 180, 0.6));
+      filter: drop-shadow(0 0 35px rgba(0, 136, 255, 0.8));
     }
 
     @keyframes tonIntro {
@@ -91,10 +92,22 @@
   <!-- 🟢 Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- 💎 TON logo -->
+  <!-- 🔷 REAL TON LOGO -->
   <div class="ton-logo">
-    <svg viewBox="0 0 512 512">
-      <path fill="#00f2c9" d="M256 32L32 160l224 320 224-320L256 32zm0 79l148 79-148 207-148-207 148-79z"/>
+    <svg viewBox="0 0 256 256">
+      <path
+        fill="#0098EA"
+        d="M128 16
+           L16 80
+           L128 240
+           L240 80
+           Z
+           M128 56
+           L192 88
+           L128 200
+           L64 88
+           Z"
+      />
     </svg>
   </div>
 
@@ -149,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
   img.src = user.photo_url;
   avatar.appendChild(img);
 
-  // after intro
   setTimeout(() => {
     clearInterval(matrixInterval);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
