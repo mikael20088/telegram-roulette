@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Telegram Web App</title>
 
+  <!-- Telegram WebApp API -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
     html, body {
       margin: 0;
@@ -12,20 +15,57 @@
       width: 100%;
       height: 100%;
       background: #000000;
-      color: #ffffff;
       font-family: Arial, sans-serif;
     }
 
     .app {
       width: 100%;
       height: 100%;
+      position: relative;
+    }
+
+    /* Аватар */
+    .avatar {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #ffffff;
+      display: none; /* сначала скрыт */
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <!-- Пусто -->
+    <div class="avatar" id="avatar">
+      <img id="avatarImg" src="">
+    </div>
   </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    const user = tg.initDataUnsafe?.user;
+
+    if (user && user.photo_url) {
+      const avatar = document.getElementById("avatar");
+      const avatarImg = document.getElementById("avatarImg");
+
+      avatarImg.src = user.photo_url;
+      avatar.style.display = "block";
+    }
+  </script>
 </body>
 </html>
