@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -18,32 +17,55 @@
       overflow: hidden;
     }
 
-    /* Аватар в центре (анимация) */
-    .avatar-center {
+    #app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* ❤️ Сердце (интро) */
+    .heart {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      overflow: hidden;
-      transform: translate(-50%, -50%) scale(0.4);
+      width: 180px;
+      height: 180px;
+      transform: translate(-50%, -50%) scale(1);
       opacity: 0;
-      box-shadow: 0 0 40px rgba(255,255,255,0.4);
-      animation: intro 1.2s ease forwards;
-      z-index: 10;
+      animation: heartIntro 5s ease-in-out forwards;
+      filter: drop-shadow(0 0 25px rgba(255, 80, 120, 0.8));
     }
 
-    .avatar-center img {
+    .heart svg {
       width: 100%;
       height: 100%;
-      object-fit: cover;
     }
 
-    /* Аватар сверху (постоянный) */
+    @keyframes heartIntro {
+      0% {
+        transform: translate(-50%, -50%) scale(0.6);
+        opacity: 0;
+      }
+      15% {
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.05);
+      }
+      80% {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -55%) scale(0.3);
+        opacity: 0;
+      }
+    }
+
+    /* 👤 Аватар сверху */
     .avatar-top {
       position: absolute;
-      top: 16px;
+      top: 18px;
       left: 50%;
       width: 56px;
       height: 56px;
@@ -51,7 +73,7 @@
       overflow: hidden;
       transform: translateX(-50%);
       opacity: 0;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.6s ease;
     }
 
     .avatar-top img {
@@ -59,63 +81,50 @@
       height: 100%;
       object-fit: cover;
     }
-
-    @keyframes intro {
-      0% {
-        transform: translate(-50%, -50%) scale(0.4);
-        opacity: 0;
-      }
-      40% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      70% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      100% {
-        transform: translate(-50%, -60%) scale(0.3);
-        opacity: 0;
-      }
-    }
   </style>
 </head>
 
 <body>
+  <div id="app">
+
+    <!-- ❤️ Сердце -->
+    <div class="heart" id="heart">
+      <svg viewBox="0 0 512 512">
+        <path fill="#ff4d6d" d="
+          M256 464
+          S32 304 32 160
+          C32 96 80 48 144 48
+          C192 48 224 80 256 112
+          C288 80 320 48 368 48
+          C432 48 480 96 480 160
+          C480 304 256 464 256 464
+        "/>
+      </svg>
+    </div>
+
+    <!-- 👤 Аватар -->
+    <div class="avatar-top" id="avatar"></div>
+
+  </div>
 
   <script>
-    const tg = Telegram.WebApp;
-    tg.ready();
+    document.addEventListener("DOMContentLoaded", () => {
+      const tg = Telegram.WebApp;
+      tg.ready();
 
-    const user = tg.initDataUnsafe?.user;
-    if (!user || !user.photo_url) return;
+      const user = tg.initDataUnsafe?.user;
+      if (!user || !user.photo_url) return;
 
-    /* Центральная анимация */
-    const centerAvatar = document.createElement("div");
-    centerAvatar.className = "avatar-center";
+      const avatar = document.getElementById("avatar");
+      const img = document.createElement("img");
+      img.src = user.photo_url;
+      avatar.appendChild(img);
 
-    const centerImg = document.createElement("img");
-    centerImg.src = user.photo_url;
-
-    centerAvatar.appendChild(centerImg);
-    document.body.appendChild(centerAvatar);
-
-    /* Верхний аватар */
-    const topAvatar = document.createElement("div");
-    topAvatar.className = "avatar-top";
-
-    const topImg = document.createElement("img");
-    topImg.src = user.photo_url;
-
-    topAvatar.appendChild(topImg);
-    document.body.appendChild(topAvatar);
-
-    /* После анимации */
-    setTimeout(() => {
-      centerAvatar.remove();
-      topAvatar.style.opacity = "1";
-    }, 1200);
+      // После окончания анимации сердца (5 секунд)
+      setTimeout(() => {
+        avatar.style.opacity = "1";
+      }, 5000);
+    });
   </script>
-
 </body>
 </html>
