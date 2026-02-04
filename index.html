@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -15,44 +16,50 @@
       height: 100%;
       background: #000000;
       font-family: Arial, sans-serif;
-      overflow: hidden;
+      color: white;
     }
 
-    .app {
-      width: 100%;
-      height: 100%;
-      position: relative;
-    }
-
-    /* Аватар */
-    .avatar-center {
+    .center {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      overflow: hidden;
-      transform: translate(-50%, -50%) scale(0.4);
-      opacity: 0;
-      box-shadow: 0 0 25px rgba(255, 255, 255, 0.35);
-      animation: appear 0.25s ease-out forwards,
-                 disappear 0.35s ease-in forwards;
-      animation-delay: 0s, 0.25s;
-      z-index: 10;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 16px;
+      opacity: 0.8;
     }
+  </style>
+</head>
 
-    .avatar-center img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+<body>
+  <div class="center" id="status">
+    Web App загружается…
+  </div>
 
-    @keyframes appear {
-      to {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
+  <script>
+    const status = document.getElementById("status");
+
+    if (!window.Telegram || !Telegram.WebApp) {
+      status.innerText = "Telegram WebApp API не найдено";
+    } else {
+      const tg = Telegram.WebApp;
+      tg.ready();
+
+      const data = tg.initDataUnsafe;
+      console.log(data);
+
+      if (!data || !data.user) {
+        status.innerText = "Пользователь не передан Telegram";
+      } else {
+        status.innerText = "Пользователь получен ✅";
+
+        if (data.user.photo_url) {
+          status.innerText += "\nАватар есть 🧑";
+        } else {
+          status.innerText += "\nАватара нет ❌";
+        }
       }
     }
-
-    @key
+  </script>
+</body>
+</html>
