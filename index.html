@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Telegram Web App</title>
+  <title>Telegram Mini App</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -14,52 +14,108 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      background: #000000;
-      font-family: Arial, sans-serif;
-      color: white;
+      background: #000;
+      overflow: hidden;
     }
 
-    .center {
+    /* Аватар в центре (анимация) */
+    .avatar-center {
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      font-size: 16px;
-      opacity: 0.8;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      overflow: hidden;
+      transform: translate(-50%, -50%) scale(0.4);
+      opacity: 0;
+      box-shadow: 0 0 40px rgba(255,255,255,0.4);
+      animation: intro 1.2s ease forwards;
+      z-index: 10;
+    }
+
+    .avatar-center img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Аватар сверху (постоянный) */
+    .avatar-top {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      overflow: hidden;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .avatar-top img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    @keyframes intro {
+      0% {
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 0;
+      }
+      40% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      70% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -60%) scale(0.3);
+        opacity: 0;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="center" id="status">
-    Web App загружается…
-  </div>
 
   <script>
-    const status = document.getElementById("status");
+    const tg = Telegram.WebApp;
+    tg.ready();
 
-    if (!window.Telegram || !Telegram.WebApp) {
-      status.innerText = "Telegram WebApp API не найдено";
-    } else {
-      const tg = Telegram.WebApp;
-      tg.ready();
+    const user = tg.initDataUnsafe?.user;
+    if (!user || !user.photo_url) return;
 
-      const data = tg.initDataUnsafe;
-      console.log(data);
+    /* Центральная анимация */
+    const centerAvatar = document.createElement("div");
+    centerAvatar.className = "avatar-center";
 
-      if (!data || !data.user) {
-        status.innerText = "Пользователь не передан Telegram";
-      } else {
-        status.innerText = "Пользователь получен ✅";
+    const centerImg = document.createElement("img");
+    centerImg.src = user.photo_url;
 
-        if (data.user.photo_url) {
-          status.innerText += "\nАватар есть 🧑";
-        } else {
-          status.innerText += "\nАватара нет ❌";
-        }
-      }
-    }
+    centerAvatar.appendChild(centerImg);
+    document.body.appendChild(centerAvatar);
+
+    /* Верхний аватар */
+    const topAvatar = document.createElement("div");
+    topAvatar.className = "avatar-top";
+
+    const topImg = document.createElement("img");
+    topImg.src = user.photo_url;
+
+    topAvatar.appendChild(topImg);
+    document.body.appendChild(topAvatar);
+
+    /* После анимации */
+    setTimeout(() => {
+      centerAvatar.remove();
+      topAvatar.style.opacity = "1";
+    }, 1200);
   </script>
+
 </body>
 </html>
