@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TON Mini App</title>
+  <title>Telegram Mini App</title>
 
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -24,43 +23,23 @@
       height: 100%;
     }
 
-    /* Matrix canvas */
+    /* Matrix */
     canvas {
       position: absolute;
       inset: 0;
       z-index: 1;
     }
 
-    /* TON logo */
-    .ton-logo {
+    /* Telegram logo */
+    .tg-logo {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 170px;
-      height: 170px;
-      transform: translate(-50%, -50%) scale(0.6);
-      opacity: 0;
-      animation: tonIntro 5s ease-in-out forwards;
+      width: 140px;
+      height: 140px;
+      transform: translate(-50%, -50%);
       z-index: 2;
-      filter: drop-shadow(0 0 35px rgba(0, 152, 234, 0.9));
-    }
-
-    @keyframes tonIntro {
-      0% {
-        transform: translate(-50%, -50%) scale(0.6);
-        opacity: 0;
-      }
-      15% {
-        opacity: 1;
-      }
-      70% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      100% {
-        transform: translate(-50%, -55%) scale(0.3);
-        opacity: 0;
-      }
+      opacity: 0.95;
     }
 
     /* Avatar */
@@ -92,13 +71,14 @@
   <!-- Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- TON logo -->
-  <div class="ton-logo">
-    <svg viewBox="0 0 512 512">
-      <!-- Левая часть -->
-      <path fill="#0098EA" d="M256 32 L64 448 L246 448 L256 420 Z"/>
-      <!-- Правая часть -->
-      <path fill="#0098EA" d="M256 32 L266 420 L448 448 L256 32 Z"/>
+  <!-- Telegram logo (static) -->
+  <div class="tg-logo">
+    <svg viewBox="0 0 240 240">
+      <circle cx="120" cy="120" r="120" fill="#2AABEE"/>
+      <path
+        d="M180 70L150 170c-2 8-8 10-15 6l-42-31-20 19c-2 2-4 4-8 4l3-45 82-74c4-4-1-6-6-3L54 116l-38-12c-8-2-8-8 2-12l150-58c7-3 13 2 10 14z"
+        fill="#fff"
+      />
     </svg>
   </div>
 
@@ -118,13 +98,11 @@ let matrixInterval;
 const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
 const fontSize = 14;
 
-/* Правильная инициализация (важно для телефона) */
 function initMatrix() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
   const columns = Math.floor(canvas.width / fontSize);
-
   drops = Array.from({ length: columns }, () => ({
     y: Math.random() * canvas.height,
     speed: 0.5 + Math.random() * 1.5
@@ -151,17 +129,15 @@ function drawMatrix() {
   });
 }
 
-/* Telegram WebApp */
+/* Telegram */
 document.addEventListener("DOMContentLoaded", () => {
   const tg = Telegram.WebApp;
   tg.ready();
 
-  /* Matrix start */
   initMatrix();
   matrixInterval = setInterval(drawMatrix, 50);
   window.addEventListener("resize", initMatrix);
 
-  /* User avatar */
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
@@ -170,10 +146,8 @@ document.addEventListener("DOMContentLoaded", () => {
     avatar.appendChild(img);
   }
 
-  /* End intro after 5 sec */
+  /* Показываем аватар через 5 сек */
   setTimeout(() => {
-    clearInterval(matrixInterval);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById("avatar").style.opacity = "1";
   }, 5000);
 });
