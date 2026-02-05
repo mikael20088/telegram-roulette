@@ -23,26 +23,24 @@
       height: 100%;
     }
 
-    /* 🟢 Matrix */
     canvas {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       z-index: 1;
     }
 
-    /* 🔷 TON LOGO */
+    /* TON LOGO */
     .ton-logo {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 160px;
-      height: 160px;
+      width: 170px;
+      height: 170px;
       transform: translate(-50%, -50%) scale(0.6);
       opacity: 0;
       animation: tonIntro 5s ease-in-out forwards;
       z-index: 2;
-      filter: drop-shadow(0 0 35px rgba(0, 152, 234, 0.8));
+      filter: drop-shadow(0 0 35px rgba(0, 152, 234, 0.9));
     }
 
     @keyframes tonIntro {
@@ -63,7 +61,7 @@
       }
     }
 
-    /* 👤 Avatar */
+    /* Avatar */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -89,51 +87,56 @@
 <body>
 <div id="app">
 
-  <!-- 🟢 Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- 🔷 TON OFFICIAL LOGO -->
+  <!-- TON LOGO -->
   <div class="ton-logo">
     <svg viewBox="0 0 512 512">
-      <!-- Пример официально-похожего знака TON -->
-      <path fill="#0098EA" d="M256 32L32 160l224 320 224-320L256 32zm0 80l148 80-148 208-148-208 148-80z" />
+      <path fill="#0098EA" d="M256 32 L64 448 L246 448 L256 420 Z"/>
+      <path fill="#0098EA" d="M256 32 L266 420 L448 448 L256 32 Z"/>
     </svg>
   </div>
 
-  <!-- 👤 Avatar -->
   <div class="avatar-top" id="avatar"></div>
 
 </div>
 
 <script>
-/* 🟢 MATRIX EFFECT */
+/* MATRIX — ТОЛЬКО РАССЫПНАЯ */
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
 const fontSize = 14;
-const columns = canvas.width / fontSize;
-const drops = Array(Math.floor(columns)).fill(1);
+const columns = Math.floor(canvas.width / fontSize);
+
+/* 👉 СРАЗУ СЛУЧАЙНЫЕ ПОЗИЦИИ */
+const drops = Array.from({ length: columns }, () => ({
+  y: Math.random() * canvas.height,
+  speed: 0.5 + Math.random() * 1.5
+}));
 
 function drawMatrix() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "#00ff88";
   ctx.font = fontSize + "px monospace";
 
-  for (let i = 0; i < drops.length; i++) {
-    const text = letters[Math.floor(Math.random() * letters.length)];
-    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+  drops.forEach((drop, i) => {
+    const text = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(text, i * fontSize, drop.y);
 
-    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-      drops[i] = 0;
+    drop.y += fontSize * drop.speed;
+
+    if (drop.y > canvas.height + 50) {
+      drop.y = Math.random() * -100;
+      drop.speed = 0.5 + Math.random() * 1.5;
     }
-    drops[i]++;
-  }
+  });
 }
 
 const matrixInterval = setInterval(drawMatrix, 50);
