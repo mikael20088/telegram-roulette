@@ -30,39 +30,19 @@
       z-index: 1;
     }
 
-    /* Герой Матрицы БЕЗ фона и свечения */
-    .matrix-hero {
+    /* Telegram logo */
+    .tg-logo {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 200px;
-      height: 260px;
+      width: 140px;
+      height: 140px;
       transform: translate(-50%, -50%);
       z-index: 2;
       opacity: 0.95;
     }
 
-    .matrix-hero img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      /* Убираем ВЕСЬ чёрный фон */
-      background: transparent;
-      /* Маска вырезает чёрный фон */
-      -webkit-mask-image: url(matrix-hero.jpg);
-      mask-image: url(matrix-hero.jpg);
-      -webkit-mask-size: contain;
-      mask-size: contain;
-      -webkit-mask-position: center;
-      mask-position: center;
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      /* Никакого свечения */
-      filter: none;
-      box-shadow: none;
-    }
-
-    /* Аватар сверху */
+    /* Avatar */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -75,7 +55,6 @@
       opacity: 0;
       transition: opacity 0.6s ease;
       z-index: 3;
-      box-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
     }
 
     .avatar-top img {
@@ -89,21 +68,27 @@
 <body>
 <div id="app">
 
-  <!-- Matrix (НЕ ИЗМЕНЕНА) -->
+  <!-- Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- Герой Матрицы БЕЗ ЧЁРНОГО ФОНА -->
-  <div class="matrix-hero">
-    <img src="matrix-hero.jpg" alt="Matrix Hero">
+  <!-- Telegram logo (static) -->
+  <div class="tg-logo">
+    <svg viewBox="0 0 240 240">
+      <circle cx="120" cy="120" r="120" fill="#2AABEE"/>
+      <path
+        d="M180 70L150 170c-2 8-8 10-15 6l-42-31-20 19c-2 2-4 4-8 4l3-45 82-74c4-4-1-6-6-3L54 116l-38-12c-8-2-8-8 2-12l150-58c7-3 13 2 10 14z"
+        fill="#fff"
+      />
+    </svg>
   </div>
 
-  <!-- Аватар пользователя (НЕ ИЗМЕНЁН) -->
+  <!-- Avatar -->
   <div class="avatar-top" id="avatar"></div>
 
 </div>
 
 <script>
-/* MATRIX (НЕ ИЗМЕНЁН) */
+/* MATRIX */
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 
@@ -144,7 +129,7 @@ function drawMatrix() {
   });
 }
 
-/* Telegram (НЕ ИЗМЕНЁН) */
+/* Telegram */
 document.addEventListener("DOMContentLoaded", () => {
   const tg = Telegram.WebApp;
   tg.ready();
@@ -161,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     avatar.appendChild(img);
   }
 
+  /* Показываем аватар через 5 сек */
   setTimeout(() => {
     document.getElementById("avatar").style.opacity = "1";
   }, 5000);
