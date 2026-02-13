@@ -30,24 +30,29 @@
       z-index: 1;
     }
 
-    /* Герой Матрицы в центре */
+    /* Контейнер для героя (фон прозрачный) */
     .matrix-hero {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 220px;  /* чуть больше для твоего героя */
+      width: 220px;
       height: 280px;
       transform: translate(-50%, -50%);
       z-index: 2;
       opacity: 0.95;
       animation: matrixGlow 2s ease-in-out infinite alternate;
+      background: transparent; /* ← ПРОЗРАЧНЫЙ ФОН */
     }
 
+    /* Сама картинка без фона */
     .matrix-hero img {
       width: 100%;
       height: 100%;
       object-fit: contain;
-      filter: drop-shadow(0 0 20px #00ff88) drop-shadow(0 0 40px #00ff88);
+      background: transparent; /* ← ПРОЗРАЧНЫЙ ФОН */
+      /* Убираем чёрный фон через CSS-трик */
+      mix-blend-mode: screen;
+      filter: drop-shadow(0 0 20px #00ff88) drop-shadow(0 0 40px #00ff88) brightness(1.2);
     }
 
     /* Анимация свечения */
@@ -92,7 +97,7 @@
   <!-- Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- Твой герой Матрицы -->
+  <!-- Герой Матрицы (ПРОЗРАЧНЫЙ ФОН) -->
   <div class="matrix-hero">
     <img src="matrix-hero.jpg" alt="Matrix Hero">
   </div>
@@ -118,7 +123,7 @@ function initMatrix() {
   canvas.height = window.innerHeight;
 
   const columns = Math.floor(canvas.width / fontSize);
-  drops = Array(from({ length: columns }, () => ({
+  drops = Array.from({ length: columns }, () => ({
     y: Math.random() * canvas.height,
     speed: 0.5 + Math.random() * 1.5
   }));
