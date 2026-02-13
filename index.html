@@ -23,26 +23,33 @@
       height: 100%;
     }
 
-    /* Matrix */
+    /* Matrix (ТЕПЕРЬ ПОД героями, z-index: 1) */
     canvas {
       position: absolute;
       inset: 0;
       z-index: 1;
     }
 
-    /* Telegram logo */
-    .tg-logo {
+    /* Герой Матрицы НАД матрицей (z-index: 3) */
+    .matrix-hero {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 140px;
-      height: 140px;
+      width: 200px;
+      height: 260px;
       transform: translate(-50%, -50%);
-      z-index: 2;
+      z-index: 3;  /* ← НАД матрицей! */
       opacity: 0.95;
     }
 
-    /* Avatar */
+    .matrix-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: transparent;
+    }
+
+    /* Аватар сверху (z-index: 4, самый верхний) */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -54,7 +61,8 @@
       transform: translateX(-50%);
       opacity: 0;
       transition: opacity 0.6s ease;
-      z-index: 3;
+      z-index: 4;  /* ← САМЫЙ ВЕРХ */
+      box-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
     }
 
     .avatar-top img {
@@ -68,21 +76,15 @@
 <body>
 <div id="app">
 
-  <!-- Matrix -->
+  <!-- Matrix (ТЕПЕРЬ РИСУЕТСЯ ПЕРВОЙ, z-index: 1) -->
   <canvas id="matrix"></canvas>
 
-  <!-- Telegram logo (static) -->
-  <div class="tg-logo">
-    <svg viewBox="0 0 240 240">
-      <circle cx="120" cy="120" r="120" fill="#2AABEE"/>
-      <path
-        d="M180 70L150 170c-2 8-8 10-15 6l-42-31-20 19c-2 2-4 4-8 4l3-45 82-74c4-4-1-6-6-3L54 116l-38-12c-8-2-8-8 2-12l150-58c7-3 13 2 10 14z"
-        fill="#fff"
-      />
-    </svg>
+  <!-- Герой Матрицы (ТЕПЕРЬ НАД матрицей, z-index: 3) -->
+  <div class="matrix-hero">
+    <img src="matrix-hero.jpg" alt="Matrix Hero">
   </div>
 
-  <!-- Avatar -->
+  <!-- Аватар пользователя (z-index: 4) -->
   <div class="avatar-top" id="avatar"></div>
 
 </div>
@@ -146,7 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
     avatar.appendChild(img);
   }
 
-  /* Показываем аватар через 5 сек */
   setTimeout(() => {
     document.getElementById("avatar").style.opacity = "1";
   }, 5000);
