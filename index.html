@@ -30,25 +30,25 @@
       z-index: 1;
     }
 
-    /* Контейнер для обрезки героя */
+    /* ТОЧНАЯ обрезка под силуэт героя */
     .matrix-hero {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 180px;
-      height: 240px;
+      width: 160px;     /* ← МЕНЬШЕ */
+      height: 220px;    /* ← МЕНЬШЕ */
       transform: translate(-50%, -50%);
       z-index: 3;
-      overflow: hidden;  /* ← ОБРЕЗАЕМ лишнее */
+      overflow: hidden;
     }
 
-    /* Обрезаем картинку точно по силуэту */
+    /* ТОЧное позиционирование картинки */
     .matrix-hero img {
-      width: 120%;  /* Немного больше контейнера */
-      height: 120%;
+      width: 130%;      /* ← Больше контейнера */
+      height: 130%;
       position: absolute;
-      top: -10%;    /* Сдвигаем вверх */
-      left: -8%;    /* Сдвигаем влево */
+      top: -18%;        /* ← ВЫШЕ */
+      left: -12%;       /* ← ЛЕВЕЕ */
       object-fit: cover;
     }
 
@@ -82,7 +82,7 @@
   <!-- Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- Герой с CSS-обрезкой (БЕЗ черного фона) -->
+  <!-- Идеально обрезанный герой -->
   <div class="matrix-hero">
     <img src="matrix-hero.jpg" alt="Matrix Hero">
   </div>
