@@ -23,14 +23,14 @@
       height: 100%;
     }
 
-    /* Matrix поверх всего (z-index: 10) */
+    /* Matrix ФОНОВЫЙ слой */
     canvas {
       position: absolute;
       inset: 0;
-      z-index: 10;  /* ← САМЫЙ ВЕРХНИЙ СЛОЙ */
+      z-index: 1;  /* ← НИЖЕ героев */
     }
 
-    /* Герой Матрицы ПОД матрицей (z-index: 2) */
+    /* Герой НАД матрицей */
     .matrix-hero {
       position: absolute;
       top: 50%;
@@ -38,8 +38,8 @@
       width: 200px;
       height: 260px;
       transform: translate(-50%, -50%);
-      z-index: 2;  /* ← ПОД матрицей */
-      opacity: 0.85;  /* Чуть прозрачнее, чтобы матрица просвечивала */
+      z-index: 3;  /* ← НАД матрицей */
+      opacity: 1;  /* ← ПОЛНАЯ видимость */
     }
 
     .matrix-hero img {
@@ -48,7 +48,7 @@
       object-fit: contain;
     }
 
-    /* Аватар самый верхний (z-index: 15) */
+    /* Аватар самый верхний */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -60,7 +60,7 @@
       transform: translateX(-50%);
       opacity: 0;
       transition: opacity 0.6s ease;
-      z-index: 15;  /* ← НАД матрицей */
+      z-index: 4;
       box-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
     }
 
@@ -75,16 +75,16 @@
 <body>
 <div id="app">
 
-  <!-- Герой Матрицы (ПОД матрицей) -->
+  <!-- Matrix (НИЖЕ всего) -->
+  <canvas id="matrix"></canvas>
+
+  <!-- Герой (НАД матрицей, ВИДИМЫЙ) -->
   <div class="matrix-hero">
     <img src="matrix-hero.jpg" alt="Matrix Hero">
   </div>
 
-  <!-- Аватар пользователя -->
+  <!-- Аватар (САМЫЙ ВЕРХ) -->
   <div class="avatar-top" id="avatar"></div>
-
-  <!-- Matrix (НАД ВСЁМ) -->
-  <canvas id="matrix"></canvas>
 
 </div>
 
