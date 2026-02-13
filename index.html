@@ -30,19 +30,28 @@
       z-index: 1;
     }
 
-    /* Telegram logo */
-    .tg-logo {
+    /* Зелёный человек в центре */
+    .matrix-guy {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 140px;
-      height: 140px;
+      width: 180px;
+      height: 180px;
       transform: translate(-50%, -50%);
       z-index: 2;
       opacity: 0.95;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* Avatar */
+    .matrix-guy svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 18px #00ff88);
+    }
+
+    /* Аватар сверху */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -55,6 +64,7 @@
       opacity: 0;
       transition: opacity 0.6s ease;
       z-index: 3;
+      box-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
     }
 
     .avatar-top img {
@@ -71,18 +81,27 @@
   <!-- Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- Telegram logo (static) -->
-  <div class="tg-logo">
-    <svg viewBox="0 0 240 240">
-      <circle cx="120" cy="120" r="120" fill="#2AABEE"/>
-      <path
-        d="M180 70L150 170c-2 8-8 10-15 6l-42-31-20 19c-2 2-4 4-8 4l3-45 82-74c4-4-1-6-6-3L54 116l-38-12c-8-2-8-8 2-12l150-58c7-3 13 2 10 14z"
-        fill="#fff"
-      />
+  <!-- Зелёный человек из матрицы в центре (SVG прямо в HTML) -->
+  <div class="matrix-guy">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Голова -->
+      <circle cx="100" cy="55" r="28" fill="#00ff88" />
+      <!-- Тело -->
+      <rect x="82" y="80" width="36" height="60" rx="8" fill="#00ff88" />
+      <!-- Руки -->
+      <rect x="52" y="82" width="26" height="14" rx="7" fill="#00ff88" />
+      <rect x="122" y="82" width="26" height="14" rx="7" fill="#00ff88" />
+      <!-- Ноги -->
+      <rect x="84" y="140" width="14" height="40" rx="6" fill="#00ff88" />
+      <rect x="102" y="140" width="14" height="40" rx="6" fill="#00ff88" />
+      <!-- Лёгкие «цифры» вокруг -->
+      <text x="40" y="40" fill="#00ff88" font-size="10" font-family="monospace">0101</text>
+      <text x="145" y="70" fill="#00ff88" font-size="10" font-family="monospace">1010</text>
+      <text x="40" y="130" fill="#00ff88" font-size="10" font-family="monospace">0110</text>
     </svg>
   </div>
 
-  <!-- Avatar -->
+  <!-- Аватар пользователя -->
   <div class="avatar-top" id="avatar"></div>
 
 </div>
@@ -146,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     avatar.appendChild(img);
   }
 
-  /* Показываем аватар через 5 сек */
+  // Показываем аватар через 5 сек
   setTimeout(() => {
     document.getElementById("avatar").style.opacity = "1";
   }, 5000);
