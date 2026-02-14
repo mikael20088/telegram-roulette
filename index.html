@@ -30,26 +30,21 @@
       z-index: 1;
     }
 
-    /* ТОЧНАЯ обрезка под силуэт героя */
+    /* Sticker-герой (идеальный размер) */
     .matrix-hero {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 160px;     /* ← МЕНЬШЕ */
-      height: 220px;    /* ← МЕНЬШЕ */
+      width: 200px;
+      height: 200px;
       transform: translate(-50%, -50%);
       z-index: 3;
-      overflow: hidden;
     }
 
-    /* ТОЧное позиционирование картинки */
     .matrix-hero img {
-      width: 130%;      /* ← Больше контейнера */
-      height: 130%;
-      position: absolute;
-      top: -18%;        /* ← ВЫШЕ */
-      left: -12%;       /* ← ЛЕВЕЕ */
-      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     /* Аватар сверху */
@@ -82,9 +77,9 @@
   <!-- Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- Идеально обрезанный герой -->
+  <!-- Sticker-герой (ПРОЗРАЧНЫЙ ФОН) -->
   <div class="matrix-hero">
-    <img src="matrix-hero.jpg" alt="Matrix Hero">
+    <img src="https://t.me/addstickers/CAACAgIAAxkBAAEQhOFpkOxtOSw2POjHpZQmJLYWq46WWgACOJMAAhMGyEo8s23dqPAdQjoE/1/1" alt="Matrix Hero">
   </div>
 
   <!-- Аватар пользователя -->
