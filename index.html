@@ -23,14 +23,12 @@
       height: 100%;
     }
 
-    /* Matrix */
     canvas {
       position: absolute;
       inset: 0;
       z-index: 1;
     }
 
-    /* Sticker-герой (идеальный размер) */
     .matrix-hero {
       position: absolute;
       top: 50%;
@@ -47,7 +45,6 @@
       object-fit: contain;
     }
 
-    /* Аватар сверху */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -73,84 +70,23 @@
 
 <body>
 <div id="app">
-
-  <!-- Matrix -->
   <canvas id="matrix"></canvas>
 
-  <!-- Sticker-герой (ПРОЗРАЧНЫЙ ФОН) -->
+  <!-- Sticker-герой (правильная ссылка) -->
   <div class="matrix-hero">
-    <img src="https://t.me/addstickers/CAACAgIAAxkBAAEQhOFpkOxtOSw2POjHpZQmJLYWq46WWgACOJMAAhMGyEo8s23dqPAdQjoE/1/1" alt="Matrix Hero">
+    <img src="https://sticker.wiki/static/stickers/CAACAgIAAxkBAAEQhOFpkOxtOSw2POjHpZQmJLYWq46WWgACOJMAAhMGyEo8s23dqPAdQjoE.webp" alt="Matrix Hero">
   </div>
 
-  <!-- Аватар пользователя -->
   <div class="avatar-top" id="avatar"></div>
-
 </div>
 
 <script>
-/* MATRIX */
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
-
-let drops = [];
-let matrixInterval;
-
-const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
-const fontSize = 14;
+let drops = [], matrixInterval;
+const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789", fontSize = 14;
 
 function initMatrix() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
-  const columns = Math.floor(canvas.width / fontSize);
-  drops = Array.from({ length: columns }, () => ({
-    y: Math.random() * canvas.height,
-    speed: 0.5 + Math.random() * 1.5
-  }));
-}
-
-function drawMatrix() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#00ff88";
-  ctx.font = fontSize + "px monospace";
-
-  drops.forEach((drop, i) => {
-    const text = chars[Math.floor(Math.random() * chars.length)];
-    ctx.fillText(text, i * fontSize, drop.y);
-
-    drop.y += fontSize * drop.speed;
-
-    if (drop.y > canvas.height + 50) {
-      drop.y = Math.random() * -100;
-      drop.speed = 0.5 + Math.random() * 1.5;
-    }
-  });
-}
-
-/* Telegram */
-document.addEventListener("DOMContentLoaded", () => {
-  const tg = Telegram.WebApp;
-  tg.ready();
-
-  initMatrix();
-  matrixInterval = setInterval(drawMatrix, 50);
-  window.addEventListener("resize", initMatrix);
-
-  const user = tg.initDataUnsafe?.user;
-  if (user && user.photo_url) {
-    const avatar = document.getElementById("avatar");
-    const img = document.createElement("img");
-    img.src = user.photo_url;
-    avatar.appendChild(img);
-  }
-
-  setTimeout(() => {
-    document.getElementById("avatar").style.opacity = "1";
-  }, 5000);
-});
-</script>
-
-</body>
-</html>
+  const columns
