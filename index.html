@@ -89,7 +89,7 @@
 </div>
 
 <script>
-/* МАТРИЦА */
+/* МАТРИЦА (без изменений) */
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 let drops = [];
@@ -133,16 +133,37 @@ document.addEventListener("DOMContentLoaded", () => {
   matrixInterval = setInterval(drawMatrix, 50);
   window.addEventListener("resize", initMatrix);
 
-  // АНИМАЦИЯ LOTTIE
-  lottie.loadAnimation({
-    container: document.getElementById('sticker'),
-    renderer: 'canvas',
+  // ---------- УЛУЧШЕННАЯ ЗАГРУЗКА LOTTIE ----------
+  const stickerContainer = document.getElementById('sticker');
+  
+  // Пробуем загрузить анимацию
+  const anim = lottie.loadAnimation({
+    container: stickerContainer,
+    renderer: 'svg',          // ← заменили на svg для лучшей совместимости
     loop: true,
     autoplay: true,
-    path: 'sticker.json'  // ← ЧИТАЕТ из твоего файла!
+    path: 'sticker.json'      // путь остался тем же
   });
 
-  // АВАТАР
+  // Отслеживаем успешную загрузку
+  anim.addEventListener('DOMLoaded', () => {
+    console.log('✅ Lottie: анимация загружена и отрисована');
+  });
+
+  // Обработка ошибки загрузки файла
+  anim.addEventListener('data_failed', () => {
+    console.error('❌ Lottie: не удалось загрузить sticker.json. Проверьте:');
+    console.error('   - Файл существует в папке /bot/');
+    console.error('   - Это корректный JSON-файл анимации Lottie');
+    // Опционально: показать сообщение пользователю
+    stickerContainer.innerHTML = '⚠️ Анимация не загрузилась';
+  });
+
+  // Если анимация вообще не запустится, можно добавить запасной вариант
+  // (например, статичное изображение), но пока оставим так.
+  // -------------------------------------------------
+
+  // АВАТАР (без изменений)
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
