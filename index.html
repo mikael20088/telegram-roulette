@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Telegram Mini App</title>
 
+  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Lottie плеер -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 
   <style>
     html, body {
@@ -23,32 +27,27 @@
       height: 100%;
     }
 
-    /* Matrix */
+    /* Matrix - фон */
     canvas {
       position: absolute;
       inset: 0;
       z-index: 1;
     }
 
-    /* Герой (ИДЕАЛЬНАЯ CSS-обрезка) */
+    /* Анимированный герой */
     .matrix-hero {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 160px;
-      height: 220px;
+      width: 200px;
+      height: 200px;
       transform: translate(-50%, -50%);
       z-index: 3;
-      overflow: hidden;
     }
 
-    .matrix-hero img {
-      width: 135%;
-      height: 135%;
-      position: absolute;
-      top: -22%;
-      left: -15%;
-      object-fit: cover;
+    #sticker {
+      width: 100%;
+      height: 100%;
     }
 
     /* Аватар сверху */
@@ -77,55 +76,46 @@
 
 <body>
 <div id="app">
-
-  <!-- Matrix -->
+  <!-- Матрица -->
   <canvas id="matrix"></canvas>
 
-  <!-- Герой (ТОЛЬКО твоя картинка matrix-hero.jpg) -->
+  <!-- АНИМИРОВАННЫЙ стикер -->
   <div class="matrix-hero">
-    <img src="matrix-hero.jpg" alt="Matrix Hero">
+    <div id="sticker"></div>
   </div>
 
-  <!-- Аватар пользователя -->
+  <!-- Аватар -->
   <div class="avatar-top" id="avatar"></div>
-
 </div>
 
 <script>
-/* MATRIX */
+/* МАТРИЦА */
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
-
 let drops = [];
-let matrixInterval;
-
 const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
 const fontSize = 14;
 
 function initMatrix() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
   const columns = Math.floor(canvas.width / fontSize);
-  drops = Array.from({ length: columns }, () => ({
+  drops = Array.from({length: columns}, () => ({
     y: Math.random() * canvas.height,
     speed: 0.5 + Math.random() * 1.5
   }));
 }
 
+let matrixInterval;
 function drawMatrix() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   ctx.fillStyle = "#00ff88";
   ctx.font = fontSize + "px monospace";
-
   drops.forEach((drop, i) => {
     const text = chars[Math.floor(Math.random() * chars.length)];
     ctx.fillText(text, i * fontSize, drop.y);
-
     drop.y += fontSize * drop.speed;
-
     if (drop.y > canvas.height + 50) {
       drop.y = Math.random() * -100;
       drop.speed = 0.5 + Math.random() * 1.5;
@@ -133,15 +123,26 @@ function drawMatrix() {
   });
 }
 
-/* Telegram */
+/* ОСНОВНАЯ ЛОГИКА */
 document.addEventListener("DOMContentLoaded", () => {
   const tg = Telegram.WebApp;
   tg.ready();
 
+  // Запуск матрицы
   initMatrix();
   matrixInterval = setInterval(drawMatrix, 50);
   window.addEventListener("resize", initMatrix);
 
+  // АНИМАЦИЯ LOTTIE
+  lottie.loadAnimation({
+    container: document.getElementById('sticker'),
+    renderer: 'canvas',
+    loop: true,
+    autoplay: true,
+    path: 'sticker.json'  // ← ЧИТАЕТ из твоего файла!
+  });
+
+  // АВАТАР
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
@@ -150,11 +151,11 @@ document.addEventListener("DOMContentLoaded", () => {
     avatar.appendChild(img);
   }
 
+  // Аватар через 5 сек
   setTimeout(() => {
     document.getElementById("avatar").style.opacity = "1";
   }, 5000);
 });
 </script>
-
 </body>
 </html>
