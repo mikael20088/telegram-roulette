@@ -30,7 +30,7 @@
       height: 100%;
     }
 
-    /* ФОН (можно потом заменить) */
+    /* МАТРИЦА */
     canvas {
       position: absolute;
       inset: 0;
@@ -82,8 +82,8 @@
 <body>
 <div id="app">
 
-  <!-- ФОН -->
-  <canvas id="bg"></canvas>
+  <!-- МАТРИЦА -->
+  <canvas id="matrix"></canvas>
 
   <!-- ВИДЕО -->
   <div class="video-wrapper">
@@ -107,26 +107,44 @@
   tg.ready();
   tg.expand();
 
-  /* ПРОСТОЙ ФОН */
-  const canvas = document.getElementById("bg");
+  /* --- МАТРИЦА --- */
+  const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
+  let drops = [];
+  const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+  const fontSize = 14;
 
-  function resize() {
+  function initMatrix() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    const columns = Math.floor(canvas.width / fontSize);
+    drops = Array.from({length: columns}, () => ({
+      y: Math.random() * canvas.height,
+      speed: 0.5 + Math.random() * 1.5
+    }));
   }
 
-  resize();
-  window.addEventListener("resize", resize);
-
-  function draw() {
-    ctx.fillStyle = "#111";
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    requestAnimationFrame(draw);
+    ctx.fillStyle = "#00ff88";
+    ctx.font = fontSize + "px monospace";
+    drops.forEach((drop, i) => {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(text, i * fontSize, drop.y);
+      drop.y += fontSize * drop.speed;
+      if (drop.y > canvas.height + 50) {
+        drop.y = Math.random() * -100;
+        drop.speed = 0.5 + Math.random() * 1.5;
+      }
+    });
   }
-  draw();
 
-  /* АВАТАР ИЗ TELEGRAM */
+  initMatrix();
+  window.addEventListener("resize", initMatrix);
+  setInterval(drawMatrix, 50);
+
+  /* --- АВАТАР ИЗ TELEGRAM --- */
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
