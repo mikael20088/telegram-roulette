@@ -108,7 +108,6 @@
       gap: 20px;
       padding: 20px;
       box-sizing: border-box;
-      cursor: pointer;
     }
 
     /* МАЛЕНЬКИЕ КВАДРАТИКИ С ПЛЮС */
@@ -122,6 +121,49 @@
       color: #fff;
       font-weight: bold;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .mini-square.selected {
+      background: rgba(0, 255, 136, 0.4);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+    }
+
+    /* ПОДАРОК В КВАДРАТИКЕ */
+    .selected-gift {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 255, 136, 0.3);
+      border-radius: 12px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 10;
+    }
+
+    .selected-gift.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .selected-gift .gift-emoji {
+      font-size: 28px;
+      margin-bottom: 2px;
+    }
+
+    .selected-gift .gift-name {
+      font-size: 8px;
+      color: #fff;
+      font-weight: 600;
+      text-align: center;
+      max-width: 60px;
+      line-height: 1.1;
     }
 
     /* МОДАЛЬНОЕ ОКНО С ПОДАРКАМИ */
@@ -204,13 +246,6 @@
       pointer-events: none;
     }
 
-    .search-results-count {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 14px;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
     .gifts-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -287,10 +322,18 @@
 
   <!-- БОЛЬШОЙ КВАДРАТ С 4 МАЛЕНЬКИМИ -->
   <div class="main-square" id="mainSquare">
-    <div class="mini-square">+</div>
-    <div class="mini-square">+</div>
-    <div class="mini-square">+</div>
-    <div class="mini-square">+</div>
+    <div class="mini-square" data-slot="0">
+      <div class="selected-gift" id="gift-slot-0"></div>
+    </div>
+    <div class="mini-square" data-slot="1">
+      <div class="selected-gift" id="gift-slot-1"></div>
+    </div>
+    <div class="mini-square" data-slot="2">
+      <div class="selected-gift" id="gift-slot-2"></div>
+    </div>
+    <div class="mini-square" data-slot="3">
+      <div class="selected-gift" id="gift-slot-3"></div>
+    </div>
   </div>
 </div>
 
@@ -305,8 +348,6 @@
       <input type="text" class="search-input" id="searchInput" placeholder="Поиск подарков..." />
       <span class="search-icon">🔍</span>
     </div>
-    
-    <div class="search-results-count" id="searchResultsCount">Найдено подарков: 12</div>
     
     <div class="gifts-grid" id="giftsGrid">
       <!-- Подарки генерируются JS -->
@@ -339,6 +380,7 @@
   ];
 
   let allGiftElements = [];
+  let currentSelectedSlot = null;
 
   /* --- МАТРИЦА --- */
   const canvas = document.getElementById("matrix");
@@ -382,14 +424,6 @@
 
   /* --- ПОИСК ПО ПОДАРКАМ --- */
   function filterGifts(searchTerm) {
-    const countElement = document.getElementById('searchResultsCount');
-    const filteredCount = allGiftElements.filter(el => {
-      const gift = rareGifts.find(g => g.id == el.dataset.id);
-      return gift.name.toLowerCase().includes(searchTerm.toLowerCase());
-    }).length;
-    
-    countElement.textContent = `Найдено подарков: ${filteredCount}`;
-    
     allGiftElements.forEach(el => {
       const gift = rareGifts.find(g => g.id == el.dataset.id);
       if (gift.name.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -401,9 +435,11 @@
   }
 
   /* --- ПОКАЗАТЬ ПОДАРКИ --- */
-  function showGifts() {
+  function showGifts(slotElement) {
+    currentSelectedSlot = slotElement.dataset.slot;
+    
     const grid = document.getElementById('giftsGrid');
-    allGiftElements = []; // Очищаем массив
+    allGiftElements = [];
     grid.innerHTML = '';
     
     rareGifts.forEach(gift => {
@@ -414,18 +450,44 @@
         <div class="gift-img">${gift.emoji}</div>
         <div class="gift-name">${gift.name}</div>
       `;
-      item.onclick = () => {
-        tg.showAlert(`Выбрал подарок: ${gift.name}!`);
-        tg.close();
-      };
+      item.onclick = () => selectGiftForSlot(gift, slotElement);
       grid.appendChild(item);
       allGiftElements.push(item);
     });
     
-    // Показываем все подарки по умолчанию
-    document.getElementById('searchResultsCount').textContent = `Найдено подарков: ${rareGifts.length}`;
-    
     document.getElementById('giftModal').classList.add('active');
+  }
+
+  /* --- ВЫБОР ПОДАРКА ДЛЯ СЛОТА --- */
+  function selectGiftForSlot(gift, slotElement) {
+    const slotGiftContainer = document.getElementById(`gift-slot-${currentSelectedSlot}`);
+    
+    // Очищаем предыдущий подарок
+    slotGiftContainer.innerHTML = '';
+    
+    // Создаем новый подарок в слоте
+    const giftEmoji = document.createElement('div');
+    giftEmoji.className = 'gift-emoji';
+    giftEmoji.textContent = gift.emoji;
+    
+    const giftName = document.createElement('div');
+    giftName.className = 'gift-name';
+    giftName.textContent = gift.name;
+    
+    slotGiftContainer.appendChild(giftEmoji);
+    slotGiftContainer.appendChild(giftName);
+    
+    // Анимация появления
+    slotGiftContainer.classList.add('active');
+    
+    // Подсвечиваем выбранный слот
+    document.querySelectorAll('.mini-square').forEach(s => s.classList.remove('selected'));
+    slotElement.classList.add('selected');
+    
+    // Закрываем модалку
+    document.getElementById('giftModal').classList.remove('active');
+    document.getElementById('searchInput').value = '';
+    filterGifts('');
   }
 
   /* --- АВАТАР ИЗ TELEGRAM --- */
@@ -448,10 +510,19 @@
       avatar.style.opacity = "1";
       document.getElementById("mainSquare").style.opacity = "1";
       
-      // ✅ ПРИВЯЗЫВАЕМ ОБРАБОТЧИКИ ПОСЛЕ ПОЯВЛЕНИЯ КВАДРАТОВ
-      document.getElementById('mainSquare').onclick = showGifts;
+      // ПРИВЯЗЫВАЕМ ОБРАБОТЧИКИ ПОСЛЕ ПОЯВЛЕНИЯ КВАДРАТОВ
+      document.getElementById('mainSquare').onclick = (e) => {
+        if (e.target === document.getElementById('mainSquare')) {
+          // Клик по большому квадрату - открываем первый слот
+          showGifts(document.querySelector('.mini-square[data-slot="0"]'));
+        }
+      };
+      
       document.querySelectorAll('.mini-square').forEach(square => {
-        square.onclick = showGifts;
+        square.onclick = (e) => {
+          e.stopPropagation();
+          showGifts(square);
+        };
       });
     }, 3500);
   }
@@ -464,15 +535,15 @@
   /* --- ОБРАБОТЧИКИ КНОПОК МОДАЛКИ --- */
   document.getElementById('closeModal').onclick = () => {
     document.getElementById('giftModal').classList.remove('active');
-    document.getElementById('searchInput').value = ''; // Очищаем поиск
-    filterGifts(''); // Показываем все подарки
+    document.getElementById('searchInput').value = '';
+    filterGifts('');
   };
 
   document.getElementById('giftModal').onclick = (e) => {
     if (e.target === document.getElementById('giftModal')) {
       document.getElementById('giftModal').classList.remove('active');
-      document.getElementById('searchInput').value = ''; // Очищаем поиск
-      filterGifts(''); // Показываем все подарки
+      document.getElementById('searchInput').value = '';
+      filterGifts('');
     }
   };
 </script>
