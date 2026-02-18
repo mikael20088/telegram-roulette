@@ -38,6 +38,22 @@
       transition: opacity 0.5s ease;
     }
 
+    /* 🆕 МАТРИЧНЫЙ ФОН ДЛЯ БОЛЬШОГО КВАДРАТА */
+    .matrix-glass {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 255, 120, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0, 255, 136, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(0, 255, 200, 0.15) 0%, transparent 50%);
+      backdrop-filter: blur(12px) saturate(150%);
+      -webkit-backdrop-filter: blur(12px) saturate(150%);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      box-shadow: 
+        0 8px 32px rgba(0, 255, 136, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
     /* ВИДЕО ПО ЦЕНТРУ */
     .video-wrapper {
       position: absolute;
@@ -90,14 +106,14 @@
       transition: opacity 0.5s ease;
     }
 
-    /* БОЛЬШОЙ КВАДРАТ ПОСЕРЕДИНЕ */
+    /* 🆕 БОЛЬШОЙ КВАДРАТ С МАТРИЧНЫМ СТЕКЛОМ */
     .main-square {
       position: absolute;
       top: 50%;
       left: 50%;
       width: 200px;
       height: 200px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(10, 20, 10, 0.4);
       border-radius: 20px;
       transform: translate(-50%, -50%);
       opacity: 0;
@@ -108,11 +124,38 @@
       gap: 20px;
       padding: 20px;
       box-sizing: border-box;
+      position: relative;
+    }
+
+    .main-square::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 200, 100, 0.05) 25%, rgba(0, 255, 200, 0.08) 50%, rgba(0, 150, 80, 0.03) 75%, rgba(0, 255, 136, 0.1) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.15) 0%, transparent 50%);
+      backdrop-filter: blur(15px) brightness(1.2) contrast(1.1);
+      -webkit-backdrop-filter: blur(15px) brightness(1.2) contrast(1.1);
+      border-radius: 20px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes matrixGlow {
+      0% { 
+        opacity: 0.7;
+        transform: scale(1);
+      }
+      100% { 
+        opacity: 1;
+        transform: scale(1.02);
+      }
     }
 
     /* МАЛЕНЬКИЕ КВАДРАТИКИ С ПЛЮС */
     .mini-square {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -124,16 +167,20 @@
       position: relative;
       overflow: hidden;
       transition: all 0.3s ease;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .mini-square.selected {
-      background: rgba(0, 255, 136, 0.4);
+      background: rgba(0, 255, 136, 0.3);
       box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+      border-color: rgba(0, 255, 136, 0.5);
     }
 
     .mini-square.filled {
-      background: rgba(0, 255, 136, 0.3);
+      background: rgba(0, 255, 136, 0.25);
       cursor: pointer;
+      border-color: rgba(0, 255, 136, 0.4);
     }
 
     /* ПЛЮСИК */
@@ -144,6 +191,7 @@
       z-index: 3;
       transition: opacity 0.3s ease;
       position: relative;
+      text-shadow: 0 0 8px rgba(0, 255, 136, 0.8);
     }
 
     /* ПОДАРОК В КВАДРАТИКЕ */
@@ -154,12 +202,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 255, 136, 0.3);
+      background: rgba(0, 255, 136, 0.2);
       border-radius: 12px;
       opacity: 0;
       transform: scale(0.5);
       transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
       z-index: 2;
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(0, 255, 136, 0.4);
     }
 
     .selected-gift.active {
@@ -170,6 +220,7 @@
     .selected-gift .gift-emoji {
       font-size: 28px;
       margin-bottom: 2px;
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
     }
 
     .selected-gift .gift-name {
@@ -179,6 +230,7 @@
       text-align: center;
       max-width: 60px;
       line-height: 1.1;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
     }
 
     /* МОДАЛЬНОЕ ОКНО С ПОДАРКАМИ */
@@ -276,6 +328,9 @@
       transition: all 0.2s ease;
       opacity: 1;
       transform: scale(1);
+      backdrop-filter: blur(4px);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .gift-item.hidden {
@@ -288,7 +343,7 @@
     }
 
     .gift-item:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.15);
       transform: scale(1.05);
     }
 
@@ -335,7 +390,7 @@
   <!-- АВАТАР -->
   <div class="avatar-top" id="avatar"></div>
 
-  <!-- БОЛЬШОЙ КВАДРАТ С 4 МАЛЕНЬКИМИ -->
+  <!-- 🆕 БОЛЬШОЙ КВАДРАТ С МАТРИЧНЫМ СТЕКЛОМ -->
   <div class="main-square" id="mainSquare">
     <div class="mini-square" data-slot="0">
       <div class="plus-sign">+</div>
