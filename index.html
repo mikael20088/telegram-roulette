@@ -133,7 +133,7 @@
 
     .mini-square.filled {
       background: rgba(0, 255, 136, 0.3);
-      cursor: default;
+      cursor: pointer;
     }
 
     /* ПЛЮСИК */
@@ -141,8 +141,9 @@
       font-size: 24px;
       color: #fff;
       font-weight: bold;
-      z-index: 2;
+      z-index: 3;
       transition: opacity 0.3s ease;
+      position: relative;
     }
 
     /* ПОДАРОК В КВАДРАТИКЕ */
@@ -158,7 +159,7 @@
       opacity: 0;
       transform: scale(0.5);
       transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      z-index: 1;
+      z-index: 2;
     }
 
     .selected-gift.active {
@@ -381,7 +382,7 @@
   // ЗАМЕДЛЯЕМ ВИДЕО до 0.7 скорости
   document.querySelector('video').playbackRate = 0.7;
 
-  /* РЕДКИЕ ПОДАРКИ */
+  /* ВСЕ ТЕЛЕГРАМ ПОДАРКИ */
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", id: 1 },
     { name: "Astral Shard", emoji: "💎", id: 2 },
@@ -394,7 +395,64 @@
     { name: "Artisan Brick", emoji: "🧱", id: 9 },
     { name: "Sharp Tongue", emoji: "🗡️", id: 10 },
     { name: "Jack-in-the-Box", emoji: "🎁", id: 11 },
-    { name: "Witch Hat", emoji: "🎃", id: 12 }
+    { name: "Witch Hat", emoji: "🎃", id: 12 },
+    { name: "Moon Pendant", emoji: "🌙", id: 13 },
+    { name: "Lunar Snake", emoji: "🐍", id: 14 },
+    { name: "Holiday Drink", emoji: "🥂", id: 15 },
+    { name: "Record Player", emoji: "🎵", id: 16 },
+    { name: "Joyful Bundle", emoji: "🎉", id: 17 },
+    { name: "Restless Jar", emoji: "🫙", id: 18 },
+    { name: "Big Year", emoji: "🎈", id: 19 },
+    { name: "Light Sword", emoji: "⚔️", id: 20 },
+    { name: "Jingle Bells", emoji: "🔔", id: 21 },
+    { name: "Eternal Candle", emoji: "🕯️", id: 22 },
+    { name: "Skull Flower", emoji: "💀🌸", id: 23 },
+    { name: "Sakura Flower", emoji: "🌸", id: 24 },
+    { name: "Jelly Bunny", emoji: "🐰", id: 25 },
+    { name: "Cupid Charm", emoji: "💘", id: 26 },
+    { name: "Hanging Star", emoji: "⭐", id: 27 },
+    { name: "Easter Egg", emoji: "🥚", id: 28 },
+    { name: "Spy Agaric", emoji: "🍄", id: 29 },
+    { name: "Homemade Cake", emoji: "🍰", id: 30 },
+    { name: "Snow Globe", emoji: "❄️", id: 31 },
+    { name: "Xmas Stocking", emoji: "🧦", id: 32 },
+    { name: "Scared Cat", emoji: "😿", id: 33 },
+    { name: "Spiced Wine", emoji: "🍷", id: 34 },
+    { name: "Evil Eye", emoji: "👁️", id: 35 },
+    { name: "Ionic Dryer", emoji: "💨", id: 36 },
+    { name: "Ginger Cookie", emoji: "🍪", id: 37 },
+    { name: "Hex Pot", emoji: "🪣", id: 38 },
+    { name: "Snake Box", emoji: "🐍📦", id: 39 },
+    { name: "Loot Bag", emoji: "💰", id: 40 },
+    { name: "Love Candle", emoji: "❤️🕯️", id: 41 },
+    { name: "Love Potion", emoji: "💕", id: 42 },
+    { name: "Kissed Frog", emoji: "🐸", id: 43 },
+    { name: "Neko Helmet", emoji: "🐱⛑️", id: 44 },
+    { name: "Pet Snake", emoji: "🐍", id: 45 },
+    { name: "Jester Hat", emoji: "🤡", id: 46 },
+    { name: "Flying Broom", emoji: "🧹", id: 47 },
+    { name: "Party Sparkler", emoji: "✨", id: 48 },
+    { name: "Star Notepad", emoji: "⭐📝", id: 49 },
+    { name: "Voodoo Doll", emoji: "🎎", id: 50 },
+    { name: "Bonded Ring", emoji: "💞", id: 51 },
+    { name: "Snow Mittens", emoji: "🧤", id: 52 },
+    { name: "Crystal Ball", emoji: "🔮", id: 53 },
+    { name: "Berry Box", emoji: "🍓", id: 54 },
+    { name: "Tama Gadget", emoji: "📱", id: 55 },
+    { name: "Valentine Box", emoji: "💝", id: 56 },
+    { name: "Cookie Heart", emoji: "❤️🍪", id: 57 },
+    { name: "Precious Peach", emoji: "🍑", id: 58 },
+    { name: "Bow Tie", emoji: "🎀", id: 59 },
+    { name: "Signet Ring", emoji: "💎", id: 60 },
+    { name: "Lol Pop", emoji: "🍭", id: 61 },
+    { name: "Santa Hat", emoji: "🎅", id: 62 },
+    { name: "Hypno Lollipop", emoji: "🍬", id: 63 },
+    { name: "Winter Wreath", emoji: "🎄", id: 64 },
+    { name: "Vintage Cigar", emoji: "🚬", id: 65 },
+    { name: "Bunny Muffin", emoji: "🐰🧁", id: 66 },
+    { name: "Mad Pumpkin", emoji: "🎃", id: 67 },
+    { name: "Eternal Rose", emoji: "🌹", id: 68 },
+    { name: "Jolly Chimp", emoji: "🐵", id: 69 }
   ];
 
   let allGiftElements = [];
@@ -545,9 +603,7 @@
       document.querySelectorAll('.mini-square').forEach(square => {
         square.onclick = (e) => {
           e.stopPropagation();
-          if (!square.classList.contains('filled')) {
-            showGifts(square);
-          }
+          showGifts(square);
         };
       });
     }, 3500);
