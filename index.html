@@ -169,17 +169,17 @@
     img.src = user.photo_url;
     avatar.appendChild(img);
 
-    // Через 1.2 секунды скрываем матрицу и видео, показываем чёрный фон
+    // Через 3 секунды скрываем матрицу и видео, показываем чёрный фон
     setTimeout(() => {
       document.getElementById("matrix").style.opacity = "0";
       document.getElementById("videoWrapper").style.opacity = "0";
       document.getElementById("blackScreen").style.opacity = "1";
-    }, 1200);
+    }, 3000);
 
-    // Через 1.5 секунды показываем аватар
+    // Через 3.5 секунды показываем аватар
     setTimeout(() => {
       avatar.style.opacity = "1";
-    }, 1500);
+    }, 3500);
   }
 </script>
 </body>
