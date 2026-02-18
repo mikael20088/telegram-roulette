@@ -131,6 +131,20 @@
       box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
     }
 
+    .mini-square.filled {
+      background: rgba(0, 255, 136, 0.3);
+      cursor: default;
+    }
+
+    /* ПЛЮСИК */
+    .plus-sign {
+      font-size: 24px;
+      color: #fff;
+      font-weight: bold;
+      z-index: 2;
+      transition: opacity 0.3s ease;
+    }
+
     /* ПОДАРОК В КВАДРАТИКЕ */
     .selected-gift {
       position: absolute;
@@ -144,7 +158,7 @@
       opacity: 0;
       transform: scale(0.5);
       transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      z-index: 10;
+      z-index: 1;
     }
 
     .selected-gift.active {
@@ -323,15 +337,19 @@
   <!-- БОЛЬШОЙ КВАДРАТ С 4 МАЛЕНЬКИМИ -->
   <div class="main-square" id="mainSquare">
     <div class="mini-square" data-slot="0">
+      <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-0"></div>
     </div>
     <div class="mini-square" data-slot="1">
+      <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-1"></div>
     </div>
     <div class="mini-square" data-slot="2">
+      <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-2"></div>
     </div>
     <div class="mini-square" data-slot="3">
+      <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-3"></div>
     </div>
   </div>
@@ -480,9 +498,12 @@
     // Анимация появления
     slotGiftContainer.classList.add('active');
     
-    // Подсвечиваем выбранный слот
-    document.querySelectorAll('.mini-square').forEach(s => s.classList.remove('selected'));
-    slotElement.classList.add('selected');
+    // Скрываем плюсик и помечаем слот как заполненный
+    const plusSign = slotElement.querySelector('.plus-sign');
+    plusSign.style.opacity = '0';
+    
+    slotElement.classList.add('filled');
+    slotElement.classList.remove('selected');
     
     // Закрываем модалку
     document.getElementById('giftModal').classList.remove('active');
@@ -513,15 +534,20 @@
       // ПРИВЯЗЫВАЕМ ОБРАБОТЧИКИ ПОСЛЕ ПОЯВЛЕНИЯ КВАДРАТОВ
       document.getElementById('mainSquare').onclick = (e) => {
         if (e.target === document.getElementById('mainSquare')) {
-          // Клик по большому квадрату - открываем первый слот
-          showGifts(document.querySelector('.mini-square[data-slot="0"]'));
+          // Клик по большому квадрату - открываем первый свободный слот
+          const firstEmpty = document.querySelector('.mini-square:not(.filled)');
+          if (firstEmpty) {
+            showGifts(firstEmpty);
+          }
         }
       };
       
       document.querySelectorAll('.mini-square').forEach(square => {
         square.onclick = (e) => {
           e.stopPropagation();
-          showGifts(square);
+          if (!square.classList.contains('filled')) {
+            showGifts(square);
+          }
         };
       });
     }, 3500);
