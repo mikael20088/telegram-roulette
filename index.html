@@ -89,6 +89,38 @@
       opacity: 0;
       transition: opacity 0.5s ease;
     }
+
+    /* БОЛЬШОЙ КВАДРАТ ПОСЕРЕДИНЕ */
+    .main-square {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* МАЛЕНЬКИЕ КВАДРАТИКИ С ПЛЮС */
+    .mini-square {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -114,6 +146,14 @@
 
   <!-- АВАТАР -->
   <div class="avatar-top" id="avatar"></div>
+
+  <!-- БОЛЬШОЙ КВАДРАТ С 4 МАЛЕНЬКИМИ -->
+  <div class="main-square" id="mainSquare">
+    <div class="mini-square">+</div>
+    <div class="mini-square">+</div>
+    <div class="mini-square">+</div>
+    <div class="mini-square">+</div>
+  </div>
 </div>
 
 <script>
@@ -179,9 +219,10 @@
       document.getElementById("blackScreen").style.opacity = "1";
     }, 3000);
 
-    // Через 3.5 секунды показываем аватар
+    // Через 3.5 секунды показываем аватар + большой квадрат
     setTimeout(() => {
       avatar.style.opacity = "1";
+      document.getElementById("mainSquare").style.opacity = "1";
     }, 3500);
   }
 </script>
