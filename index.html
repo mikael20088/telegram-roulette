@@ -223,6 +223,14 @@
       text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
     }
 
+    .selected-gift .gift-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      object-fit: cover;
+      margin-bottom: 2px;
+    }
+
     .selected-gift .gift-name {
       font-size: 8px;
       color: #fff;
@@ -357,6 +365,14 @@
       align-items: center;
       justify-content: center;
       font-size: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .gift-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .gift-name {
@@ -439,92 +455,103 @@
 
   /* 🆕 ПОЛНЫЙ КАТАЛОГ ТЕЛЕГРАМ ПОДАРКОВ */
   const rareGifts = [
-    { name: "Durov's Cap", emoji: "🎩", id: 1 },
-    { name: "Top Hat", emoji: "🎩", id: 70 },
-    { name: "Astral Shard", emoji: "💎", id: 2 },
-    { name: "Mini Oscar", emoji: "🏆", id: 3 },
-    { name: "Electric Skull", emoji: "💀", id: 4 },
-    { name: "Diamond Ring", emoji: "💍", id: 5 },
-    { name: "Stellar Rocket", emoji: "🚀", id: 6 },
-    { name: "Trapped Heart", emoji: "💖", id: 7 },
-    { name: "Gem Signet", emoji: "🔮", id: 8 },
-    { name: "Artisan Brick", emoji: "🧱", id: 9 },
-    { name: "Sharp Tongue", emoji: "🗡️", id: 10 },
-    { name: "Jack-in-the-Box", emoji: "🎁", id: 11 },
-    { name: "Witch Hat", emoji: "🎃", id: 12 },
-    { name: "Moon Pendant", emoji: "🌙", id: 13 },
-    { name: "Lunar Snake", emoji: "🐍", id: 14 },
-    { name: "Holiday Drink", emoji: "🥂", id: 15 },
-    { name: "Record Player", emoji: "🎵", id: 16 },
-    { name: "Joyful Bundle", emoji: "🎉", id: 17 },
-    { name: "Restless Jar", emoji: "🫙", id: 18 },
-    { name: "Big Year", emoji: "🎈", id: 19 },
-    { name: "Light Sword", emoji: "⚔️", id: 20 },
-    { name: "Jingle Bells", emoji: "🔔", id: 21 },
-    { name: "Eternal Candle", emoji: "🕯️", id: 22 },
-    { name: "Skull Flower", emoji: "💀🌸", id: 23 },
-    { name: "Sakura Flower", emoji: "🌸", id: 24 },
-    { name: "Jelly Bunny", emoji: "🐰", id: 25 },
-    { name: "Cupid Charm", emoji: "💘", id: 26 },
-    { name: "Hanging Star", emoji: "⭐", id: 27 },
-    { name: "Easter Egg", emoji: "🥚", id: 28 },
-    { name: "Spy Agaric", emoji: "🍄", id: 29 },
-    { name: "Homemade Cake", emoji: "🍰", id: 30 },
-    { name: "Snow Globe", emoji: "❄️", id: 31 },
-    { name: "Xmas Stocking", emoji: "🧦", id: 32 },
-    { name: "Scared Cat", emoji: "😿", id: 33 },
-    { name: "Spiced Wine", emoji: "🍷", id: 34 },
-    { name: "Evil Eye", emoji: "👁️", id: 35 },
-    { name: "Ionic Dryer", emoji: "💨", id: 36 },
-    { name: "Ginger Cookie", emoji: "🍪", id: 37 },
-    { name: "Hex Pot", emoji: "🪣", id: 38 },
-    { name: "Snake Box", emoji: "🐍📦", id: 39 },
-    { name: "Loot Bag", emoji: "💰", id: 40 },
-    { name: "Love Candle", emoji: "❤️🕯️", id: 41 },
-    { name: "Love Potion", emoji: "💕", id: 42 },
-    { name: "Kissed Frog", emoji: "🐸", id: 43 },
-    { name: "Neko Helmet", emoji: "🐱⛑️", id: 44 },
-    { name: "Pet Snake", emoji: "🐍", id: 45 },
-    { name: "Jester Hat", emoji: "🤡", id: 46 },
-    { name: "Flying Broom", emoji: "🧹", id: 47 },
-    { name: "Party Sparkler", emoji: "✨", id: 48 },
-    { name: "Star Notepad", emoji: "⭐📝", id: 49 },
-    { name: "Voodoo Doll", emoji: "🎎", id: 50 },
-    { name: "Bonded Ring", emoji: "💞", id: 51 },
-    { name: "Snow Mittens", emoji: "🧤", id: 52 },
-    { name: "Crystal Ball", emoji: "🔮", id: 53 },
-    { name: "Berry Box", emoji: "🍓", id: 54 },
-    { name: "Tama Gadget", emoji: "📱", id: 55 },
-    { name: "Valentine Box", emoji: "💝", id: 56 },
-    { name: "Cookie Heart", emoji: "❤️🍪", id: 57 },
-    { name: "Precious Peach", emoji: "🍑", id: 58 },
-    { name: "Bow Tie", emoji: "🎀", id: 59 },
-    { name: "Signet Ring", emoji: "💎", id: 60 },
-    { name: "Lol Pop", emoji: "🍭", id: 61 },
-    { name: "Santa Hat", emoji: "🎅", id: 62 },
-    { name: "Hypno Lollipop", emoji: "🍬", id: 63 },
-    { name: "Winter Wreath", emoji: "🎄", id: 64 },
-    { name: "Vintage Cigar", emoji: "🚬", id: 65 },
-    { name: "Bunny Muffin", emoji: "🐰🧁", id: 66 },
-    { name: "Mad Pumpkin", emoji: "🎃", id: 67 },
-    { name: "Eternal Rose", emoji: "🌹", id: 68 },
-    { name: "Jolly Chimp", emoji: "🐵", id: 69 },
-    /* 🆕 ДОБАВЛЕННЫЕ ПОДАРКИ ИЗ СПИСКА */
-    { name: "Toy Bear", emoji: "🧸", id: 71 },
-    { name: "Candy Cane", emoji: "🍭", id: 72 },
-    { name: "Sleigh Bell", emoji: "🔔", id: 73 },
-    { name: "Swiss Watch", emoji: "⌚", id: 74 },
-    { name: "Genie Lamp", emoji: "🪔", id: 75 },
-    { name: "Plush Pepe", emoji: "🐸", id: 76 },
-    { name: "Perfume Bottle", emoji: "💨", id: 77 },
-    { name: "Magic Potion", emoji: "🧪", id: 78 },
-    { name: "Ion Gem", emoji: "💎", id: 79 },
-    { name: "Desk Calendar", emoji: "🗓", id: 80 },
-    { name: "B-Day Candle", emoji: "🕯️", id: 81 }
+    { name: "Durov's Cap", emoji: "🎩", image: "https://raw.githubusercontent.com/mikael20088/telegram-roulette/main/gift1.png", id: 1 },
+    { name: "Top Hat", emoji: "🎩", image: null, id: 70 },
+    { name: "Astral Shard", emoji: "💎", image: null, id: 2 },
+    { name: "Mini Oscar", emoji: "🏆", image: null, id: 3 },
+    { name: "Electric Skull", emoji: "💀", image: null, id: 4 },
+    { name: "Diamond Ring", emoji: "💍", image: null, id: 5 },
+    { name: "Stellar Rocket", emoji: "🚀", image: null, id: 6 },
+    { name: "Trapped Heart", emoji: "💖", image: null, id: 7 },
+    { name: "Gem Signet", emoji: "🔮", image: null, id: 8 },
+    { name: "Artisan Brick", emoji: "🧱", image: null, id: 9 },
+    { name: "Sharp Tongue", emoji: "🗡️", image: null, id: 10 },
+    { name: "Jack-in-the-Box", emoji: "🎁", image: null, id: 11 },
+    { name: "Witch Hat", emoji: "🎃", image: null, id: 12 },
+    { name: "Moon Pendant", emoji: "🌙", image: null, id: 13 },
+    { name: "Lunar Snake", emoji: "🐍", image: null, id: 14 },
+    { name: "Holiday Drink", emoji: "🥂", image: null, id: 15 },
+    { name: "Record Player", emoji: "🎵", image: null, id: 16 },
+    { name: "Joyful Bundle", emoji: "🎉", image: null, id: 17 },
+    { name: "Restless Jar", emoji: "🫙", image: null, id: 18 },
+    { name: "Big Year", emoji: "🎈", image: null, id: 19 },
+    { name: "Light Sword", emoji: "⚔️", image: null, id: 20 },
+    { name: "Jingle Bells", emoji: "🔔", image: null, id: 21 },
+    { name: "Eternal Candle", emoji: "🕯️", image: null, id: 22 },
+    { name: "Skull Flower", emoji: "💀🌸", image: null, id: 23 },
+    { name: "Sakura Flower", emoji: "🌸", image: null, id: 24 },
+    { name: "Jelly Bunny", emoji: "🐰", image: null, id: 25 },
+    { name: "Cupid Charm", emoji: "💘", image: null, id: 26 },
+    { name: "Hanging Star", emoji: "⭐", image: null, id: 27 },
+    { name: "Easter Egg", emoji: "🥚", image: null, id: 28 },
+    { name: "Spy Agaric", emoji: "🍄", image: null, id: 29 },
+    { name: "Homemade Cake", emoji: "🍰", image: null, id: 30 },
+    { name: "Snow Globe", emoji: "❄️", image: null, id: 31 },
+    { name: "Xmas Stocking", emoji: "🧦", image: null, id: 32 },
+    { name: "Scared Cat", emoji: "😿", image: null, id: 33 },
+    { name: "Spiced Wine", emoji: "🍷", image: null, id: 34 },
+    { name: "Evil Eye", emoji: "👁️", image: null, id: 35 },
+    { name: "Ionic Dryer", emoji: "💨", image: null, id: 36 },
+    { name: "Ginger Cookie", emoji: "🍪", image: null, id: 37 },
+    { name: "Hex Pot", emoji: "🪣", image: null, id: 38 },
+    { name: "Snake Box", emoji: "🐍📦", image: null, id: 39 },
+    { name: "Loot Bag", emoji: "💰", image: null, id: 40 },
+    { name: "Love Candle", emoji: "❤️🕯️", image: null, id: 41 },
+    { name: "Love Potion", emoji: "💕", image: null, id: 42 },
+    { name: "Kissed Frog", emoji: "🐸", image: null, id: 43 },
+    { name: "Neko Helmet", emoji: "🐱⛑️", image: null, id: 44 },
+    { name: "Pet Snake", emoji: "🐍", image: null, id: 45 },
+    { name: "Jester Hat", emoji: "🤡", image: null, id: 46 },
+    { name: "Flying Broom", emoji: "🧹", image: null, id: 47 },
+    { name: "Party Sparkler", emoji: "✨", image: null, id: 48 },
+    { name: "Star Notepad", emoji: "⭐📝", image: null, id: 49 },
+    { name: "Voodoo Doll", emoji: "🎎", image: null, id: 50 },
+    { name: "Bonded Ring", emoji: "💞", image: null, id: 51 },
+    { name: "Snow Mittens", emoji: "🧤", image: null, id: 52 },
+    { name: "Crystal Ball", emoji: "🔮", image: null, id: 53 },
+    { name: "Berry Box", emoji: "🍓", image: null, id: 54 },
+    { name: "Tama Gadget", emoji: "📱", image: null, id: 55 },
+    { name: "Valentine Box", emoji: "💝", image: null, id: 56 },
+    { name: "Cookie Heart", emoji: "❤️🍪", image: null, id: 57 },
+    { name: "Precious Peach", emoji: "🍑", image: null, id: 58 },
+    { name: "Bow Tie", emoji: "🎀", image: null, id: 59 },
+    { name: "Signet Ring", emoji: "💎", image: null, id: 60 },
+    { name: "Lol Pop", emoji: "🍭", image: null, id: 61 },
+    { name: "Santa Hat", emoji: "🎅", image: null, id: 62 },
+    { name: "Hypno Lollipop", emoji: "🍬", image: null, id: 63 },
+    { name: "Winter Wreath", emoji: "🎄", image: null, id: 64 },
+    { name: "Vintage Cigar", emoji: "🚬", image: null, id: 65 },
+    { name: "Bunny Muffin", emoji: "🐰🧁", image: null, id: 66 },
+    { name: "Mad Pumpkin", emoji: "🎃", image: null, id: 67 },
+    { name: "Eternal Rose", emoji: "🌹", image: null, id: 68 },
+    { name: "Jolly Chimp", emoji: "🐵", image: null, id: 69 },
+    { name: "Toy Bear", emoji: "🧸", image: null, id: 71 },
+    { name: "Candy Cane", emoji: "🍭", image: null, id: 72 },
+    { name: "Sleigh Bell", emoji: "🔔", image: null, id: 73 },
+    { name: "Swiss Watch", emoji: "⌚", image: null, id: 74 },
+    { name: "Genie Lamp", emoji: "🪔", image: null, id: 75 },
+    { name: "Plush Pepe", emoji: "🐸", image: null, id: 76 },
+    { name: "Perfume Bottle", emoji: "💨", image: null, id: 77 },
+    { name: "Magic Potion", emoji: "🧪", image: null, id: 78 },
+    { name: "Ion Gem", emoji: "💎", image: null, id: 79 },
+    { name: "Desk Calendar", emoji: "🗓", image: null, id: 80 },
+    { name: "B-Day Candle", emoji: "🕯️", image: null, id: 81 }
   ];
 
   let allGiftElements = [];
   let currentSelectedSlot = null;
+  let giftImagesCache = {};
+
+  /* --- ПРЕДОЗАГРУЗКА ИЗОБРАЖЕНИЙ --- */
+  function preloadGiftImages() {
+    rareGifts.forEach(gift => {
+      if (gift.image) {
+        const img = new Image();
+        img.src = gift.image;
+        giftImagesCache[gift.id] = img;
+      }
+    });
+  }
 
   /* --- МАТРИЦА --- */
   const canvas = document.getElementById("matrix");
@@ -577,10 +604,9 @@
       const scoreB = getSearchScore(b.name, searchTerm);
       
       if (scoreA !== scoreB) {
-        return scoreB - scoreA; // Выше score = раньше показываем
+        return scoreB - scoreA;
       }
       
-      // Если совпадение одинаковое, сортируем по алфавиту
       return a.name.localeCompare(b.name);
     });
   }
@@ -588,22 +614,18 @@
   function getSearchScore(name, searchTerm) {
     const lowerName = name.toLowerCase();
     
-    // 🎯 1. Начинается с поискового запроса (максимальный приоритет)
     if (lowerName.startsWith(searchTerm)) {
       return 1000;
     }
     
-    // 🎯 2. Содержит запрос в начале слова
     if (lowerName.includes(` ${searchTerm}`)) {
       return 800;
     }
     
-    // 🎯 3. Первая буква совпадает
     if (lowerName[0] === searchTerm[0]) {
       return 500;
     }
     
-    // 🎯 4. Содержит запрос где-то в середине (вторая, третья буква и т.д.)
     if (lowerName.includes(searchTerm)) {
       return 100;
     }
@@ -619,7 +641,6 @@
     
     const sortedGifts = sortGiftsByRelevance(filteredGifts, searchTerm);
     
-    // Пересоздаем грид с учетом новой сортировки
     const grid = document.getElementById('giftsGrid');
     allGiftElements = [];
     grid.innerHTML = '';
@@ -628,10 +649,21 @@
       const item = document.createElement('div');
       item.className = 'gift-item';
       item.dataset.id = gift.id;
-      item.innerHTML = `
-        <div class="gift-img">${gift.emoji}</div>
-        <div class="gift-name">${gift.name}</div>
-      `;
+      
+      if (gift.image) {
+        item.innerHTML = `
+          <div class="gift-img">
+            <img src="${gift.image}" alt="${gift.name}">
+          </div>
+          <div class="gift-name">${gift.name}</div>
+        `;
+      } else {
+        item.innerHTML = `
+          <div class="gift-img">${gift.emoji}</div>
+          <div class="gift-name">${gift.name}</div>
+        `;
+      }
+      
       item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
       grid.appendChild(item);
       allGiftElements.push(item);
@@ -652,10 +684,21 @@
       const item = document.createElement('div');
       item.className = 'gift-item';
       item.dataset.id = gift.id;
-      item.innerHTML = `
-        <div class="gift-img">${gift.emoji}</div>
-        <div class="gift-name">${gift.name}</div>
-      `;
+      
+      if (gift.image) {
+        item.innerHTML = `
+          <div class="gift-img">
+            <img src="${gift.image}" alt="${gift.name}">
+          </div>
+          <div class="gift-name">${gift.name}</div>
+        `;
+      } else {
+        item.innerHTML = `
+          <div class="gift-img">${gift.emoji}</div>
+          <div class="gift-name">${gift.name}</div>
+        `;
+      }
+      
       item.onclick = () => selectGiftForSlot(gift, slotElement);
       grid.appendChild(item);
       allGiftElements.push(item);
@@ -668,32 +711,34 @@
   function selectGiftForSlot(gift, slotElement) {
     const slotGiftContainer = document.getElementById(`gift-slot-${currentSelectedSlot}`);
     
-    // Очищаем предыдущий подарок
     slotGiftContainer.innerHTML = '';
     
-    // Создаем новый подарок в слоте
-    const giftEmoji = document.createElement('div');
-    giftEmoji.className = 'gift-emoji';
-    giftEmoji.textContent = gift.emoji;
+    if (gift.image) {
+      const giftImg = document.createElement('img');
+      giftImg.className = 'gift-img';
+      giftImg.src = gift.image;
+      giftImg.alt = gift.name;
+      slotGiftContainer.appendChild(giftImg);
+    } else {
+      const giftEmoji = document.createElement('div');
+      giftEmoji.className = 'gift-emoji';
+      giftEmoji.textContent = gift.emoji;
+      slotGiftContainer.appendChild(giftEmoji);
+    }
     
     const giftName = document.createElement('div');
     giftName.className = 'gift-name';
     giftName.textContent = gift.name;
-    
-    slotGiftContainer.appendChild(giftEmoji);
     slotGiftContainer.appendChild(giftName);
     
-    // Анимация появления
     slotGiftContainer.classList.add('active');
     
-    // Скрываем плюсик и помечаем слот как заполненный
     const plusSign = slotElement.querySelector('.plus-sign');
     plusSign.style.opacity = '0';
     
     slotElement.classList.add('filled');
     slotElement.classList.remove('selected');
     
-    // Закрываем модалку
     document.getElementById('giftModal').classList.remove('active');
     document.getElementById('searchInput').value = '';
   }
@@ -706,22 +751,21 @@
     img.src = user.photo_url;
     avatar.appendChild(img);
 
-    // Через 3 секунды скрываем матрицу и видео, показываем чёрный фон
+    // Предзагружаем изображения подарков
+    preloadGiftImages();
+
     setTimeout(() => {
       document.getElementById("matrix").style.opacity = "0";
       document.getElementById("videoWrapper").style.opacity = "0";
       document.getElementById("blackScreen").style.opacity = "1";
     }, 3000);
 
-    // Через 3.5 секунды показываем аватар + большой квадрат
     setTimeout(() => {
       avatar.style.opacity = "1";
       document.getElementById("mainSquare").style.opacity = "1";
       
-      // ПРИВЯЗЫВАЕМ ОБРАБОТЧИКИ ПОСЛЕ ПОЯВЛЕНИЯ КВАДРАТОВ
       document.getElementById('mainSquare').onclick = (e) => {
         if (e.target === document.getElementById('mainSquare')) {
-          // Клик по большому квадрату - открываем первый свободный слот
           const firstEmpty = document.querySelector('.mini-square:not(.filled)');
           if (firstEmpty) {
             showGifts(firstEmpty);
