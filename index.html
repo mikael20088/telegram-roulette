@@ -236,10 +236,10 @@
 
   <!-- БОЛЬШОЙ КВАДРАТ С 4 МАЛЕНЬКИМИ -->
   <div class="main-square" id="mainSquare">
-    <div class="mini-square" data-gift="1">+</div>
-    <div class="mini-square" data-gift="2">+</div>
-    <div class="mini-square" data-gift="3">+</div>
-    <div class="mini-square" data-gift="4">+</div>
+    <div class="mini-square">+</div>
+    <div class="mini-square">+</div>
+    <div class="mini-square">+</div>
+    <div class="mini-square">+</div>
   </div>
 </div>
 
@@ -273,7 +273,7 @@
     { name: "Trapped Heart", emoji: "💖", id: 7 },
     { name: "Gem Signet", emoji: "🔮", id: 8 },
     { name: "Artisan Brick", emoji: "🧱", id: 9 },
-    { name: "Sharp Tongue", emoji: "🗡️️", id: 10 },
+    { name: "Sharp Tongue", emoji: "🗡️", id: 10 },
     { name: "Jack-in-the-Box", emoji: "🎁", id: 11 },
     { name: "Witch Hat", emoji: "🎃", id: 12 }
   ];
@@ -336,6 +336,8 @@
       };
       grid.appendChild(item);
     });
+    
+    document.getElementById('giftModal').classList.add('active');
   }
 
   /* --- АВАТАР ИЗ TELEGRAM --- */
@@ -357,16 +359,16 @@
     setTimeout(() => {
       avatar.style.opacity = "1";
       document.getElementById("mainSquare").style.opacity = "1";
+      
+      // ✅ ПРИВЯЗЫВАЕМ ОБРАБОТЧИКИ ПОСЛЕ ПОЯВЛЕНИЯ КВАДРАТОВ
+      document.getElementById('mainSquare').onclick = showGifts;
+      document.querySelectorAll('.mini-square').forEach(square => {
+        square.onclick = showGifts;
+      });
     }, 3500);
   }
 
-  /* --- ОБРАБОТЧИКИ КНОПОК --- */
-  document.getElementById('mainSquare').onclick = showGifts;
-
-  document.querySelectorAll('.mini-square').forEach(square => {
-    square.onclick = showGifts;
-  });
-
+  /* --- ОБРАБОТЧИКИ КНОПОК МОДАЛКИ --- */
   document.getElementById('closeModal').onclick = () => {
     document.getElementById('giftModal').classList.remove('active');
   };
