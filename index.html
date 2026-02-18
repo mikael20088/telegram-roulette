@@ -38,7 +38,7 @@
       transition: opacity 0.5s ease;
     }
 
-    /* 🆕 МАТРИЧНЫЙ ФОН ДЛЯ БОЛЬШОГО КВАДРАТА */
+    /* МАТРИЧНЫЙ ФОН ДЛЯ БОЛЬШОГО КВАДРАТА */
     .matrix-glass {
       position: absolute;
       inset: 0;
@@ -106,7 +106,7 @@
       transition: opacity 0.5s ease;
     }
 
-    /* 🆕 БОЛЬШОЙ КВАДРАТ С МАТРИЧНЫМ СТЕКЛОМ */
+    /* 🆕 БОЛЬШОЙ КВАДРАТ С МАТРИЧНЫМ СТЕКЛОМ - УВЕЛИЧЕННЫЙ */
     .main-square {
       position: absolute;
       top: 50%;
@@ -121,8 +121,8 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 20px;
-      padding: 20px;
+      gap: 12px;
+      padding: 10px;
       box-sizing: border-box;
       position: relative;
     }
@@ -153,7 +153,7 @@
       }
     }
 
-    /* МАЛЕНЬКИЕ КВАДРАТИКИ С ПЛЮС */
+    /* МАЛЕНЬКИЕ КВАДРАТИКИ - БЕЗ PADDING ДЛЯ ПОЛНОГО РАЗМЕРА */
     .mini-square {
       background: rgba(255, 255, 255, 0.15);
       border-radius: 12px;
@@ -169,6 +169,7 @@
       transition: all 0.3s ease;
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0; /* 🆕 УБРАН PADDING */
     }
 
     .mini-square.selected {
@@ -217,19 +218,18 @@
       transform: scale(1);
     }
 
-    /* 🆕 СПЕЦИАЛЬНЫЙ БОЛЬШОЙ Durov's Cap */
+    /* 🆕 Durov's Cap - ПОЛНЫЙ РАЗМЕР ПОДКВАДРАТИКА */
     .selected-gift.durov-cap .gift-img {
-      width: 44px !important;
-      height: 44px !important;
-      border-radius: 8px;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 12px;
       object-fit: cover;
       margin-bottom: 0;
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
     }
 
     .selected-gift.durov-cap .gift-name {
-      font-size: 6px !important;
-      margin-top: 2px;
+      display: none; /* 🆕 СКРЫТО ДЛЯ ПОЛНОГО РАЗМЕРА */
     }
 
     .selected-gift .gift-emoji {
@@ -495,7 +495,7 @@
     { name: "Trapped Heart", emoji: "💖", image: null, id: 7 },
     { name: "Gem Signet", emoji: "🔮", image: null, id: 8 },
     { name: "Artisan Brick", emoji: "🧱", image: null, id: 9 },
-    { name: "Sharp Tongue", emoji: "🗡️", image: null, id: 10 },
+    { name: "Sharp Tongue", emoji: "🗡", image: null, id: 10 },
     { name: "Jack-in-the-Box", emoji: "🎁", image: null, id: 11 },
     { name: "Witch Hat", emoji: "🎃", image: null, id: 12 },
     { name: "Moon Pendant", emoji: "🌙", image: null, id: 13 },
@@ -507,12 +507,12 @@
     { name: "Big Year", emoji: "🎈", image: null, id: 19 },
     { name: "Light Sword", emoji: "⚔️", image: null, id: 20 },
     { name: "Jingle Bells", emoji: "🔔", image: null, id: 21 },
-    { name: "Eternal Candle", emoji: "🕯️", image: null, id: 22 },
+    { name: "Eternal Candle", emoji: "🕯", image: null, id: 22 },
     { name: "Skull Flower", emoji: "💀🌸", image: null, id: 23 },
     { name: "Sakura Flower", emoji: "🌸", image: null, id: 24 },
     { name: "Jelly Bunny", emoji: "🐰", image: null, id: 25 },
     { name: "Cupid Charm", emoji: "💘", image: null, id: 26 },
-    { name: "Hanging Star", emoji: "⭐", image: null, id: 27 },
+    { name: "Hanging Star", emoji: "⭐️", image: null, id: 27 },
     { name: "Easter Egg", emoji: "🥚", image: null, id: 28 },
     { name: "Spy Agaric", emoji: "🍄", image: null, id: 29 },
     { name: "Homemade Cake", emoji: "🍰", image: null, id: 30 },
@@ -520,21 +520,21 @@
     { name: "Xmas Stocking", emoji: "🧦", image: null, id: 32 },
     { name: "Scared Cat", emoji: "😿", image: null, id: 33 },
     { name: "Spiced Wine", emoji: "🍷", image: null, id: 34 },
-    { name: "Evil Eye", emoji: "👁️", image: null, id: 35 },
+    { name: "Evil Eye", emoji: "👁", image: null, id: 35 },
     { name: "Ionic Dryer", emoji: "💨", image: null, id: 36 },
     { name: "Ginger Cookie", emoji: "🍪", image: null, id: 37 },
     { name: "Hex Pot", emoji: "🪣", image: null, id: 38 },
     { name: "Snake Box", emoji: "🐍📦", image: null, id: 39 },
     { name: "Loot Bag", emoji: "💰", image: null, id: 40 },
-    { name: "Love Candle", emoji: "❤️🕯️", image: null, id: 41 },
+    { name: "Love Candle", emoji: "❤️🕯", image: null, id: 41 },
     { name: "Love Potion", emoji: "💕", image: null, id: 42 },
     { name: "Kissed Frog", emoji: "🐸", image: null, id: 43 },
-    { name: "Neko Helmet", emoji: "🐱⛑️", image: null, id: 44 },
+    { name: "Neko Helmet", emoji: "🐱⛑", image: null, id: 44 },
     { name: "Pet Snake", emoji: "🐍", image: null, id: 45 },
     { name: "Jester Hat", emoji: "🤡", image: null, id: 46 },
     { name: "Flying Broom", emoji: "🧹", image: null, id: 47 },
     { name: "Party Sparkler", emoji: "✨", image: null, id: 48 },
-    { name: "Star Notepad", emoji: "⭐📝", image: null, id: 49 },
+    { name: "Star Notepad", emoji: "⭐️📝", image: null, id: 49 },
     { name: "Voodoo Doll", emoji: "🎎", image: null, id: 50 },
     { name: "Bonded Ring", emoji: "💞", image: null, id: 51 },
     { name: "Snow Mittens", emoji: "🧤", image: null, id: 52 },
@@ -558,14 +558,14 @@
     { name: "Toy Bear", emoji: "🧸", image: null, id: 71 },
     { name: "Candy Cane", emoji: "🍭", image: null, id: 72 },
     { name: "Sleigh Bell", emoji: "🔔", image: null, id: 73 },
-    { name: "Swiss Watch", emoji: "⌚", image: null, id: 74 },
+    { name: "Swiss Watch", emoji: "⌚️", image: null, id: 74 },
     { name: "Genie Lamp", emoji: "🪔", image: null, id: 75 },
     { name: "Plush Pepe", emoji: "🐸", image: null, id: 76 },
     { name: "Perfume Bottle", emoji: "💨", image: null, id: 77 },
     { name: "Magic Potion", emoji: "🧪", image: null, id: 78 },
     { name: "Ion Gem", emoji: "💎", image: null, id: 79 },
     { name: "Desk Calendar", emoji: "🗓", image: null, id: 80 },
-    { name: "B-Day Candle", emoji: "🕯️", image: null, id: 81 }
+    { name: "B-Day Candle", emoji: "🕯", image: null, id: 81 }
   ];
 
   let allGiftElements = [];
