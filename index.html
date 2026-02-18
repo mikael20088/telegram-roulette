@@ -498,21 +498,83 @@
   window.addEventListener("resize", initMatrix);
   matrixInterval = setInterval(drawMatrix, 50);
 
-  /* --- ПОИСК ПО ПОДАРКАМ --- */
-  function filterGifts(searchTerm) {
-    allGiftElements.forEach(el => {
-      const gift = rareGifts.find(g => g.id == el.dataset.id);
-      if (gift.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        el.classList.remove('hidden');
-      } else {
-        el.classList.add('hidden');
+  /* --- 🆕 НОВЫЙ ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК --- */
+  function sortGiftsByRelevance(gifts, searchTerm) {
+    if (!searchTerm) return gifts;
+
+    searchTerm = searchTerm.toLowerCase();
+    
+    return gifts.sort((a, b) => {
+      const scoreA = getSearchScore(a.name, searchTerm);
+      const scoreB = getSearchScore(b.name, searchTerm);
+      
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA; // Выше score = раньше показываем
       }
+      
+      // Если совпадение одинаковое, сортируем по алфавиту
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  function getSearchScore(name, searchTerm) {
+    const lowerName = name.toLowerCase();
+    
+    // 🎯 1. Начинается с поискового запроса (максимальный приоритет)
+    if (lowerName.startsWith(searchTerm)) {
+      return 1000;
+    }
+    
+    // 🎯 2. Содержит запрос в начале слова
+    if (lowerName.includes(` ${searchTerm}`)) {
+      return 800;
+    }
+    
+    // 🎯 3. Первая буква совпадает
+    if (lowerName[0] === searchTerm[0]) {
+      return 500;
+    }
+    
+    // 🎯 4. Содержит запрос где-то в середине (вторая, третья буква и т.д.)
+    if (lowerName.includes(searchTerm)) {
+      return 100;
+    }
+    
+    return 0;
+  }
+
+  /* --- 🆕 ФИЛЬТР + СОРТИРОВКА ПО ПОИСКУ --- */
+  function filterAndSortGifts(searchTerm) {
+    const filteredGifts = rareGifts.filter(gift => 
+      gift.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    const sortedGifts = sortGiftsByRelevance(filteredGifts, searchTerm);
+    
+    // Пересоздаем грид с учетом новой сортировки
+    const grid = document.getElementById('giftsGrid');
+    allGiftElements = [];
+    grid.innerHTML = '';
+    
+    sortedGifts.forEach(gift => {
+      const item = document.createElement('div');
+      item.className = 'gift-item';
+      item.dataset.id = gift.id;
+      item.innerHTML = `
+        <div class="gift-img">${gift.emoji}</div>
+        <div class="gift-name">${gift.name}</div>
+      `;
+      item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
+      grid.appendChild(item);
+      allGiftElements.push(item);
     });
   }
 
   /* --- ПОКАЗАТЬ ПОДАРКИ --- */
+  let currentSlotElement = null;
   function showGifts(slotElement) {
     currentSelectedSlot = slotElement.dataset.slot;
+    currentSlotElement = slotElement;
     
     const grid = document.getElementById('giftsGrid');
     allGiftElements = [];
@@ -566,7 +628,6 @@
     // Закрываем модалку
     document.getElementById('giftModal').classList.remove('active');
     document.getElementById('searchInput').value = '';
-    filterGifts('');
   }
 
   /* --- АВАТАР ИЗ TELEGRAM --- */
@@ -609,23 +670,21 @@
     }, 3500);
   }
 
-  /* --- ОБРАБОТЧИКИ ПОИСКА --- */
+  /* --- 🆕 ОБРАБОТЧИК ПОИСКА С ИНТЕЛЛЕКТУАЛЬНОЙ СОРТИРОВКОЙ --- */
   document.getElementById('searchInput').addEventListener('input', (e) => {
-    filterGifts(e.target.value);
+    filterAndSortGifts(e.target.value);
   });
 
   /* --- ОБРАБОТЧИКИ КНОПОК МОДАЛКИ --- */
   document.getElementById('closeModal').onclick = () => {
     document.getElementById('giftModal').classList.remove('active');
     document.getElementById('searchInput').value = '';
-    filterGifts('');
   };
 
   document.getElementById('giftModal').onclick = (e) => {
     if (e.target === document.getElementById('giftModal')) {
       document.getElementById('giftModal').classList.remove('active');
       document.getElementById('searchInput').value = '';
-      filterGifts('');
     }
   };
 </script>
