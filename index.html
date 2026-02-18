@@ -217,6 +217,21 @@
       transform: scale(1);
     }
 
+    /* 🆕 СПЕЦИАЛЬНЫЙ БОЛЬШОЙ Durov's Cap */
+    .selected-gift.durov-cap .gift-img {
+      width: 44px !important;
+      height: 44px !important;
+      border-radius: 8px;
+      object-fit: cover;
+      margin-bottom: 0;
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+    }
+
+    .selected-gift.durov-cap .gift-name {
+      font-size: 6px !important;
+      margin-top: 2px;
+    }
+
     .selected-gift .gift-emoji {
       font-size: 28px;
       margin-bottom: 2px;
@@ -353,6 +368,21 @@
     .gift-item:hover {
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.05);
+    }
+
+    /* 🆕 СПЕЦИАЛЬНЫЙ Durov's Cap В КАТАЛОГЕ */
+    .gift-item[data-id="1"] .gift-img img {
+      width: 65px !important;
+      height: 65px !important;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+    }
+
+    .gift-item[data-id="1"] .gift-name {
+      font-size: 10px !important;
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
     }
 
     .gift-img {
@@ -718,6 +748,12 @@
       giftImg.className = 'gift-img';
       giftImg.src = gift.image;
       giftImg.alt = gift.name;
+      
+      // 🆕 СПЕЦИАЛЬНАЯ КЛАССА ДЛЯ Durov's Cap
+      if (gift.id === 1) {
+        slotGiftContainer.classList.add('durov-cap');
+      }
+      
       slotGiftContainer.appendChild(giftImg);
     } else {
       const giftEmoji = document.createElement('div');
