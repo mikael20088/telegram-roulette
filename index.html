@@ -121,6 +121,9 @@
   tg.ready();
   tg.expand();
 
+  // ЗАМЕДЛЯЕМ ВИДЕО до 0.7 скорости
+  document.querySelector('video').playbackRate = 0.7;
+
   /* --- МАТРИЦА --- */
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
