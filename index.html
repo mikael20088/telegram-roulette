@@ -304,6 +304,9 @@
       justify-content: center;
       overflow: hidden;
       box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+      /* Фикс для мобильных устройств */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .cube-face .selected-gift {
