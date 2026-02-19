@@ -105,6 +105,7 @@
       padding: 8px;
       box-sizing: border-box;
       position: relative;
+      transition: all 0.5s ease;
     }
 
     .main-square::before {
@@ -125,6 +126,19 @@
     @keyframes matrixGlow {
       0% { opacity: 0.7; transform: scale(1); }
       100% { opacity: 1; transform: scale(1.03); }
+    }
+
+    /* КОНТЕЙНЕР ДЛЯ 4 УГЛОВЫХ КВАДРАТИКОВ */
+    .corners-container {
+      position: absolute;
+      inset: 0;
+      transition: all 0.5s ease;
+      z-index: 2;
+    }
+
+    .corners-container.merged {
+      opacity: 0;
+      pointer-events: none;
     }
 
     /* 4 УГЛОВЫХ КВАДРАТИКА */
@@ -148,17 +162,10 @@
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
 
-    .mini-square:nth-child(1) { top: 8px; left: 8px; }
-    .mini-square:nth-child(2) { top: 8px; right: 8px; }
-    .mini-square:nth-child(3) { bottom: 8px; left: 8px; }
-    .mini-square:nth-child(4) { bottom: 8px; right: 8px; }
-
-    .mini-square.selected {
-      background: rgba(0, 255, 136, 0.4);
-      box-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
-      border-color: rgba(0, 255, 136, 0.7);
-      transform: scale(1.05);
-    }
+    .mini-square[data-slot="0"] { top: 8px; left: 8px; }
+    .mini-square[data-slot="1"] { top: 8px; right: 8px; }
+    .mini-square[data-slot="2"] { bottom: 8px; left: 8px; }
+    .mini-square[data-slot="3"] { bottom: 8px; right: 8px; }
 
     .mini-square.filled {
       background: rgba(0, 255, 136, 0.35);
@@ -175,7 +182,7 @@
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
 
-    /* ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО - ИЗНАЧАЛЬНО БЕЗ ПОДСВЕТКИ */
+    /* ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО */
     .center-mini-square {
       position: absolute;
       top: 50%;
@@ -192,16 +199,22 @@
       border: 2px solid rgba(255, 255, 255, 0.2);
       box-shadow: none;
       backdrop-filter: blur(15px);
-      pointer-events: none;
       overflow: hidden;
       transition: all 0.5s ease;
+      cursor: pointer;
+      pointer-events: none;
     }
 
-    /* ПОДСВЕТКА ПОСЛЕ ЗАПОЛНЕНИЯ ВСЕХ СЛОТОВ */
     .center-mini-square.completed {
       background: rgba(255, 215, 0, 0.3);
       border: 2px solid rgba(255, 215, 0, 0.8);
       box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+      pointer-events: auto;
+    }
+
+    .center-mini-square.merged {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .center-video {
@@ -211,6 +224,84 @@
       border-radius: 6px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
+
+    /* 3D КУБ С ПОДАРКАМИ */
+    .gift-cube-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 70px;
+      height: 70px;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    .gift-cube-container.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .gift-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: rotate3d 8s infinite linear;
+    }
+
+    @keyframes rotate3d {
+      0% { transform: rotateX(0deg) rotateY(0deg); }
+      100% { transform: rotateX(360deg) rotateY(360deg); }
+    }
+
+    .cube-face {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background: rgba(0, 255, 136, 0.2);
+      border: 2px solid rgba(0, 255, 136, 0.5);
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+
+    .cube-face .selected-gift {
+      position: relative;
+      opacity: 1;
+      transform: scale(1);
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      backdrop-filter: none;
+      border: none;
+    }
+
+    .cube-face .selected-gift .gift-img {
+      width: 45px;
+      height: 45px;
+    }
+
+    .cube-face .selected-gift .gift-emoji {
+      font-size: 32px;
+    }
+
+    .cube-face .selected-gift .gift-name {
+      display: none;
+    }
+
+    .cube-face.front  { transform: translateZ(35px); }
+    .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
+    .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
+    .cube-face.left   { transform: rotateY(-90deg) translateZ(35px); }
+    .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
+    .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
     /* СТИЛИ ПОДАРКОВ */
     .selected-gift {
@@ -364,15 +455,6 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .gift-item.hidden {
-      opacity: 0;
-      transform: scale(0.8);
-      height: 0;
-      padding: 0;
-      margin: 0;
-      overflow: hidden;
-    }
-
     .gift-item:hover {
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.05);
@@ -438,22 +520,25 @@
 
   <!-- БОЛЬШОЙ КВАДРАТ -->
   <div class="main-square" id="mainSquare">
-    <!-- 4 УГЛОВЫХ КВАДРАТИКА -->
-    <div class="mini-square" data-slot="0">
-      <div class="plus-sign">+</div>
-      <div class="selected-gift" id="gift-slot-0"></div>
-    </div>
-    <div class="mini-square" data-slot="1">
-      <div class="plus-sign">+</div>
-      <div class="selected-gift" id="gift-slot-1"></div>
-    </div>
-    <div class="mini-square" data-slot="2">
-      <div class="plus-sign">+</div>
-      <div class="selected-gift" id="gift-slot-2"></div>
-    </div>
-    <div class="mini-square" data-slot="3">
-      <div class="plus-sign">+</div>
-      <div class="selected-gift" id="gift-slot-3"></div>
+    <!-- КОНТЕЙНЕР ДЛЯ 4 УГЛОВЫХ КВАДРАТИКОВ -->
+    <div class="corners-container" id="cornersContainer">
+      <!-- 4 УГЛОВЫХ КВАДРАТИКА -->
+      <div class="mini-square" data-slot="0">
+        <div class="plus-sign">+</div>
+        <div class="selected-gift" id="gift-slot-0"></div>
+      </div>
+      <div class="mini-square" data-slot="1">
+        <div class="plus-sign">+</div>
+        <div class="selected-gift" id="gift-slot-1"></div>
+      </div>
+      <div class="mini-square" data-slot="2">
+        <div class="plus-sign">+</div>
+        <div class="selected-gift" id="gift-slot-2"></div>
+      </div>
+      <div class="mini-square" data-slot="3">
+        <div class="plus-sign">+</div>
+        <div class="selected-gift" id="gift-slot-3"></div>
+      </div>
     </div>
 
     <!-- ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ЛОКАЛЬНЫМ ВИДЕО -->
@@ -462,6 +547,18 @@
              src="center-video.mp4"
              muted loop playsinline webkit-playsinline>
       </video>
+    </div>
+
+    <!-- 3D КУБ С ПОДАРКАМИ -->
+    <div class="gift-cube-container" id="giftCubeContainer">
+      <div class="gift-cube" id="giftCube">
+        <div class="cube-face front" id="cube-face-0"></div>
+        <div class="cube-face back" id="cube-face-1"></div>
+        <div class="cube-face right" id="cube-face-2"></div>
+        <div class="cube-face left" id="cube-face-3"></div>
+        <div class="cube-face top"></div>
+        <div class="cube-face bottom"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -496,6 +593,9 @@
   if (centerVideo) {
     centerVideo.pause();
   }
+
+  // МАССИВ ДЛЯ ХРАНЕНИЯ ВЫБРАННЫХ ПОДАРКОВ
+  let selectedGifts = [null, null, null, null];
 
   /* ✅ ПОЛНЫЙ КАТАЛОГ 80+ ТЕЛЕГРАМ ПОДАРКОВ */
   const rareGifts = [
@@ -635,14 +735,72 @@
   function activateCenterSquare() {
     const centerSquare = document.getElementById('centerSquare');
     centerSquare.classList.add('completed');
+  }
+
+  // ФУНКЦИЯ СОЗДАНИЯ 3D КУБА С ПОДАРКАМИ
+  function createGiftCube() {
+    const cubeFaces = [
+      document.getElementById('cube-face-0'),
+      document.getElementById('cube-face-1'),
+      document.getElementById('cube-face-2'),
+      document.getElementById('cube-face-3')
+    ];
+
+    // КОПИРУЕМ ПОДАРКИ В ГРАНИ КУБА
+    cubeFaces.forEach((face, index) => {
+      if (selectedGifts[index]) {
+        const gift = selectedGifts[index];
+        const giftContainer = document.createElement('div');
+        giftContainer.className = 'selected-gift active';
+
+        if (gift.image) {
+          const giftImg = document.createElement('img');
+          giftImg.className = 'gift-img';
+          giftImg.src = gift.image;
+          giftImg.alt = gift.name;
+          giftContainer.appendChild(giftImg);
+        } else {
+          const giftEmoji = document.createElement('div');
+          giftEmoji.className = 'gift-emoji';
+          giftEmoji.textContent = gift.emoji;
+          giftContainer.appendChild(giftEmoji);
+        }
+
+        face.innerHTML = '';
+        face.appendChild(giftContainer);
+      }
+    });
+
+    // ВЕРХНЯЯ И НИЖНЯЯ ГРАНИ - ПРОСТО ЗЕРКАЛЬНЫЕ
+    const topFace = document.querySelector('.cube-face.top');
+    const bottomFace = document.querySelector('.cube-face.bottom');
     
-    // ЗАПУСКАЕМ ВИДЕО
-    if (centerVideo) {
-      centerVideo.play().catch(e => {
-        console.log('center-video.mp4 загружается...');
-      });
-      centerVideo.playbackRate = 1.2;
+    if (selectedGifts[0]) {
+      const topGift = document.createElement('div');
+      topGift.className = 'selected-gift active';
+      topGift.innerHTML = '<div class="gift-emoji">✨</div>';
+      topFace.innerHTML = '';
+      topFace.appendChild(topGift);
+      
+      const bottomGift = document.createElement('div');
+      bottomGift.className = 'selected-gift active';
+      bottomGift.innerHTML = '<div class="gift-emoji">💫</div>';
+      bottomFace.innerHTML = '';
+      bottomFace.appendChild(bottomGift);
     }
+  }
+
+  // ФУНКЦИЯ ОБЪЕДИНЕНИЯ В 3D КУБ
+  function mergeToCube() {
+    const cornersContainer = document.getElementById('cornersContainer');
+    const centerSquare = document.getElementById('centerSquare');
+    const giftCubeContainer = document.getElementById('giftCubeContainer');
+
+    cornersContainer.classList.add('merged');
+    centerSquare.classList.add('merged');
+    
+    createGiftCube();
+    giftCubeContainer.classList.add('active');
   }
 
   /* ✅ ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК */
@@ -759,6 +917,9 @@
     const slotIndex = parseInt(currentSelectedSlot);
     const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
 
+    // СОХРАНЯЕМ ВЫБРАННЫЙ ПОДАРОК
+    selectedGifts[slotIndex] = gift;
+
     slotGiftContainer.innerHTML = '';
 
     if (gift.image) {
@@ -821,6 +982,13 @@
           showGifts(square);
         };
       });
+
+      // ДОБАВЛЯЕМ ОБРАБОТЧИК НА ЦЕНТРАЛЬНЫЙ КВАДРАТ
+      document.getElementById('centerSquare').onclick = () => {
+        if (checkAllSlotsFilled()) {
+          mergeToCube();
+        }
+      };
     }, 3500);
   }
 
