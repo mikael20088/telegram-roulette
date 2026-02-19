@@ -70,14 +70,14 @@
       transition: opacity 0.5s ease;
     }
 
-    /* 🆕 ВИДЕО ПО ЦЕНТРУ БОЛЬШОГО КВАДРАТА - УМЕНЬШЕН */
+    /* 🆕 ВИДЕО ПО ЦЕНТРУ БОЛЬШОГО КВАДРАТА */
     .video-wrapper {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 220px;  /* 🆕 УМЕНЬШЕН */
-      height: 220px; /* 🆕 УМЕНЬШЕН */
+      width: 220px;
+      height: 220px;
       z-index: 3;
       pointer-events: none;
       transition: opacity 0.5s ease;
@@ -90,19 +90,19 @@
       background: transparent;
     }
 
-    /* 🆕 БОЛЬШОЙ КВАДРАТ - УМЕНЬШЕН, 4 угловых ТОЧНО ВПЛОТНУЮ */
+    /* 🆕 БОЛЬШОЙ КВАДРАТ - УМЕНЬШЕН */
     .main-square {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 190px;  /* 🆕 ТОЧНЫЙ РАСЧЕТ: 70px угловые + промежутки */
-      height: 190px; /* 🆕 ТОЧНЫЙ РАСЧЕТ: 70px угловые + промежутки */
+      width: 190px;
+      height: 190px;
       background: rgba(10, 20, 10, 0.3);
-      border-radius: 20px; /* 🆕 Немного уменьшен */
+      border-radius: 20px;
       transform: translate(-50%, -50%);
       opacity: 0;
       z-index: 5;
-      padding: 8px; /* 🆕 УМЕНЬШЕН */
+      padding: 8px;
       box-sizing: border-box;
       position: relative;
     }
@@ -127,11 +127,11 @@
       100% { opacity: 1; transform: scale(1.03); }
     }
 
-    /* 🆕 4 УГЛОВЫХ КВАДРАТИКА - РАЗМЕР НЕ ИЗМЕНИЛСЯ (70x70) */
+    /* 4 УГЛОВЫХ КВАДРАТИКА */
     .mini-square {
       position: absolute;
-      width: 70px;     /* ✅ НЕ ИЗМЕНИЛСЯ */
-      height: 70px;    /* ✅ НЕ ИЗМЕНИЛСЯ */
+      width: 70px;
+      height: 70px;
       background: rgba(255, 255, 255, 0.18);
       border-radius: 14px;
       display: flex;
@@ -148,11 +148,10 @@
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
 
-    /* 🆕 ТОЧНО ВПЛОТНУЮ К ЦЕНТРУ */
-    .mini-square:nth-child(1) { top: 8px; left: 8px; }       /* Левый верх */
-    .mini-square:nth-child(2) { top: 8px; right: 8px; }      /* Правый верх */
-    .mini-square:nth-child(3) { bottom: 8px; left: 8px; }    /* Левый низ */
-    .mini-square:nth-child(4) { bottom: 8px; right: 8px; }   /* Правый низ */
+    .mini-square:nth-child(1) { top: 8px; left: 8px; }
+    .mini-square:nth-child(2) { top: 8px; right: 8px; }
+    .mini-square:nth-child(3) { bottom: 8px; left: 8px; }
+    .mini-square:nth-child(4) { bottom: 8px; right: 8px; }
 
     .mini-square.selected {
       background: rgba(0, 255, 136, 0.4);
@@ -176,13 +175,13 @@
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
 
-    /* 🆕 МАЛЕНЬКИЙ КВАДРАТИК ПОСЕРЕДИНЕ - РАЗМЕР НЕ ИЗМЕНИЛСЯ */
+    /* 🆕 ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО ИЗ GITHUB */
     .center-mini-square {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 50px;     /* ✅ НЕ ИЗМЕНИЛСЯ */
-      height: 50px;    /* ✅ НЕ ИЗМЕНИЛСЯ */
+      width: 50px;
+      height: 50px;
       background: rgba(255, 215, 0, 0.3);
       border-radius: 10px;
       transform: translate(-50%, -50%);
@@ -194,17 +193,18 @@
       box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
       backdrop-filter: blur(15px);
       pointer-events: none;
+      overflow: hidden;
     }
 
     .center-video {
-      width: 80%;
-      height: 80%;
+      width: 90%;
+      height: 90%;
       object-fit: cover;
       border-radius: 6px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
-    /* Остальные стили без изменений */
+    /* Остальные стили... */
     .selected-gift {
       position: absolute;
       inset: 0;
@@ -262,7 +262,7 @@
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
 
-    /* МОДАЛЬНОЕ ОКНО - БЕЗ ИЗМЕНЕНИЙ */
+    /* МОДАЛЬНОЕ ОКНО */
     .modal {
       position: fixed;
       top: 0;
@@ -420,7 +420,7 @@
   <!-- МАТРИЦА -->
   <canvas id="matrix"></canvas>
 
-  <!-- 🆕 ОСНОВНОЕ ВИДЕО - УМЕНЬШЕНО -->
+  <!-- ОСНОВНОЕ ВИДЕО -->
   <div class="video-wrapper" id="videoWrapper">
     <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
   </div>
@@ -428,9 +428,9 @@
   <!-- АВАТАР -->
   <div class="avatar-top" id="avatar"></div>
 
-  <!-- 🆕 БОЛЬШОЙ КВАДРАТ УМЕНЬШЕН, 4 УГЛОВЫХ ВПЛОТНУЮ -->
+  <!-- БОЛЬШОЙ КВАДРАТ -->
   <div class="main-square" id="mainSquare">
-    <!-- 4 УГЛОВЫХ КВАДРАТИКА (70x70 - БЕЗ ИЗМЕНЕНИЙ) -->
+    <!-- 4 УГЛОВЫХ КВАДРАТИКА -->
     <div class="mini-square" data-slot="0">
       <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-0"></div>
@@ -448,9 +448,11 @@
       <div class="selected-gift" id="gift-slot-3"></div>
     </div>
 
-    <!-- МАЛЕНЬКИЙ КВАДРАТИК ПОСЕРЕДИНЕ (50x50 - БЕЗ ИЗМЕНЕНИЙ) -->
-    <div class="center-mini-square">
-      <video class="center-video" src="center-video.mp4" muted loop playsinline webkit-playsinline></video>
+    <!-- 🆕 ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО ИЗ GITHUB -->
+    <div class="center-mini-square" id="centerSquare">
+      <video class="center-video" 
+             src="https://raw.githubusercontent.com/ТВОЙ_ЮЗЕРНЕЙМ/ТВОЙ_РЕПОЗИТОРИЙ/main/center-video.mp4"
+             muted loop playsinline webkit-playsinline></video>
     </div>
   </div>
 </div>
@@ -486,27 +488,15 @@
     { name: "Electric Skull", emoji: "💀", image: null, id: 4 }
   ];
 
-  let allGiftElements = [];
   let currentSelectedSlot = null;
-  let giftImagesCache = {};
+  let currentSlotElement = null;
 
-  function preloadGiftImages() {
-    rareGifts.forEach(gift => {
-      if (gift.image) {
-        const img = new Image();
-        img.src = gift.image;
-        giftImagesCache[gift.id] = img;
-      }
-    });
-  }
-
-  /* --- МАТРИЦА --- */
+  /* МАТРИЦА */
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
   let drops = [];
   const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
   const fontSize = 14;
-  let matrixInterval;
 
   function initMatrix() {
     canvas.width = window.innerWidth;
@@ -537,10 +527,9 @@
 
   initMatrix();
   window.addEventListener("resize", initMatrix);
-  matrixInterval = setInterval(drawMatrix, 50);
+  setInterval(drawMatrix, 50);
 
-  /* --- ПОКАЗАТЬ ПОДАРКИ --- */
-  let currentSlotElement = null;
+  /* ПОКАЗАТЬ ПОДАРКИ */
   function showGifts(slotElement) {
     currentSelectedSlot = slotElement.dataset.slot;
     currentSlotElement = slotElement;
@@ -574,7 +563,7 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  /* --- ВЫБОР ПОДАРКА --- */
+  /* ВЫБОР ПОДАРКА */
   function selectGiftForSlot(gift, slotElement) {
     const slotGiftContainer = document.getElementById(`gift-slot-${currentSelectedSlot}`);
     
@@ -608,15 +597,13 @@
     document.getElementById('giftModal').classList.remove('active');
   }
 
-  /* --- ИНИЦИАЛИЗАЦИЯ --- */
+  /* ИНИЦИАЛИЗАЦИЯ */
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
     const img = document.createElement("img");
     img.src = user.photo_url;
     avatar.appendChild(img);
-
-    preloadGiftImages();
 
     setTimeout(() => {
       document.getElementById("matrix").style.opacity = "0";
@@ -635,16 +622,19 @@
         };
       });
 
-      // 🆕 ЗАПУСК ЦЕНТРАЛЬНОГО ВИДЕО
+      // 🆕 ЗАПУСК ЦЕНТРАЛЬНОГО ВИДЕО ИЗ GITHUB
       const centerVideo = document.querySelector('.center-video');
       if (centerVideo) {
-        centerVideo.play().catch(() => {});
+        centerVideo.play().catch(e => {
+          console.log('Видео из GitHub загружается...');
+        });
         centerVideo.playbackRate = 1.2;
       }
     }, 3500);
   }
 
-  document.getElementById('searchInput').addEventListener('input', (e) => {
+  /* ОБРАБОТЧИКИ */
+  document.getElementById('searchInput')?.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
     document.querySelectorAll('.gift-item').forEach(item => {
       const name = item.querySelector('.gift-name').textContent.toLowerCase();
