@@ -175,25 +175,33 @@
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
 
-    /* ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО */
+    /* ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО - ИЗНАЧАЛЬНО БЕЗ ПОДСВЕТКИ */
     .center-mini-square {
       position: absolute;
       top: 50%;
       left: 50%;
       width: 50px;
       height: 50px;
-      background: rgba(255, 215, 0, 0.3);
+      background: rgba(255, 255, 255, 0.15);
       border-radius: 10px;
       transform: translate(-50%, -50%);
       z-index: 6;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid rgba(255, 215, 0, 0.8);
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: none;
       backdrop-filter: blur(15px);
       pointer-events: none;
       overflow: hidden;
+      transition: all 0.5s ease;
+    }
+
+    /* ПОДСВЕТКА ПОСЛЕ ЗАПОЛНЕНИЯ ВСЕХ СЛОТОВ */
+    .center-mini-square.completed {
+      background: rgba(255, 215, 0, 0.3);
+      border: 2px solid rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
     }
 
     .center-video {
@@ -452,7 +460,7 @@
     <div class="center-mini-square" id="centerSquare">
       <video class="center-video" 
              src="center-video.mp4"
-             muted loop autoplay playsinline webkit-playsinline>
+             muted loop playsinline webkit-playsinline>
       </video>
     </div>
   </div>
@@ -481,7 +489,15 @@
   // ЗАМЕДЛЯЕМ ОСНОВНОЕ ВИДЕО
   document.querySelector('#videoWrapper video').playbackRate = 0.7;
 
-  /* ✅ ПОЛНЫЙ КАТАЛОГ 80+ ТЕЛЕГРАМ ПОДАРКОВ ИЗ СТАРОГО КОДА */
+  // ПОЛУЧАЕМ ЦЕНТРАЛЬНОЕ ВИДЕО
+  const centerVideo = document.querySelector('.center-video');
+  
+  // СТАВИМ ЕГО НА ПАУЗУ ИЗНАЧАЛЬНО
+  if (centerVideo) {
+    centerVideo.pause();
+  }
+
+  /* ✅ ПОЛНЫЙ КАТАЛОГ 80+ ТЕЛЕГРАМ ПОДАРКОВ */
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", image: "https://raw.githubusercontent.com/mikael20088/telegram-roulette/main/gift1.png", id: 1 },
     { name: "Top Hat", emoji: "🎩", image: null, id: 70 },
@@ -569,6 +585,9 @@
   let currentSelectedSlot = null;
   let currentSlotElement = null;
 
+  // ОТСЛЕЖИВАЕМ ЗАПОЛНЕННЫЕ СЛОТЫ
+  let filledSlots = new Array(4).fill(false);
+
   /* МАТРИЦА */
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
@@ -607,7 +626,26 @@
   window.addEventListener("resize", initMatrix);
   setInterval(drawMatrix, 50);
 
-  /* ✅ ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК ИЗ СТАРОГО КОДА */
+  // ФУНКЦИЯ ПРОВЕРКИ ВСЕХ ЗАПОЛНЕННЫХ СЛОТОВ
+  function checkAllSlotsFilled() {
+    return filledSlots.every(filled => filled === true);
+  }
+
+  // ФУНКЦИЯ АКТИВАЦИИ ЦЕНТРАЛЬНОГО КВАДРАТА
+  function activateCenterSquare() {
+    const centerSquare = document.getElementById('centerSquare');
+    centerSquare.classList.add('completed');
+    
+    // ЗАПУСКАЕМ ВИДЕО
+    if (centerVideo) {
+      centerVideo.play().catch(e => {
+        console.log('center-video.mp4 загружается...');
+      });
+      centerVideo.playbackRate = 1.2;
+    }
+  }
+
+  /* ✅ ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК */
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
 
@@ -682,7 +720,7 @@
     });
   }
 
-  /* ✅ ПОКАЗАТЬ ПОДАРКИ (ИЗ СТАРОГО КОДА) */
+  /* ✅ ПОКАЗАТЬ ПОДАРКИ */
   function showGifts(slotElement) {
     currentSelectedSlot = slotElement.dataset.slot;
     currentSlotElement = slotElement;
@@ -716,9 +754,10 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  /* ✅ ВЫБОР ПОДАРКА (ИЗ СТАРОГО КОДА) */
+  /* ✅ ВЫБОР ПОДАРКА */
   function selectGiftForSlot(gift, slotElement) {
-    const slotGiftContainer = document.getElementById(`gift-slot-${currentSelectedSlot}`);
+    const slotIndex = parseInt(currentSelectedSlot);
+    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
 
     slotGiftContainer.innerHTML = '';
 
@@ -746,6 +785,14 @@
     slotGiftContainer.classList.add('active');
     slotElement.querySelector('.plus-sign').style.opacity = '0';
     slotElement.classList.add('filled');
+    
+    // ОТМЕЧАЕМ СЛОТ КАК ЗАПОЛНЕННЫЙ
+    filledSlots[slotIndex] = true;
+
+    // ПРОВЕРЯЕМ, ВСЕ ЛИ СЛОТЫ ЗАПОЛНЕНЫ
+    if (checkAllSlotsFilled()) {
+      activateCenterSquare();
+    }
 
     document.getElementById('giftModal').classList.remove('active');
   }
@@ -774,15 +821,6 @@
           showGifts(square);
         };
       });
-
-      // ЗАПУСК ЛОКАЛЬНОГО center-video.mp4
-      const centerVideo = document.querySelector('.center-video');
-      if (centerVideo) {
-        centerVideo.play().catch(e => {
-          console.log('center-video.mp4 загружается...');
-        });
-        centerVideo.playbackRate = 1.2;
-      }
     }, 3500);
   }
 
