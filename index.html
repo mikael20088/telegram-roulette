@@ -38,22 +38,6 @@
       transition: opacity 0.5s ease;
     }
 
-    /* МАТРИЧНЫЙ ФОН ДЛЯ БОЛЬШОГО КВАДРАТА */
-    .matrix-glass {
-      position: absolute;
-      inset: 0;
-      background: 
-        radial-gradient(circle at 20% 80%, rgba(120, 255, 120, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(0, 255, 136, 0.2) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(0, 255, 200, 0.15) 0%, transparent 50%);
-      backdrop-filter: blur(12px) saturate(150%);
-      -webkit-backdrop-filter: blur(12px) saturate(150%);
-      border: 1px solid rgba(0, 255, 136, 0.3);
-      box-shadow: 
-        0 8px 32px rgba(0, 255, 136, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-
     /* ВИДЕО ПО ЦЕНТРУ */
     .video-wrapper {
       position: absolute;
@@ -106,24 +90,18 @@
       transition: opacity 0.5s ease;
     }
 
-    /* 🆕 БОЛЬШОЙ КВАДРАТ 3x3 С МАТРИЧНЫМ СТЕКЛОМ */
+    /* 🆕 БОЛЬШИЙ КВАДРАТ - РАСШИРЕННЫЙ */
     .main-square {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 220px;
-      height: 220px;
+      width: 280px;  /* 🆕 УВЕЛИЧЕН */
+      height: 280px; /* 🆕 УВЕЛИЧЕН */
       background: rgba(10, 20, 10, 0.4);
-      border-radius: 20px;
+      border-radius: 24px;
       transform: translate(-50%, -50%);
       opacity: 0;
       z-index: 5;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: 1fr 1fr 1fr;
-      gap: 8px;
-      padding: 12px;
-      box-sizing: border-box;
       position: relative;
     }
 
@@ -132,12 +110,12 @@
       position: absolute;
       inset: 0;
       background: 
-        linear-gradient(45deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 200, 100, 0.05) 25%, rgba(0, 255, 200, 0.08) 50%, rgba(0, 150, 80, 0.03) 75%, rgba(0, 255, 136, 0.1) 100%),
-        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.2) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.15) 0%, transparent 50%);
-      backdrop-filter: blur(15px) brightness(1.2) contrast(1.1);
-      -webkit-backdrop-filter: blur(15px) brightness(1.2) contrast(1.1);
-      border-radius: 20px;
+        linear-gradient(45deg, rgba(0, 255, 136, 0.12) 0%, rgba(0, 200, 100, 0.06) 25%, rgba(0, 255, 200, 0.1) 50%, rgba(0, 150, 80, 0.04) 75%, rgba(0, 255, 136, 0.12) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      backdrop-filter: blur(18px) brightness(1.2) contrast(1.1);
+      -webkit-backdrop-filter: blur(18px) brightness(1.2) contrast(1.1);
+      border-radius: 24px;
       z-index: -1;
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
@@ -153,69 +131,233 @@
       }
     }
 
-    /* 🆕 ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО */
-    .center-video-slot {
-      grid-column: 2;
-      grid-row: 2;
-      background: rgba(0, 255, 136, 0.25);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid rgba(0, 255, 136, 0.7);
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-      backdrop-filter: blur(12px);
-      cursor: default;
-      pointer-events: none;
-    }
-
-    .center-video {
-      width: 65%;
-      height: 65%;
-      object-fit: cover;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    }
-
-    /* 🆕 УГЛОВЫЕ КВАДРАТИКИ */
-    .corner-slot {
+    /* 🆕 4 КВАДРАТИКА В УГЛАХ */
+    .mini-square {
+      position: absolute;
+      width: 72px;
+      height: 72px;
       background: rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 26px;
       color: #fff;
       font-weight: bold;
       cursor: pointer;
-      position: relative;
       overflow: hidden;
       transition: all 0.3s ease;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     }
 
-    .corner-slot.selected {
-      background: rgba(0, 255, 136, 0.35);
-      box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
-      border-color: rgba(0, 255, 136, 0.6);
+    .mini-square:nth-child(1) { top: 12px; left: 12px; }      /* ЛевПонял! Сделаю **большой квадрат** побольше, **4 квадратика в углах**, **маленький квадратик ПОСЕРЕДИНЕ между ними**.
+
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width,
+                 height=device-height,
+                 initial-scale=1.0,
+                 maximum-scale=1.0,
+                 user-scalable=no" />
+
+  <title>Telegram Roulette</title>
+
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
     }
 
-    .corner-slot.filled {
-      background: rgba(0, 255, 136, 0.3);
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* МАТРИЦА */
+    canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    /* АВАТАР СВЕРХУ */
+    .avatar-top {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      overflow: hidden;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      z-index: 4;
+      box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
+    }
+
+    .avatar-top img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ЧЁРНЫЙ ФОН */
+    .black-screen {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    /* 🆕 ВИДЕО ПО ЦЕНТРУ БОЛЬШОГО КВАДРАТА */
+    .video-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 280px;
+      height: 280px;
+      z-index: 3;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: transparent;
+    }
+
+    /* 🆕 БОЛЬШОЙ КВАДРАТ - РАСШИРЕННЫЙ */
+    .main-square {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 280px;
+      height: 280px;
+      background: rgba(10, 20, 10, 0.3);
+      border-radius: 24px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      z-index: 5;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .main-square::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      backdrop-filter: blur(18px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(18px) brightness(1.3) contrast(1.2);
+      border-radius: 24px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes matrixGlow {
+      0% { opacity: 0.7; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.03); }
+    }
+
+    /* 🆕 4 УГЛОВЫХ КВАДРАТИКА */
+    .mini-square {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+      font-weight: bold;
       cursor: pointer;
-      border-color: rgba(0, 255, 136, 0.5);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .mini-square:nth-child(1) { top: 20px; left: 20px; }      /* Левый верх */
+    .mini-square:nth-child(2) { top: 20px; right: 20px; }     /* Правый верх */
+    .mini-square:nth-child(3) { bottom: 20px; left: 20px; }   /* Левый низ */
+    .mini-square:nth-child(4) { bottom: 20px; right: 20px; }  /* Правый низ */
+
+    .mini-square.selected {
+      background: rgba(0, 255, 136, 0.4);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
+      border-color: rgba(0, 255, 136, 0.7);
+      transform: scale(1.05);
+    }
+
+    .mini-square.filled {
+      background: rgba(0, 255, 136, 0.35);
+      border-color: rgba(0, 255, 136, 0.6);
     }
 
     /* ПЛЮСИК */
     .plus-sign {
-      font-size: 22px;
+      font-size: 24px;
       color: #fff;
       font-weight: bold;
       z-index: 3;
       transition: opacity 0.3s ease;
-      position: relative;
-      text-shadow: 0 0 10px rgba(0, 255, 136, 0.9);
+      text-shadow: 0 0 12px rgba(0, 255, 136, 1);
+    }
+
+    /* 🆕 МАЛЕНЬКИЙ КВАДРАТИК ПОСЕРЕДИНЕ */
+    .center-mini-square {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 215, 0, 0.3);
+      border-radius: 10px;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+      backdrop-filter: blur(15px);
+      pointer-events: none;
+    }
+
+    .center-video {
+      width: 80%;
+      height: 80%;
+      object-fit: cover;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
     /* ПОДАРОК В КВАДРАТИКЕ */
@@ -226,14 +368,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 255, 136, 0.25);
-      border-radius: 12px;
+      background: rgba(0, 255, 136, 0.3);
+      border-radius: 14px;
       opacity: 0;
       transform: scale(0.5);
       transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
       z-index: 2;
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(0, 255, 136, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 255, 136, 0.6);
     }
 
     .selected-gift.active {
@@ -244,38 +386,36 @@
     .selected-gift.durov-cap .gift-img {
       width: 95% !important;
       height: 95% !important;
-      border-radius: 10px;
+      border-radius: 12px;
       object-fit: cover;
       margin-bottom: 0;
       box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
     }
 
-    .selected-gift.durov-cap .gift-name {
-      display: none;
-    }
+    .selected-gift.durov-cap .gift-name { display: none; }
 
     .selected-gift .gift-emoji {
-      font-size: 26px;
+      font-size: 28px;
       margin-bottom: 2px;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 1);
     }
 
     .selected-gift .gift-img {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: 8px;
       object-fit: cover;
       margin-bottom: 2px;
     }
 
     .selected-gift .gift-name {
-      font-size: 9px;
+      font-size: 10px;
       color: #fff;
       font-weight: 600;
       text-align: center;
-      max-width: 70px;
+      max-width: 75px;
       line-height: 1.1;
-      text-shadow: 0 0 5px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
 
     /* МОДАЛЬНОЕ ОКНО С ПОДАРКАМИ */
@@ -294,10 +434,7 @@
       transition: opacity 0.3s ease;
     }
 
-    .modal.active {
-      display: flex;
-      opacity: 1;
-    }
+    .modal.active { display: flex; opacity: 1; }
 
     .modal-content {
       background: rgba(20, 20, 20, 0.95);
@@ -326,7 +463,6 @@
       color: #fff;
     }
 
-    /* ПОИСКОВИК */
     .search-container {
       position: relative;
       margin-bottom: 15px;
@@ -344,9 +480,7 @@
       outline: none;
     }
 
-    .search-input::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-    }
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.6); }
 
     .search-icon {
       position: absolute;
@@ -442,54 +576,37 @@
   <!-- МАТРИЦА -->
   <canvas id="matrix"></canvas>
 
-  <!-- ВИДЕО С ПРОЗРАЧНОСТЬЮ -->
+  <!-- 🆕 ОСНОВНОЕ ВИДЕО В ЦЕНТРЕ БОЛЬШОГО КВАДРАТА -->
   <div class="video-wrapper" id="videoWrapper">
-    <video
-      src="roulette.webm"
-      autoplay
-      loop
-      muted
-      playsinline
-      webkit-playsinline
-    ></video>
+    <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
   </div>
 
   <!-- АВАТАР -->
   <div class="avatar-top" id="avatar"></div>
 
-  <!-- 🆕 БОЛЬШОЙ КВАДРАТ 3x3 С ЦЕНТРАЛЬНЫМ ВИДЕО -->
+  <!-- 🆕 БОЛЬШОЙ КВАДРАТ С 4 УГЛОВЫМИ + 1 ЦЕНТРАЛЬНЫМ -->
   <div class="main-square" id="mainSquare">
-    <!-- 🆕 4 угловых слота -->
-    <div class="corner-slot" data-slot="0">
+    <!-- 🆕 4 УГЛОВЫХ КВАДРАТИКА -->
+    <div class="mini-square" data-slot="0">
       <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-0"></div>
     </div>
-    
-    <div class="corner-slot" data-slot="1">
+    <div class="mini-square" data-slot="1">
       <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-1"></div>
     </div>
-    
-    <!-- 🆕 ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО -->
-    <div class="center-video-slot">
-      <video 
-        class="center-video" 
-        muted 
-        loop 
-        playsinline 
-        webkit-playsinline"
-        src="center-video.mp4"
-      ></video>
-    </div>
-    
-    <div class="corner-slot" data-slot="2">
+    <div class="mini-square" data-slot="2">
       <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-2"></div>
     </div>
-    
-    <div class="corner-slot" data-slot="3">
+    <div class="mini-square" data-slot="3">
       <div class="plus-sign">+</div>
       <div class="selected-gift" id="gift-slot-3"></div>
+    </div>
+
+    <!-- 🆕 МАЛЕНЬКИЙ КВАДРАТИК ПОСЕРЕДИНЕ -->
+    <div class="center-mini-square">
+      <video class="center-video" src="center-video.mp4" muted loop playsinline webkit-playsinline></video>
     </div>
   </div>
 </div>
@@ -500,15 +617,12 @@
     <div class="close-btn" id="closeModal">×</div>
     <h3 style="color: #fff; margin: 0 0 20px 0; text-align: center;">Редкие подарки</h3>
     
-    <!-- ПОИСКОВИК -->
     <div class="search-container">
       <input type="text" class="search-input" id="searchInput" placeholder="Поиск подарков..." />
       <span class="search-icon">🔍</span>
     </div>
     
-    <div class="gifts-grid" id="giftsGrid">
-      <!-- Подарки генерируются JS -->
-    </div>
+    <div class="gifts-grid" id="giftsGrid"></div>
   </div>
 </div>
 
@@ -517,25 +631,21 @@
   tg.ready();
   tg.expand();
 
-  // ЗАМЕДЛЯЕМ ВИДЕО до 0.7 скорости
-  document.querySelector('video').playbackRate = 0.7;
+  // ЗАМЕДЛЯЕМ ОСНОВНОЕ ВИДЕО
+  document.querySelector('#videoWrapper video').playbackRate = 0.7;
 
-  /* 🆕 ПОЛНЫЙ КАТАЛОГ ТЕЛЕГРАМ ПОДАРКОВ */
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", image: "https://raw.githubusercontent.com/mikael20088/telegram-roulette/main/gift1.png", id: 1 },
     { name: "Top Hat", emoji: "🎩", image: null, id: 70 },
-    // ... остальные подарки (оставил как есть)
     { name: "Astral Shard", emoji: "💎", image: null, id: 2 },
     { name: "Mini Oscar", emoji: "🏆", image: null, id: 3 },
     { name: "Electric Skull", emoji: "💀", image: null, id: 4 }
-    // Можно добавить остальные или оставить сокращенно
   ];
 
   let allGiftElements = [];
   let currentSelectedSlot = null;
   let giftImagesCache = {};
 
-  /* --- ПРЕДОЗАГРУЗКА ИЗОБРАЖЕНИЙ --- */
   function preloadGiftImages() {
     rareGifts.forEach(gift => {
       if (gift.image) {
@@ -574,7 +684,6 @@
       const text = chars[Math.floor(Math.random() * chars.length)];
       ctx.fillText(text, i * fontSize, drop.y);
       drop.y += fontSize * drop.speed;
-
       if (drop.y > canvas.height + 50) {
         drop.y = Math.random() * -100;
         drop.speed = 0.5 + Math.random() * 1.5;
@@ -586,41 +695,6 @@
   window.addEventListener("resize", initMatrix);
   matrixInterval = setInterval(drawMatrix, 50);
 
-  /* --- ФИЛЬТР ПОИСКА --- */
-  function filterAndSortGifts(searchTerm) {
-    const filteredGifts = rareGifts.filter(gift => 
-      gift.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    const grid = document.getElementById('giftsGrid');
-    allGiftElements = [];
-    grid.innerHTML = '';
-    
-    filteredGifts.forEach(gift => {
-      const item = document.createElement('div');
-      item.className = 'gift-item';
-      item.dataset.id = gift.id;
-      
-      if (gift.image) {
-        item.innerHTML = `
-          <div class="gift-img">
-            <img src="${gift.image}" alt="${gift.name}">
-          </div>
-          <div class="gift-name">${gift.name}</div>
-        `;
-      } else {
-        item.innerHTML = `
-          <div class="gift-img">${gift.emoji}</div>
-          <div class="gift-name">${gift.name}</div>
-        `;
-      }
-      
-      item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
-      grid.appendChild(item);
-      allGiftElements.push(item);
-    });
-  }
-
   /* --- ПОКАЗАТЬ ПОДАРКИ --- */
   let currentSlotElement = null;
   function showGifts(slotElement) {
@@ -628,7 +702,6 @@
     currentSlotElement = slotElement;
     
     const grid = document.getElementById('giftsGrid');
-    allGiftElements = [];
     grid.innerHTML = '';
     
     rareGifts.forEach(gift => {
@@ -652,13 +725,12 @@
       
       item.onclick = () => selectGiftForSlot(gift, slotElement);
       grid.appendChild(item);
-      allGiftElements.push(item);
     });
     
     document.getElementById('giftModal').classList.add('active');
   }
 
-  /* --- ВЫБОР ПОДАРКА ДЛЯ СЛОТА --- */
+  /* --- ВЫБОР ПОДАРКА --- */
   function selectGiftForSlot(gift, slotElement) {
     const slotGiftContainer = document.getElementById(`gift-slot-${currentSelectedSlot}`);
     
@@ -670,9 +742,7 @@
       giftImg.src = gift.image;
       giftImg.alt = gift.name;
       
-      if (gift.id === 1) {
-        slotGiftContainer.classList.add('durov-cap');
-      }
+      if (gift.id === 1) slotGiftContainer.classList.add('durov-cap');
       
       slotGiftContainer.appendChild(giftImg);
     } else {
@@ -688,18 +758,13 @@
     slotGiftContainer.appendChild(giftName);
     
     slotGiftContainer.classList.add('active');
-    
-    const plusSign = slotElement.querySelector('.plus-sign');
-    plusSign.style.opacity = '0';
-    
+    slotElement.querySelector('.plus-sign').style.opacity = '0';
     slotElement.classList.add('filled');
-    slotElement.classList.remove('selected');
     
     document.getElementById('giftModal').classList.remove('active');
-    document.getElementById('searchInput').value = '';
   }
 
-  /* --- АВАТАР ИЗ TELEGRAM --- */
+  /* --- ИНИЦИАЛИЗАЦИЯ --- */
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
@@ -719,37 +784,38 @@
       avatar.style.opacity = "1";
       document.getElementById("mainSquare").style.opacity = "1";
       
-      // 🆕 ТОЛЬКО ДЛЯ УГЛОВЫХ СЛОТОВ
-      document.querySelectorAll('.corner-slot').forEach(square => {
+      document.querySelectorAll('.mini-square').forEach(square => {
         square.onclick = (e) => {
           e.stopPropagation();
           showGifts(square);
         };
       });
 
-      // 🆕 АВТОЗАПУСК ЦЕНТРАЛЬНОГО ВИДЕО
+      // 🆕 ЗАПУСК ЦЕНТРАЛЬНОГО ВИДЕО
       const centerVideo = document.querySelector('.center-video');
       if (centerVideo) {
         centerVideo.play().catch(() => {});
-        centerVideo.playbackRate = 0.8;
+        centerVideo.playbackRate = 1.2;
       }
     }, 3500);
   }
 
-  /* --- ОБРАБОТЧИКИ ПОИСКА И МОДАЛКИ --- */
   document.getElementById('searchInput').addEventListener('input', (e) => {
-    filterAndSortGifts(e.target.value);
+    // Простой поиск
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.gift-item').forEach(item => {
+      const name = item.querySelector('.gift-name').textContent.toLowerCase();
+      item.style.display = name.includes(term) ? 'block' : 'none';
+    });
   });
 
   document.getElementById('closeModal').onclick = () => {
     document.getElementById('giftModal').classList.remove('active');
-    document.getElementById('searchInput').value = '';
   };
 
   document.getElementById('giftModal').onclick = (e) => {
     if (e.target === document.getElementById('giftModal')) {
       document.getElementById('giftModal').classList.remove('active');
-      document.getElementById('searchInput').value = '';
     }
   };
 </script>
