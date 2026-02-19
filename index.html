@@ -182,6 +182,33 @@
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
 
+    /* КРЕСТИК ДЛЯ УДАЛЕНИЯ */
+    .remove-gift {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 0, 0, 0.8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .mini-square:hover .remove-gift {
+      opacity: 1;
+    }
+
     /* ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО */
     .center-mini-square {
       position: absolute;
@@ -203,6 +230,13 @@
       transition: all 0.5s ease;
       cursor: pointer;
       pointer-events: none;
+    }
+
+    .center-mini-square.active-video {
+      background: rgba(255, 215, 0, 0.3);
+      border: 2px solid rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+      pointer-events: auto;
     }
 
     .center-mini-square.completed {
@@ -443,6 +477,7 @@
     }
 
     .gift-item {
+      position: relative;
       text-align: center;
       cursor: pointer;
       padding: 10px;
@@ -453,6 +488,31 @@
       backdrop-filter: blur(4px);
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .gift-item.selected {
+      background: rgba(0, 255, 136, 0.2);
+      border-color: rgba(0, 255, 136, 0.5);
+    }
+
+    .gift-item .remove-selected {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 0, 0, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
 
     .gift-item:hover {
@@ -545,7 +605,7 @@
     <div class="center-mini-square" id="centerSquare">
       <video class="center-video" 
              src="center-video.mp4"
-             muted loop playsinline webkit-playsinline>
+             muted playsinline webkit-playsinline>
       </video>
     </div>
 
@@ -592,10 +652,20 @@
   // СТАВИМ ЕГО НА ПАУЗУ ИЗНАЧАЛЬНО
   if (centerVideo) {
     centerVideo.pause();
+    centerVideo.currentTime = 0;
   }
 
   // МАССИВ ДЛЯ ХРАНЕНИЯ ВЫБРАННЫХ ПОДАРКОВ
   let selectedGifts = [null, null, null, null];
+  let currentSelectedSlot = null;
+  let currentSlotElement = null;
+
+  // ОТСЛЕЖИВАЕМ ЗАПОЛНЕННЫЕ СЛОТЫ
+  let filledSlots = new Array(4).fill(false);
+  let videoPlayTimeout = null;
+
+  // ФЛАГ ДЛЯ 4ГО ПОДАРКА
+  let fourthGiftSelected = false;
 
   /* ✅ ПОЛНЫЙ КАТАЛОГ 80+ ТЕЛЕГРАМ ПОДАРКОВ */
   const rareGifts = [
@@ -682,12 +752,6 @@
     { name: "B-Day Candle", emoji: "🕯", image: null, id: 81 }
   ];
 
-  let currentSelectedSlot = null;
-  let currentSlotElement = null;
-
-  // ОТСЛЕЖИВАЕМ ЗАПОЛНЕННЫЕ СЛОТЫ
-  let filledSlots = new Array(4).fill(false);
-
   /* МАТРИЦА */
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
@@ -726,15 +790,111 @@
   window.addEventListener("resize", initMatrix);
   setInterval(drawMatrix, 50);
 
-  // ФУНКЦИЯ ПРОВЕРКИ ВСЕХ ЗАПОЛНЕННЫХ СЛОТОВ
-  function checkAllSlotsFilled() {
-    return filledSlots.every(filled => filled === true);
+  // ФУНКЦИЯ ДЛЯ ВОСПРОИЗВЕДЕНИЯ ВИДЕО С НАЧАЛА
+  function playVideoFromStart() {
+    if (centerVideo && !fourthGiftSelected) {
+      // Очищаем предыдущий таймаут
+      if (videoPlayTimeout) {
+        clearTimeout(videoPlayTimeout);
+      }
+      
+      centerVideo.currentTime = 0;
+      centerVideo.play().catch(e => console.log('Ошибка воспроизведения видео'));
+      
+      // Останавливаем видео через 2 секунды
+      videoPlayTimeout = setTimeout(() => {
+        centerVideo.pause();
+        centerVideo.currentTime = 0;
+      }, 2000);
+    }
   }
 
-  // ФУНКЦИЯ АКТИВАЦИИ ЦЕНТРАЛЬНОГО КВАДРАТА
-  function activateCenterSquare() {
+  // ФУНКЦИЯ ПОДСВЕТКИ ЦЕНТРАЛЬНОГО КВАДРАТА
+  function updateCenterSquareHighlight() {
     const centerSquare = document.getElementById('centerSquare');
-    centerSquare.classList.add('completed');
+    const filledCount = filledSlots.filter(filled => filled).length;
+    
+    if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
+      centerSquare.classList.add('active-video');
+    } else if (filledCount === 4) {
+      centerSquare.classList.remove('active-video');
+      centerSquare.classList.add('completed');
+    } else {
+      centerSquare.classList.remove('active-video', 'completed');
+    }
+  }
+
+  // ФУНКЦИЯ ДЛЯ ОТМЕНЫ ВЫБОРА ПОДАРКА
+  function removeGiftFromSlot(slotIndex, event) {
+    event.stopPropagation();
+    
+    const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
+    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
+    
+    // Очищаем слот
+    selectedGifts[slotIndex] = null;
+    filledSlots[slotIndex] = false;
+    fourthGiftSelected = false;
+    
+    slotGiftContainer.innerHTML = '';
+    slotGiftContainer.classList.remove('active', 'durov-cap');
+    slotElement.querySelector('.plus-sign').style.opacity = '1';
+    slotElement.classList.remove('filled');
+    
+    // Удаляем крестик
+    const removeBtn = slotElement.querySelector('.remove-gift');
+    if (removeBtn) {
+      removeBtn.remove();
+    }
+    
+    // Обновляем подсветку центрального квадрата
+    updateCenterSquareHighlight();
+    
+    // Если были выбранные подарки, останавливаем видео
+    if (centerVideo) {
+      centerVideo.pause();
+      centerVideo.currentTime = 0;
+      if (videoPlayTimeout) {
+        clearTimeout(videoPlayTimeout);
+      }
+    }
+    
+    // Обновляем отображение в модальном окне
+    updateModalSelection();
+  }
+
+  // ФУНКЦИЯ ОБНОВЛЕНИЯ ВЫДЕЛЕНИЯ В МОДАЛЬНОМ ОКНЕ
+  function updateModalSelection() {
+    const giftItems = document.querySelectorAll('.gift-item');
+    giftItems.forEach(item => {
+      item.classList.remove('selected');
+      const removeBtn = item.querySelector('.remove-selected');
+      if (removeBtn) {
+        removeBtn.remove();
+      }
+    });
+    
+    // Добавляем выделение для выбранных подарков
+    selectedGifts.forEach((gift, index) => {
+      if (gift) {
+        const giftItem = document.querySelector(`.gift-item[data-id="${gift.id}"]`);
+        if (giftItem) {
+          giftItem.classList.add('selected');
+          
+          // Добавляем крестик, если его нет
+          if (!giftItem.querySelector('.remove-selected')) {
+            const removeBtn = document.createElement('div');
+            removeBtn.className = 'remove-selected';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = (e) => {
+              e.stopPropagation();
+              removeGiftFromSlot(index, e);
+            };
+            giftItem.appendChild(removeBtn);
+          }
+        }
+      }
+    });
   }
 
   // ФУНКЦИЯ СОЗДАНИЯ 3D КУБА С ПОДАРКАМИ
@@ -876,6 +1036,9 @@
       item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
       grid.appendChild(item);
     });
+    
+    // Восстанавливаем выделение
+    updateModalSelection();
   }
 
   /* ✅ ПОКАЗАТЬ ПОДАРКИ */
@@ -883,42 +1046,24 @@
     currentSelectedSlot = slotElement.dataset.slot;
     currentSlotElement = slotElement;
 
-    const grid = document.getElementById('giftsGrid');
-    grid.innerHTML = '';
-
-    rareGifts.forEach(gift => {
-      const item = document.createElement('div');
-      item.className = 'gift-item';
-      item.dataset.id = gift.id;
-
-      if (gift.image) {
-        item.innerHTML = `
-          <div class="gift-img">
-            <img src="${gift.image}" alt="${gift.name}">
-          </div>
-          <div class="gift-name">${gift.name}</div>
-        `;
-      } else {
-        item.innerHTML = `
-          <div class="gift-img">${gift.emoji}</div>
-          <div class="gift-name">${gift.name}</div>
-        `;
-      }
-
-      item.onclick = () => selectGiftForSlot(gift, slotElement);
-      grid.appendChild(item);
-    });
-
+    filterAndSortGifts('');
     document.getElementById('giftModal').classList.add('active');
   }
 
   /* ✅ ВЫБОР ПОДАРКА */
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
+    
+    // Если слот уже заполнен, ничего не делаем
+    if (filledSlots[slotIndex]) {
+      return;
+    }
+    
     const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
 
     // СОХРАНЯЕМ ВЫБРАННЫЙ ПОДАРОК
     selectedGifts[slotIndex] = gift;
+    filledSlots[slotIndex] = true;
 
     slotGiftContainer.innerHTML = '';
 
@@ -947,14 +1092,36 @@
     slotElement.querySelector('.plus-sign').style.opacity = '0';
     slotElement.classList.add('filled');
     
-    // ОТМЕЧАЕМ СЛОТ КАК ЗАПОЛНЕННЫЙ
-    filledSlots[slotIndex] = true;
+    // ДОБАВЛЯЕМ КРЕСТИК ДЛЯ УДАЛЕНИЯ
+    const removeBtn = document.createElement('div');
+    removeBtn.className = 'remove-gift';
+    removeBtn.innerHTML = '×';
+    removeBtn.onclick = (e) => removeGiftFromSlot(slotIndex, e);
+    slotElement.appendChild(removeBtn);
 
-    // ПРОВЕРЯЕМ, ВСЕ ЛИ СЛОТЫ ЗАПОЛНЕНЫ
-    if (checkAllSlotsFilled()) {
-      activateCenterSquare();
+    // ПРОВЕРЯЕМ, ЭТО 4-Й ПОДАРОК?
+    const filledCount = filledSlots.filter(filled => filled).length;
+    
+    if (filledCount === 4) {
+      fourthGiftSelected = true;
+      // ОСТАНАВЛИВАЕМ ВИДЕО И ДЕЛАЕМ КВАДРАТ ГОТОВЫМ
+      if (centerVideo) {
+        centerVideo.pause();
+        centerVideo.currentTime = 0;
+        if (videoPlayTimeout) {
+          clearTimeout(videoPlayTimeout);
+        }
+      }
+      updateCenterSquareHighlight();
+    } else {
+      // ВОСПРОИЗВОДИМ ВИДЕО С НАЧАЛА
+      playVideoFromStart();
+      updateCenterSquareHighlight();
     }
 
+    // Обновляем выделение в модальном окне
+    updateModalSelection();
+    
     document.getElementById('giftModal').classList.remove('active');
   }
 
@@ -978,14 +1145,17 @@
 
       document.querySelectorAll('.mini-square').forEach(square => {
         square.onclick = (e) => {
-          e.stopPropagation();
+          // Не открываем модалку если кликнули по крестику
+          if (e.target.classList.contains('remove-gift')) {
+            return;
+          }
           showGifts(square);
         };
       });
 
       // ДОБАВЛЯЕМ ОБРАБОТЧИК НА ЦЕНТРАЛЬНЫЙ КВАДРАТ
       document.getElementById('centerSquare').onclick = () => {
-        if (checkAllSlotsFilled()) {
+        if (filledSlots.filter(filled => filled).length === 4) {
           mergeToCube();
         }
       };
