@@ -509,6 +509,10 @@
       transform: translate(-50%, -50%) scale(1);
       opacity: 1;
     }
+    .winning-gift.rising {
+      transition: transform 2s ease-out;
+      transform: translate(-50%, -150%) scale(1.2);
+    }
     .winning-gift video {
       width: 100%;
       height: 100%;
@@ -969,11 +973,8 @@
   // ========== АНИМАЦИЯ ВЫИГРЫША ==========
   let animationFrame = null;
   let startTime = null;
-  const CUBE_SPEED_INITIAL = 0.5; // оборотов в секунду
-  const CUBE_SPEED_FINAL = 2.0;
-  const ACCELERATION_START = 10; // секунд
-  const ACCELERATION_END = 20;
-  const TOTAL_DURATION = 20;
+  const ROTATION_PHASE_DURATION = 10; // секунд
+  const RISE_DURATION = 4; // секунд
 
   function stopCubeAnimation() {
     if (animationFrame) {
@@ -994,46 +995,52 @@
     let angleY = 0;
     startTime = performance.now();
 
-    function animate(currentTime) {
-      const elapsed = (currentTime - startTime) / 1000; // в секундах
+    // Фаза вращения (0-10 сек)
+    function rotatePhase(currentTime) {
+      const elapsed = (currentTime - startTime) / 1000;
 
-      if (elapsed < TOTAL_DURATION) {
-        // Первые 10 секунд постоянная скорость
-        if (elapsed < ACCELERATION_START) {
-          angleY += CUBE_SPEED_INITIAL * 360 * (1/60); // примерно 60fps
-          angleX += CUBE_SPEED_INITIAL * 180 * (1/60);
+      if (elapsed < ROTATION_PHASE_DURATION) {
+        // Вычисляем скорость в зависимости от времени
+        let speedFactor;
+        if (elapsed < 3) {
+          // Первые 3 секунды: медленно (0.3 об/с)
+          speedFactor = 0.3;
+        } else if (elapsed < 7) {
+          // 3-7 сек: ускорение от 0.3 до 2 об/с
+          const t = (elapsed - 3) / 4; // 0..1 за 4 секунды
+          speedFactor = 0.3 + (2 - 0.3) * t;
+        } else {
+          // 7-10 сек: замедление от 2 до 0 об/с
+          const t = (elapsed - 7) / 3; // 0..1 за 3 секунды
+          speedFactor = 2 * (1 - t);
         }
-        // С 10 по 20 секунду ускорение
-        else if (elapsed < ACCELERATION_END) {
-          const t = (elapsed - ACCELERATION_START) / (ACCELERATION_END - ACCELERATION_START);
-          const speed = CUBE_SPEED_INITIAL + (CUBE_SPEED_FINAL - CUBE_SPEED_INITIAL) * t;
-          angleY += speed * 360 * (1/60);
-          angleX += speed * 180 * (1/60);
-        }
-        
+
+        // Приращение угла за кадр (примерно 60fps)
+        const delta = speedFactor * 360 * (1/60); // градусов за кадр
+        angleY += delta;
+        angleX += delta * 0.5; // вращение по двум осям для красоты
+
         giftCube.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg)`;
-        animationFrame = requestAnimationFrame(animate);
+        animationFrame = requestAnimationFrame(rotatePhase);
       } else {
-        // Останавливаем в нужном положении: верхняя грань пустая.
-        // Мы хотим, чтобы грань top (пустая) была сверху.
-        // Это значит, что ось X должна быть такой, что top направлена вверх.
-        // При transform: rotateX(0) rotateY(0) top смотрит вверх.
-        // Нам нужно довернуть до ближайшего кратного 90° по X и Y, чтобы top была сверху.
-        // Проще установить transform в rotateX(0deg) rotateY(0deg) и затем добавить небольшой поворот,
-        // чтобы куб встал ровно (можно оставить как есть, если мы уверены).
-        // Для красоты установим в rotateX(0) rotateY(0).
+        // Конец вращения: ставим куб ровно
         giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
         
-        // Показываем выигрышный подарок
+        // Показываем подарок и запускаем подъём
         winningGift.classList.add('active');
         winningVideo.play().catch(() => {});
-        
-        // Можно скрыть куб или оставить как есть
-        // Через некоторое время убрать или оставить
+
+        // Запускаем фазу подъёма через небольшой таймер (чтобы анимация появления успела)
+        setTimeout(() => {
+          winningGift.classList.add('rising');
+        }, 100);
+
+        // Очищаем фрейм
+        animationFrame = null;
       }
     }
 
-    animationFrame = requestAnimationFrame(animate);
+    animationFrame = requestAnimationFrame(rotatePhase);
   }
 
   // Переопределяем функцию mergeToCube
