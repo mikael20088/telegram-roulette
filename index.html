@@ -1025,8 +1025,9 @@
         giftCube.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg)`;
         animationFrame = requestAnimationFrame(rotatePhase);
       } else {
-        // Конец вращения: ставим куб в положение с небольшим наклоном, чтобы был виден 3D-эффект
-        giftCube.style.transform = 'rotateX(15deg) rotateY(15deg)';
+        // Конец вращения: ставим куб с наклоном влево и вниз (rotateX отрицательный, rotateY отрицательный)
+        // Так верхняя грань (пустая) будет видна как верхняя.
+        giftCube.style.transform = 'rotateX(-15deg) rotateY(-15deg)';
         
         // Ждём 0.5 секунды, затем куб падает вниз и появляется подарок
         setTimeout(() => {
