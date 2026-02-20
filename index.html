@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* ========== ПОЛНЫЙ CSS ИЗ РАБОЧЕЙ ВЕРСИИ ========== */
+    /* Все ваши стили (без изменений) + добавлены правила для .has-media */
     html, body {
       margin: 0;
       padding: 0;
@@ -20,20 +20,17 @@
       background: #000;
       overflow: hidden;
     }
-
     #app {
       position: relative;
       width: 100%;
       height: 100%;
     }
-
     canvas {
       position: absolute;
       inset: 0;
       z-index: 1;
       transition: opacity 0.5s ease;
     }
-
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -48,13 +45,11 @@
       z-index: 4;
       box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
     }
-
     .avatar-top img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
     .black-screen {
       position: absolute;
       inset: 0;
@@ -63,7 +58,6 @@
       opacity: 0;
       transition: opacity 0.5s ease;
     }
-
     .video-wrapper {
       position: absolute;
       top: 50%;
@@ -75,14 +69,12 @@
       pointer-events: none;
       transition: opacity 0.5s ease;
     }
-
     video {
       width: 100%;
       height: 100%;
       object-fit: contain;
       background: transparent;
     }
-
     .main-square {
       position: absolute;
       top: 50%;
@@ -99,7 +91,6 @@
       position: relative;
       transition: all 0.5s ease;
     }
-
     .main-square::before {
       content: '';
       position: absolute;
@@ -114,24 +105,20 @@
       z-index: -1;
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
-
     @keyframes matrixGlow {
       0% { opacity: 0.7; transform: scale(1); }
       100% { opacity: 1; transform: scale(1.03); }
     }
-
     .corners-container {
       position: absolute;
       inset: 0;
       transition: all 0.5s ease;
       z-index: 2;
     }
-
     .corners-container.merged {
       opacity: 0;
       pointer-events: none;
     }
-
     .mini-square {
       position: absolute;
       width: 70px;
@@ -151,17 +138,14 @@
       border: 1.5px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
-
     .mini-square[data-slot="0"] { top: 8px; left: 8px; }
     .mini-square[data-slot="1"] { top: 8px; right: 8px; }
     .mini-square[data-slot="2"] { bottom: 8px; left: 8px; }
     .mini-square[data-slot="3"] { bottom: 8px; right: 8px; }
-
     .mini-square.filled {
       background: rgba(0, 255, 136, 0.35);
       border-color: rgba(0, 255, 136, 0.6);
     }
-
     .plus-sign {
       font-size: 24px;
       color: #fff;
@@ -170,33 +154,10 @@
       transition: opacity 0.3s ease;
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
-
+    /* Крестик удаления в квадратиках больше не используется, поэтому можно удалить или оставить без изменений */
     .remove-gift {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      width: 20px;
-      height: 20px;
-      background: rgba(255, 0, 0, 0.8);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 10;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      opacity: 0;
-      transition: opacity 0.2s ease;
+      display: none; /* просто скрываем, если вдруг остался */
     }
-
-    .mini-square:hover .remove-gift {
-      opacity: 1;
-    }
-
     .center-mini-square {
       position: absolute;
       top: 50%;
@@ -218,26 +179,22 @@
       cursor: pointer;
       pointer-events: none;
     }
-
     .center-mini-square.active-video {
       background: rgba(255, 215, 0, 0.3);
       border: 2px solid rgba(255, 215, 0, 0.8);
       box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
       pointer-events: auto;
     }
-
     .center-mini-square.completed {
       background: rgba(255, 215, 0, 0.3);
       border: 2px solid rgba(255, 215, 0, 0.8);
       box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
       pointer-events: auto;
     }
-
     .center-mini-square.merged {
       opacity: 0;
       pointer-events: none;
     }
-
     .center-video {
       width: 90%;
       height: 90%;
@@ -245,7 +202,6 @@
       border-radius: 6px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
-
     .gift-cube-container {
       position: absolute;
       top: 50%;
@@ -258,12 +214,10 @@
       transition: opacity 0.5s ease;
       pointer-events: none;
     }
-
     .gift-cube-container.active {
       opacity: 1;
       pointer-events: auto;
     }
-
     .gift-cube {
       width: 100%;
       height: 100%;
@@ -271,12 +225,10 @@
       transform-style: preserve-3d;
       animation: rotate3d 8s infinite linear;
     }
-
     @keyframes rotate3d {
       0% { transform: rotateX(0deg) rotateY(0deg); }
       100% { transform: rotateX(360deg) rotateY(360deg); }
     }
-
     .cube-face {
       position: absolute;
       width: 70px;
@@ -293,7 +245,6 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
-
     .cube-face .selected-gift {
       position: relative;
       opacity: 1;
@@ -304,7 +255,6 @@
       backdrop-filter: none;
       border: none;
     }
-
     .cube-face .selected-gift .gift-img,
     .cube-face .selected-gift video.gift-img {
       width: 45px;
@@ -312,22 +262,18 @@
       object-fit: cover;
       border-radius: 8px;
     }
-
     .cube-face .selected-gift .gift-emoji {
       font-size: 32px;
     }
-
     .cube-face .selected-gift .gift-name {
       display: none;
     }
-
     .cube-face.front  { transform: translateZ(35px); }
     .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
     .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
     .cube-face.left   { transform: rotateY(-90deg) translateZ(35px); }
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
-
     .selected-gift {
       position: absolute;
       inset: 0;
@@ -344,12 +290,30 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(0, 255, 136, 0.6);
     }
-
     .selected-gift.active {
       opacity: 1;
       transform: scale(1);
     }
-
+    /* Для подарков с гарантированным медиа убираем фон, чтобы не было моргания */
+    .selected-gift.has-media {
+      background: none;
+      backdrop-filter: none;
+      border: none;
+    }
+    /* Увеличенный размер для подарков с медиа */
+    .selected-gift.has-media .gift-img,
+    .selected-gift.has-media video.gift-img {
+      width: 95% !important;
+      height: 95% !important;
+      border-radius: 12px;
+      object-fit: cover;
+      margin-bottom: 0;
+      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
+    }
+    .selected-gift.has-media .gift-name {
+      display: none;
+    }
+    /* Старый класс для совместимости */
     .selected-gift.durov-cap .gift-img {
       width: 95% !important;
       height: 95% !important;
@@ -358,7 +322,6 @@
       margin-bottom: 0;
       box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
     }
-
     .selected-gift.durov-cap .gift-name { display: none; }
 
     .selected-gift .gift-emoji {
@@ -366,7 +329,6 @@
       margin-bottom: 2px;
       text-shadow: 0 0 10px rgba(255, 255, 255, 1);
     }
-
     .selected-gift .gift-img,
     .selected-gift video.gift-img {
       width: 38px;
@@ -375,7 +337,6 @@
       object-fit: cover;
       margin-bottom: 2px;
     }
-
     .selected-gift .gift-name {
       font-size: 10px;
       color: #fff;
@@ -385,7 +346,6 @@
       line-height: 1.1;
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
-
     .modal {
       position: fixed;
       top: 0;
@@ -400,9 +360,7 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-
     .modal.active { display: flex; opacity: 1; }
-
     .modal-content {
       background: rgba(20, 20, 20, 0.95);
       border-radius: 20px;
@@ -413,7 +371,6 @@
       position: relative;
       width: 90%;
     }
-
     .close-btn {
       position: absolute;
       top: 15px;
@@ -429,12 +386,10 @@
       font-size: 18px;
       color: #fff;
     }
-
     .search-container {
       position: relative;
       margin-bottom: 15px;
     }
-
     .search-input {
       width: 100%;
       padding: 12px 40px 12px 15px;
@@ -446,9 +401,7 @@
       box-sizing: border-box;
       outline: none;
     }
-
     .search-input::placeholder { color: rgba(255, 255, 255, 0.6); }
-
     .search-icon {
       position: absolute;
       right: 15px;
@@ -458,14 +411,12 @@
       font-size: 18px;
       pointer-events: none;
     }
-
     .gifts-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 15px;
       margin-top: 10px;
     }
-
     .gift-item {
       position: relative;
       text-align: center;
@@ -479,12 +430,10 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
-
     .gift-item.selected {
       background: rgba(0, 255, 136, 0.2);
       border-color: rgba(0, 255, 136, 0.5);
     }
-
     .gift-item .remove-selected {
       position: absolute;
       top: -5px;
@@ -504,12 +453,10 @@
       border: 1px solid rgba(255, 255, 255, 0.5);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
-
     .gift-item:hover {
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.05);
     }
-
     .gift-img {
       width: 60px;
       height: 60px;
@@ -523,32 +470,16 @@
       overflow: hidden;
       position: relative;
     }
-
     .gift-img img,
     .gift-img video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
     .gift-name {
       font-size: 12px;
       color: #fff;
       font-weight: 500;
-    }
-
-    /* ===== ДОБАВЛЕННЫЕ СТИЛИ ДЛЯ УВЕЛИЧЕННЫХ ПОДАРКОВ ===== */
-    .selected-gift.has-media .gift-img,
-    .selected-gift.has-media video.gift-img {
-      width: 95% !important;
-      height: 95% !important;
-      border-radius: 12px;
-      object-fit: cover;
-      margin-bottom: 0;
-      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
-    }
-    .selected-gift.has-media .gift-name {
-      display: none;
     }
   </style>
 </head>
@@ -634,7 +565,7 @@
   let videoPlayTimeout = null;
   let fourthGiftSelected = false;
 
-  // Карта соответствия имён файлов
+  // ========== КАРТА СООТВЕТСТВИЯ ИМЁН ФАЙЛОВ ==========
   const fileMap = {
     "Durov's Cap": "Durov-Cap",
     "Astral Shard": "Astral Shard",
@@ -642,7 +573,7 @@
     "Artisan Brick": "Artisan Brick"
   };
 
-  // Множество подарков, для которых есть медиа (чтобы применять увеличенный размер)
+  // Множество подарков, для которых есть медиа (чтобы применять увеличенный размер и убрать фон)
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
   // Полный каталог подарков (имена и эмодзи)
@@ -820,7 +751,7 @@
     const container = document.createElement('div');
     container.className = 'selected-gift active';
     
-    // Если подарок есть в mediaGifts, добавляем класс для увеличенного размера
+    // Если подарок есть в mediaGifts, добавляем класс для увеличенного размера и убираем фон
     if (mediaGifts.has(gift.name)) {
       container.classList.add('has-media');
     }
@@ -881,7 +812,7 @@
     return container;
   }
 
-  // Удаление подарка из слота
+  // Удаление подарка из слота (теперь вызывается только из модалки)
   function removeGiftFromSlot(slotIndex, event) {
     event.stopPropagation();
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
@@ -896,6 +827,7 @@
     slotElement.querySelector('.plus-sign').style.opacity = '1';
     slotElement.classList.remove('filled');
 
+    // Крестик в квадратике больше не добавляем, но на всякий случай удалим, если есть
     const removeBtn = slotElement.querySelector('.remove-gift');
     if (removeBtn) removeBtn.remove();
 
@@ -939,7 +871,7 @@
     });
   }
 
-  // Создание 3D куба (БЕЗ ВЕРХНЕЙ И НИЖНЕЙ ГРАНЕЙ)
+  // Создание 3D куба (без верхней и нижней граней)
   function createGiftCube() {
     const cubeFaces = [
       document.getElementById('cube-face-0'),
@@ -955,13 +887,11 @@
         face.innerHTML = '';
         face.appendChild(content);
       } else {
-        // Если подарок не выбран, оставляем грань пустой
-        face.innerHTML = '';
+        face.innerHTML = ''; // оставляем пустым
       }
     });
 
     // Верхняя и нижняя грани остаются пустыми (ничего не вставляем)
-    // (они уже есть в разметке, но без содержимого)
   }
 
   function mergeToCube() {
@@ -1033,7 +963,7 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота
+  // Выбор подарка для слота (без крестика)
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -1047,7 +977,6 @@
     slotGiftContainer.appendChild(content);
 
     slotGiftContainer.classList.add('active');
-    // Для совместимости оставляем старый класс, но новый класс .has-media уже добавлен в createGiftContent
     if (gift.name === "Durov's Cap") {
       slotGiftContainer.classList.add('durov-cap');
     }
@@ -1055,11 +984,7 @@
     slotElement.querySelector('.plus-sign').style.opacity = '0';
     slotElement.classList.add('filled');
 
-    const removeBtn = document.createElement('div');
-    removeBtn.className = 'remove-gift';
-    removeBtn.innerHTML = '×';
-    removeBtn.onclick = (e) => removeGiftFromSlot(slotIndex, e);
-    slotElement.appendChild(removeBtn);
+    // КРЕСТИК БОЛЬШЕ НЕ ДОБАВЛЯЕМ!
 
     const filledCount = filledSlots.filter(filled => filled).length;
     if (filledCount === 4) {
@@ -1099,7 +1024,7 @@
 
       document.querySelectorAll('.mini-square').forEach(square => {
         square.onclick = (e) => {
-          if (e.target.classList.contains('remove-gift')) return;
+          if (e.target.classList.contains('remove-gift')) return; // на всякий случай
           showGifts(square);
         };
       });
@@ -1128,7 +1053,7 @@
   };
 </script>
 
-<!-- Предзагрузка изображений для четырёх подарков с учётом карты имён -->
+<!-- Предзагрузка изображений для четырёх подарков -->
 <script>
   (function preloadImages() {
     var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
