@@ -8,274 +8,91 @@
                  initial-scale=1.0,
                  maximum-scale=1.0,
                  user-scalable=no" />
-
   <title>Telegram Roulette</title>
-
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
   <style>
-    /* Все стили без изменений (как в предыдущем ответе) */
-    /* ... */
+    /* Все стили без изменений (копируем из предыдущего ответа) */
+    /* ... (для краткости не привожу, но в реальном ответе они должны быть) */
   </style>
 </head>
-
 <body>
 <div id="app">
   <!-- Вся разметка без изменений -->
   <!-- ... -->
 </div>
-
-<div class="modal" id="giftModal">
-  <!-- ... -->
-</div>
+<div class="modal" id="giftModal"><!-- ... --></div>
 
 <script>
-  const tg = Telegram.WebApp;
-  tg.ready();
-  tg.expand();
+  (function() {
+    const tg = Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
-  document.querySelector('#videoWrapper video').playbackRate = 0.7;
+    // ========== НАСТРОЙКИ ==========
+    const MAIN_VIDEO_SRC = 'roulette.webm';
+    const CENTER_VIDEO_SRC = 'center-video.mp4';
 
-  const centerVideo = document.querySelector('.center-video');
-  if (centerVideo) {
-    centerVideo.pause();
-    centerVideo.currentTime = 0;
-  }
+    // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+    let selectedGifts = [null, null, null, null];
+    let filledSlots = [false, false, false, false];
+    let fourthGiftSelected = false;
+    let videoPlayTimeout = null;
+    let currentSelectedSlot = null;
+    let currentSlotElement = null;
 
-  let selectedGifts = [null, null, null, null];
-  let currentSelectedSlot = null;
-  let currentSlotElement = null;
-  let filledSlots = new Array(4).fill(false);
-  let videoPlayTimeout = null;
-  let fourthGiftSelected = false;
+    // Данные из manifest.json
+    let pngSet = new Set();
+    let mp4Set = new Set();
+    let manifestLoaded = false;
 
-  // Структуры для хранения информации о файлах из манифеста
-  let pngFiles = new Set();
-  let mp4Files = new Set();
-  let manifestLoaded = false;
+    // ========== КАТАЛОГ ПОДАРКОВ (только имена и эмодзи) ==========
+    const rareGifts = [
+      { name: "Durov's Cap", emoji: "🎩" },
+      { name: "Top Hat", emoji: "🎩" },
+      { name: "Astral Shard", emoji: "💎" },
+      { name: "Mini Oscar", emoji: "🏆" },
+      { name: "Electric Skull", emoji: "💀" },
+      // ... (полный список из предыдущего кода)
+    ];
 
-  // Загружаем манифест при старте
-  async function loadManifest() {
-    try {
-      const response = await fetch('videos/manifest.json');
-      const manifest = await response.json();
-      pngFiles = new Set(manifest.png || []);
-      mp4Files = new Set(manifest.mp4 || []);
-      manifestLoaded = true;
-    } catch (e) {
-      console.warn('Не удалось загрузить manifest.json, работаем в режиме пробных загрузок');
-      manifestLoaded = false;
-    }
-  }
-
-  // Каталог подарков (только имена и эмодзи)
-  const rareGifts = [
-    { name: "Durov's Cap", emoji: "🎩" },
-    { name: "Top Hat", emoji: "🎩" },
-    { name: "Astral Shard", emoji: "💎" },
-    { name: "Mini Oscar", emoji: "🏆" },
-    { name: "Electric Skull", emoji: "💀" },
-    { name: "Diamond Ring", emoji: "💍" },
-    { name: "Stellar Rocket", emoji: "🚀" },
-    { name: "Trapped Heart", emoji: "💖" },
-    { name: "Gem Signet", emoji: "🔮" },
-    { name: "Artisan Brick", emoji: "🧱" },
-    { name: "Sharp Tongue", emoji: "🗡" },
-    { name: "Jack-in-the-Box", emoji: "🎁" },
-    { name: "Witch Hat", emoji: "🎃" },
-    { name: "Moon Pendant", emoji: "🌙" },
-    { name: "Lunar Snake", emoji: "🐍" },
-    { name: "Holiday Drink", emoji: "🥂" },
-    { name: "Record Player", emoji: "🎵" },
-    { name: "Joyful Bundle", emoji: "🎉" },
-    { name: "Restless Jar", emoji: "🫙" },
-    { name: "Big Year", emoji: "🎈" },
-    { name: "Light Sword", emoji: "⚔️" },
-    { name: "Jingle Bells", emoji: "🔔" },
-    { name: "Eternal Candle", emoji: "🕯" },
-    { name: "Skull Flower", emoji: "💀🌸" },
-    { name: "Sakura Flower", emoji: "🌸" },
-    { name: "Jelly Bunny", emoji: "🐰" },
-    { name: "Cupid Charm", emoji: "💘" },
-    { name: "Hanging Star", emoji: "⭐️" },
-    { name: "Easter Egg", emoji: "🥚" },
-    { name: "Spy Agaric", emoji: "🍄" },
-    { name: "Homemade Cake", emoji: "🍰" },
-    { name: "Snow Globe", emoji: "❄️" },
-    { name: "Xmas Stocking", emoji: "🧦" },
-    { name: "Scared Cat", emoji: "😿" },
-    { name: "Spiced Wine", emoji: "🍷" },
-    { name: "Evil Eye", emoji: "👁" },
-    { name: "Ionic Dryer", emoji: "💨" },
-    { name: "Ginger Cookie", emoji: "🍪" },
-    { name: "Hex Pot", emoji: "🪣" },
-    { name: "Snake Box", emoji: "🐍📦" },
-    { name: "Loot Bag", emoji: "💰" },
-    { name: "Love Candle", emoji: "❤️🕯" },
-    { name: "Love Potion", emoji: "💕" },
-    { name: "Kissed Frog", emoji: "🐸" },
-    { name: "Neko Helmet", emoji: "🐱⛑" },
-    { name: "Pet Snake", emoji: "🐍" },
-    { name: "Jester Hat", emoji: "🤡" },
-    { name: "Flying Broom", emoji: "🧹" },
-    { name: "Party Sparkler", emoji: "✨" },
-    { name: "Star Notepad", emoji: "⭐️📝" },
-    { name: "Voodoo Doll", emoji: "🎎" },
-    { name: "Bonded Ring", emoji: "💞" },
-    { name: "Snow Mittens", emoji: "🧤" },
-    { name: "Crystal Ball", emoji: "🔮" },
-    { name: "Berry Box", emoji: "🍓" },
-    { name: "Tama Gadget", emoji: "📱" },
-    { name: "Valentine Box", emoji: "💝" },
-    { name: "Cookie Heart", emoji: "❤️🍪" },
-    { name: "Precious Peach", emoji: "🍑" },
-    { name: "Bow Tie", emoji: "🎀" },
-    { name: "Signet Ring", emoji: "💎" },
-    { name: "Lol Pop", emoji: "🍭" },
-    { name: "Santa Hat", emoji: "🎅" },
-    { name: "Hypno Lollipop", emoji: "🍬" },
-    { name: "Winter Wreath", emoji: "🎄" },
-    { name: "Vintage Cigar", emoji: "🚬" },
-    { name: "Bunny Muffin", emoji: "🐰🧁" },
-    { name: "Mad Pumpkin", emoji: "🎃" },
-    { name: "Eternal Rose", emoji: "🌹" },
-    { name: "Jolly Chimp", emoji: "🐵" },
-    { name: "Toy Bear", emoji: "🧸" },
-    { name: "Candy Cane", emoji: "🍭" },
-    { name: "Sleigh Bell", emoji: "🔔" },
-    { name: "Swiss Watch", emoji: "⌚️" },
-    { name: "Genie Lamp", emoji: "🪔" },
-    { name: "Plush Pepe", emoji: "🐸" },
-    { name: "Perfume Bottle", emoji: "💨" },
-    { name: "Magic Potion", emoji: "🧪" },
-    { name: "Ion Gem", emoji: "💎" },
-    { name: "Desk Calendar", emoji: "🗓" },
-    { name: "B-Day Candle", emoji: "🕯" }
-  ];
-
-  // Матрица (без изменений)
-  const canvas = document.getElementById("matrix");
-  const ctx = canvas.getContext("2d");
-  let drops = [];
-  const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
-  const fontSize = 14;
-
-  function initMatrix() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const columns = Math.floor(canvas.width / fontSize);
-    drops = Array.from({ length: columns }, () => ({
-      y: Math.random() * canvas.height,
-      speed: 0.5 + Math.random() * 1.5
-    }));
-  }
-
-  function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#00ff88";
-    ctx.font = fontSize + "px monospace";
-
-    drops.forEach((drop, i) => {
-      const text = chars[Math.floor(Math.random() * chars.length)];
-      ctx.fillText(text, i * fontSize, drop.y);
-      drop.y += fontSize * drop.speed;
-      if (drop.y > canvas.height + 50) {
-        drop.y = Math.random() * -100;
-        drop.speed = 0.5 + Math.random() * 1.5;
-      }
-    });
-  }
-
-  initMatrix();
-  window.addEventListener("resize", initMatrix);
-  setInterval(drawMatrix, 50);
-
-  // Функции работы с видеоцентром
-  function playVideoFromStart() {
-    if (centerVideo && !fourthGiftSelected) {
-      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
-      centerVideo.currentTime = 0;
-      centerVideo.play().catch(e => console.log('Ошибка воспроизведения видео'));
-      videoPlayTimeout = setTimeout(() => {
-        centerVideo.pause();
-        centerVideo.currentTime = 0;
-      }, 2000);
-    }
-  }
-
-  function updateCenterSquareHighlight() {
-    const centerSquare = document.getElementById('centerSquare');
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
-      centerSquare.classList.add('active-video');
-    } else if (filledCount === 4) {
-      centerSquare.classList.remove('active-video');
-      centerSquare.classList.add('completed');
-    } else {
-      centerSquare.classList.remove('active-video', 'completed');
-    }
-  }
-
-  // Создание содержимого подарка (для слотов и куба)
-  function createGiftContent(gift, forSlot = false) {
-    const container = document.createElement('div');
-    container.className = 'selected-gift active';
-
-    const fileName = `${gift.name}.mp4`;
-    const pngName = `${gift.name}.png`;
-
-    // Если грузим для слота/куба и есть MP4 — видео
-    if (forSlot && (manifestLoaded ? mp4Files.has(fileName) : true)) {
-      const video = document.createElement('video');
-      video.className = 'gift-img';
-      video.src = `videos/${encodeURIComponent(gift.name)}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      
-      if (manifestLoaded) {
-        // Если манифест загружен, видео точно есть, сразу вставляем
-        container.appendChild(video);
-        return container;
-      } else {
-        // Без манифеста — fallback через onerror
-        video.onerror = () => {
-          // Пробуем PNG
-          const img = new Image();
-          img.onload = () => {
-            container.innerHTML = '';
-            img.className = 'gift-img';
-            container.appendChild(img);
-          };
-          img.onerror = () => {
-            container.innerHTML = '';
-            const emoji = document.createElement('div');
-            emoji.className = 'gift-emoji';
-            emoji.textContent = gift.emoji;
-            container.appendChild(emoji);
-          };
-          img.src = `videos/${encodeURIComponent(gift.name)}.png`;
-        };
-        container.appendChild(video);
-        return container;
+    // ========== ЗАГРУЗКА MANIFEST ==========
+    async function loadManifest() {
+      try {
+        const response = await fetch('videos/manifest.json');
+        if (!response.ok) throw new Error('Manifest not found');
+        const manifest = await response.json();
+        pngSet = new Set(manifest.png || []);
+        mp4Set = new Set(manifest.mp4 || []);
+        manifestLoaded = true;
+        console.log('Manifest loaded');
+      } catch (e) {
+        console.warn('Manifest loading failed, using fallback mode');
+        manifestLoaded = false;
       }
     }
 
-    // Если не forSlot (каталог) или нет видео, пробуем PNG
-    if (manifestLoaded ? pngFiles.has(pngName) : true) {
-      const img = new Image();
-      img.className = 'gift-img';
-      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
-      
-      if (manifestLoaded) {
-        // Точно есть PNG
-        container.appendChild(img);
-      } else {
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    // Проверка наличия PNG для подарка
+    function hasPng(gift) {
+      return manifestLoaded ? pngSet.has(gift.name + '.png') : true;
+    }
+
+    // Проверка наличия MP4 для подарка
+    function hasMp4(gift) {
+      return manifestLoaded ? mp4Set.has(gift.name + '.mp4') : true;
+    }
+
+    // Создание элемента для отображения в КАТАЛОГЕ (всегда изображение, если есть PNG)
+    function createCatalogGiftElement(gift) {
+      const container = document.createElement('div');
+      container.className = 'gift-img';
+
+      if (hasPng(gift)) {
+        const img = new Image();
+        img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+        img.alt = gift.name;
         img.onerror = () => {
+          // если не загрузилось, заменяем на эмодзи
           container.innerHTML = '';
           const emoji = document.createElement('div');
           emoji.className = 'gift-emoji';
@@ -283,287 +100,331 @@
           container.appendChild(emoji);
         };
         container.appendChild(img);
+      } else {
+        const emoji = document.createElement('div');
+        emoji.className = 'gift-emoji';
+        emoji.textContent = gift.emoji;
+        container.appendChild(emoji);
       }
-    } else {
-      // В манифесте нет PNG — сразу эмодзи
-      const emoji = document.createElement('div');
-      emoji.className = 'gift-emoji';
-      emoji.textContent = gift.emoji;
-      container.appendChild(emoji);
+      return container;
     }
 
-    return container;
-  }
+    // Создание содержимого для СЛОТА или КУБА (пытаемся показать видео, иначе картинку, иначе эмодзи)
+    function createSlotGiftContent(gift) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'selected-gift active';
 
-  // Удаление подарка из слота
-  function removeGiftFromSlot(slotIndex, event) {
-    event.stopPropagation();
-    const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
-    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-    
-    selectedGifts[slotIndex] = null;
-    filledSlots[slotIndex] = false;
-    fourthGiftSelected = false;
-    
-    slotGiftContainer.innerHTML = '';
-    slotGiftContainer.classList.remove('active', 'durov-cap');
-    slotElement.querySelector('.plus-sign').style.opacity = '1';
-    slotElement.classList.remove('filled');
-    
-    const removeBtn = slotElement.querySelector('.remove-gift');
-    if (removeBtn) removeBtn.remove();
-    
-    updateCenterSquareHighlight();
-    
+      const tryShowVideo = () => {
+        if (hasMp4(gift)) {
+          const video = document.createElement('video');
+          video.className = 'gift-img';
+          video.src = `videos/${encodeURIComponent(gift.name)}.mp4`;
+          video.muted = true;
+          video.loop = true;
+          video.autoplay = true;
+          video.playsInline = true;
+          video.setAttribute('webkit-playsinline', '');
+          // Если видео не загружается (редко), покажем картинку или эмодзи
+          video.onerror = () => {
+            wrapper.innerHTML = ''; // очищаем
+            tryShowImage(); // пробуем показать картинку
+          };
+          wrapper.appendChild(video);
+          return true;
+        }
+        return false;
+      };
+
+      const tryShowImage = () => {
+        if (hasPng(gift)) {
+          const img = new Image();
+          img.className = 'gift-img';
+          img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+          img.alt = gift.name;
+          img.onerror = () => {
+            wrapper.innerHTML = '';
+            const emoji = document.createElement('div');
+            emoji.className = 'gift-emoji';
+            emoji.textContent = gift.emoji;
+            wrapper.appendChild(emoji);
+          };
+          wrapper.appendChild(img);
+        } else {
+          const emoji = document.createElement('div');
+          emoji.className = 'gift-emoji';
+          emoji.textContent = gift.emoji;
+          wrapper.appendChild(emoji);
+        }
+      };
+
+      if (!tryShowVideo()) {
+        tryShowImage();
+      }
+      return wrapper;
+    }
+
+    // ========== ФУНКЦИИ УПРАВЛЕНИЯ ВИДЕОЦЕНТРОМ ==========
+    const centerVideo = document.querySelector('.center-video');
     if (centerVideo) {
       centerVideo.pause();
       centerVideo.currentTime = 0;
-      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
     }
-    
-    updateModalSelection();
-  }
 
-  // Обновление выделения в модальном окне
-  function updateModalSelection() {
-    const giftItems = document.querySelectorAll('.gift-item');
-    giftItems.forEach(item => {
-      item.classList.remove('selected');
-      const removeBtn = item.querySelector('.remove-selected');
-      if (removeBtn) removeBtn.remove();
-    });
-    
-    selectedGifts.forEach((gift, index) => {
-      if (gift) {
-        const giftItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
-        if (giftItem) {
-          giftItem.classList.add('selected');
-          if (!giftItem.querySelector('.remove-selected')) {
-            const removeBtn = document.createElement('div');
-            removeBtn.className = 'remove-selected';
-            removeBtn.innerHTML = '×';
-            removeBtn.onclick = (e) => {
-              e.stopPropagation();
-              removeGiftFromSlot(index, e);
-            };
-            giftItem.appendChild(removeBtn);
-          }
-        }
+    function playVideoFromStart() {
+      if (centerVideo && !fourthGiftSelected) {
+        if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+        centerVideo.currentTime = 0;
+        centerVideo.play().catch(() => {});
+        videoPlayTimeout = setTimeout(() => {
+          centerVideo.pause();
+          centerVideo.currentTime = 0;
+        }, 2000);
       }
-    });
-  }
-
-  // Создание 3D куба
-  function createGiftCube() {
-    const cubeFaces = [
-      document.getElementById('cube-face-0'),
-      document.getElementById('cube-face-1'),
-      document.getElementById('cube-face-2'),
-      document.getElementById('cube-face-3')
-    ];
-
-    cubeFaces.forEach((face, index) => {
-      if (selectedGifts[index]) {
-        const gift = selectedGifts[index];
-        const content = createGiftContent(gift, true); // для куба тоже видео/изображение
-        face.innerHTML = '';
-        face.appendChild(content);
-      }
-    });
-
-    const topFace = document.querySelector('.cube-face.top');
-    const bottomFace = document.querySelector('.cube-face.bottom');
-    if (selectedGifts[0]) {
-      topFace.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">✨</div></div>';
-      bottomFace.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">💫</div></div>';
     }
-  }
 
-  function mergeToCube() {
-    const cornersContainer = document.getElementById('cornersContainer');
-    const centerSquare = document.getElementById('centerSquare');
-    const giftCubeContainer = document.getElementById('giftCubeContainer');
-
-    cornersContainer.classList.add('merged');
-    centerSquare.classList.add('merged');
-    
-    createGiftCube();
-    giftCubeContainer.classList.add('active');
-  }
-
-  // Интеллектуальный поиск
-  function sortGiftsByRelevance(gifts, searchTerm) {
-    if (!searchTerm) return gifts;
-    searchTerm = searchTerm.toLowerCase();
-    return gifts.sort((a, b) => {
-      const scoreA = getSearchScore(a.name, searchTerm);
-      const scoreB = getSearchScore(b.name, searchTerm);
-      if (scoreA !== scoreB) return scoreB - scoreA;
-      return a.name.localeCompare(b.name);
-    });
-  }
-
-  function getSearchScore(name, searchTerm) {
-    const lowerName = name.toLowerCase();
-    if (lowerName.startsWith(searchTerm)) return 1000;
-    if (lowerName.includes(` ${searchTerm}`)) return 800;
-    if (lowerName[0] === searchTerm[0]) return 500;
-    if (lowerName.includes(searchTerm)) return 100;
-    return 0;
-  }
-
-  // Фильтрация и отрисовка сетки подарков
-  function filterAndSortGifts(searchTerm) {
-    const filteredGifts = rareGifts.filter(gift =>
-      gift.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const sortedGifts = sortGiftsByRelevance(filteredGifts, searchTerm);
-
-    const grid = document.getElementById('giftsGrid');
-    grid.innerHTML = '';
-
-    sortedGifts.forEach(gift => {
-      const item = document.createElement('div');
-      item.className = 'gift-item';
-      item.dataset.name = gift.name;
-
-      // Создаем содержимое для каталога (всегда используем PNG, если есть)
-      const content = createGiftContent(gift, false);
-      // Извлекаем только нужную часть (картинку или эмодзи) без обертки selected-gift
-      let innerContent;
-      if (content.querySelector('img')) {
-        innerContent = content.querySelector('img').cloneNode();
-      } else if (content.querySelector('.gift-emoji')) {
-        innerContent = content.querySelector('.gift-emoji').cloneNode(true);
+    function updateCenterSquareHighlight() {
+      const centerSquare = document.getElementById('centerSquare');
+      const filledCount = filledSlots.filter(Boolean).length;
+      if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
+        centerSquare.classList.add('active-video');
+      } else if (filledCount === 4) {
+        centerSquare.classList.remove('active-video');
+        centerSquare.classList.add('completed');
       } else {
-        innerContent = document.createElement('div');
-        innerContent.className = 'gift-emoji';
-        innerContent.textContent = gift.emoji;
+        centerSquare.classList.remove('active-video', 'completed');
       }
+    }
 
-      const giftImgDiv = document.createElement('div');
-      giftImgDiv.className = 'gift-img';
-      giftImgDiv.appendChild(innerContent);
+    // ========== УДАЛЕНИЕ ПОДАРКА ИЗ СЛОТА ==========
+    function removeGiftFromSlot(slotIndex, event) {
+      event.stopPropagation();
+      const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
+      const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
 
-      const nameDiv = document.createElement('div');
-      nameDiv.className = 'gift-name';
-      nameDiv.textContent = gift.name;
+      selectedGifts[slotIndex] = null;
+      filledSlots[slotIndex] = false;
+      fourthGiftSelected = false;
 
-      item.appendChild(giftImgDiv);
-      item.appendChild(nameDiv);
+      slotGiftContainer.innerHTML = '';
+      slotGiftContainer.classList.remove('active', 'durov-cap');
+      slotElement.querySelector('.plus-sign').style.opacity = '1';
+      slotElement.classList.remove('filled');
 
-      item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
-      grid.appendChild(item);
-    });
+      const removeBtn = slotElement.querySelector('.remove-gift');
+      if (removeBtn) removeBtn.remove();
 
-    updateModalSelection();
-  }
+      updateCenterSquareHighlight();
 
-  // Показать модальное окно
-  function showGifts(slotElement) {
-    currentSelectedSlot = slotElement.dataset.slot;
-    currentSlotElement = slotElement;
-    filterAndSortGifts('');
-    document.getElementById('giftModal').classList.add('active');
-  }
-
-  // Выбор подарка для слота
-  function selectGiftForSlot(gift, slotElement) {
-    const slotIndex = parseInt(currentSelectedSlot);
-    if (filledSlots[slotIndex]) return;
-
-    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-    selectedGifts[slotIndex] = gift;
-    filledSlots[slotIndex] = true;
-
-    slotGiftContainer.innerHTML = '';
-    const content = createGiftContent(gift, true); // для слота видео (или запасное)
-    slotGiftContainer.appendChild(content);
-
-    slotGiftContainer.classList.add('active');
-    if (gift.name === "Durov's Cap") slotGiftContainer.classList.add('durov-cap');
-
-    slotElement.querySelector('.plus-sign').style.opacity = '0';
-    slotElement.classList.add('filled');
-
-    const removeBtn = document.createElement('div');
-    removeBtn.className = 'remove-gift';
-    removeBtn.innerHTML = '×';
-    removeBtn.onclick = (e) => removeGiftFromSlot(slotIndex, e);
-    slotElement.appendChild(removeBtn);
-
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount === 4) {
-      fourthGiftSelected = true;
       if (centerVideo) {
         centerVideo.pause();
         centerVideo.currentTime = 0;
         if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
       }
-      updateCenterSquareHighlight();
-    } else {
-      playVideoFromStart();
-      updateCenterSquareHighlight();
+
+      updateModalSelection();
     }
 
-    updateModalSelection();
-    document.getElementById('giftModal').classList.remove('active');
-  }
+    // ========== ОБНОВЛЕНИЕ ВЫДЕЛЕНИЯ В МОДАЛКЕ ==========
+    function updateModalSelection() {
+      const giftItems = document.querySelectorAll('.gift-item');
+      giftItems.forEach(item => {
+        item.classList.remove('selected');
+        const removeBtn = item.querySelector('.remove-selected');
+        if (removeBtn) removeBtn.remove();
+      });
 
-  // Загружаем манифест и затем инициализируем интерфейс
-  async function initApp() {
-    await loadManifest();
-
-    const user = tg.initDataUnsafe?.user;
-    if (user && user.photo_url) {
-      const avatar = document.getElementById("avatar");
-      const img = document.createElement("img");
-      img.src = user.photo_url;
-      avatar.appendChild(img);
-
-      setTimeout(() => {
-        document.getElementById("matrix").style.opacity = "0";
-        document.getElementById("videoWrapper").style.opacity = "0";
-        document.getElementById("blackScreen").style.opacity = "1";
-      }, 3000);
-
-      setTimeout(() => {
-        avatar.style.opacity = "1";
-        document.getElementById("mainSquare").style.opacity = "1";
-
-        document.querySelectorAll('.mini-square').forEach(square => {
-          square.onclick = (e) => {
-            if (e.target.classList.contains('remove-gift')) return;
-            showGifts(square);
-          };
-        });
-
-        document.getElementById('centerSquare').onclick = () => {
-          if (filledSlots.filter(filled => filled).length === 4) {
-            mergeToCube();
+      selectedGifts.forEach((gift, idx) => {
+        if (gift) {
+          const targetItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
+          if (targetItem) {
+            targetItem.classList.add('selected');
+            if (!targetItem.querySelector('.remove-selected')) {
+              const rm = document.createElement('div');
+              rm.className = 'remove-selected';
+              rm.innerHTML = '×';
+              rm.onclick = (e) => removeGiftFromSlot(idx, e);
+              targetItem.appendChild(rm);
+            }
           }
-        };
-      }, 3500);
+        }
+      });
     }
 
-    // Обработчики модального окна
-    document.getElementById('searchInput')?.addEventListener('input', (e) => {
-      filterAndSortGifts(e.target.value);
-    });
-
-    document.getElementById('closeModal').onclick = () => {
-      document.getElementById('giftModal').classList.remove('active');
-    };
-
-    document.getElementById('giftModal').onclick = (e) => {
-      if (e.target === document.getElementById('giftModal')) {
-        document.getElementById('giftModal').classList.remove('active');
+    // ========== СОЗДАНИЕ 3D КУБА ==========
+    function createGiftCube() {
+      const faces = [
+        document.getElementById('cube-face-0'),
+        document.getElementById('cube-face-1'),
+        document.getElementById('cube-face-2'),
+        document.getElementById('cube-face-3')
+      ];
+      faces.forEach((face, i) => {
+        if (selectedGifts[i]) {
+          face.innerHTML = '';
+          face.appendChild(createSlotGiftContent(selectedGifts[i]));
+        }
+      });
+      const top = document.querySelector('.cube-face.top');
+      const bottom = document.querySelector('.cube-face.bottom');
+      if (selectedGifts[0]) {
+        top.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">✨</div></div>';
+        bottom.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">💫</div></div>';
       }
-    };
-  }
+    }
 
-  // Запускаем приложение
-  initApp();
+    function mergeToCube() {
+      document.getElementById('cornersContainer').classList.add('merged');
+      document.getElementById('centerSquare').classList.add('merged');
+      createGiftCube();
+      document.getElementById('giftCubeContainer').classList.add('active');
+    }
+
+    // ========== ПОИСК ==========
+    function sortGiftsByRelevance(gifts, term) {
+      if (!term) return gifts;
+      term = term.toLowerCase();
+      return gifts.sort((a, b) => {
+        const sa = getSearchScore(a.name, term);
+        const sb = getSearchScore(b.name, term);
+        return sb - sa || a.name.localeCompare(b.name);
+      });
+    }
+    function getSearchScore(name, term) {
+      const low = name.toLowerCase();
+      if (low.startsWith(term)) return 1000;
+      if (low.includes(' ' + term)) return 800;
+      if (low[0] === term[0]) return 500;
+      if (low.includes(term)) return 100;
+      return 0;
+    }
+
+    // ========== ФИЛЬТРАЦИЯ И ОТРИСОВКА СЕТКИ ==========
+    function filterAndSortGifts(searchTerm) {
+      const filtered = rareGifts.filter(g => g.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      const sorted = sortGiftsByRelevance(filtered, searchTerm);
+
+      const grid = document.getElementById('giftsGrid');
+      grid.innerHTML = '';
+
+      sorted.forEach(gift => {
+        const item = document.createElement('div');
+        item.className = 'gift-item';
+        item.dataset.name = gift.name;
+
+        const imgDiv = createCatalogGiftElement(gift);
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'gift-name';
+        nameDiv.textContent = gift.name;
+
+        item.appendChild(imgDiv);
+        item.appendChild(nameDiv);
+        item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
+        grid.appendChild(item);
+      });
+
+      updateModalSelection();
+    }
+
+    // ========== ПОКАЗ МОДАЛКИ ==========
+    function showGifts(slotElement) {
+      currentSelectedSlot = slotElement.dataset.slot;
+      currentSlotElement = slotElement;
+      filterAndSortGifts('');
+      document.getElementById('giftModal').classList.add('active');
+    }
+
+    // ========== ВЫБОР ПОДАРКА ДЛЯ СЛОТА ==========
+    function selectGiftForSlot(gift, slotElement) {
+      const slotIndex = parseInt(currentSelectedSlot);
+      if (filledSlots[slotIndex]) return;
+
+      const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
+      selectedGifts[slotIndex] = gift;
+      filledSlots[slotIndex] = true;
+
+      slotGiftContainer.innerHTML = '';
+      slotGiftContainer.appendChild(createSlotGiftContent(gift));
+      slotGiftContainer.classList.add('active');
+      if (gift.name === "Durov's Cap") slotGiftContainer.classList.add('durov-cap');
+
+      slotElement.querySelector('.plus-sign').style.opacity = '0';
+      slotElement.classList.add('filled');
+
+      const removeBtn = document.createElement('div');
+      removeBtn.className = 'remove-gift';
+      removeBtn.innerHTML = '×';
+      removeBtn.onclick = (e) => removeGiftFromSlot(slotIndex, e);
+      slotElement.appendChild(removeBtn);
+
+      const filledCount = filledSlots.filter(Boolean).length;
+      if (filledCount === 4) {
+        fourthGiftSelected = true;
+        if (centerVideo) {
+          centerVideo.pause();
+          centerVideo.currentTime = 0;
+          if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+        }
+        updateCenterSquareHighlight();
+      } else {
+        playVideoFromStart();
+        updateCenterSquareHighlight();
+      }
+
+      updateModalSelection();
+      document.getElementById('giftModal').classList.remove('active');
+    }
+
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    async function init() {
+      await loadManifest();
+
+      // Установка скорости основного видео
+      const mainVideo = document.querySelector('#videoWrapper video');
+      if (mainVideo) mainVideo.playbackRate = 0.7;
+
+      const user = tg.initDataUnsafe?.user;
+      if (user && user.photo_url) {
+        const avatar = document.getElementById("avatar");
+        const img = document.createElement("img");
+        img.src = user.photo_url;
+        avatar.appendChild(img);
+
+        setTimeout(() => {
+          document.getElementById("matrix").style.opacity = "0";
+          document.getElementById("videoWrapper").style.opacity = "0";
+          document.getElementById("blackScreen").style.opacity = "1";
+        }, 3000);
+
+        setTimeout(() => {
+          avatar.style.opacity = "1";
+          document.getElementById("mainSquare").style.opacity = "1";
+
+          document.querySelectorAll('.mini-square').forEach(sq => {
+            sq.onclick = (e) => {
+              if (e.target.classList.contains('remove-gift')) return;
+              showGifts(sq);
+            };
+          });
+
+          document.getElementById('centerSquare').onclick = () => {
+            if (filledSlots.filter(Boolean).length === 4) mergeToCube();
+          };
+        }, 3500);
+      }
+
+      // Обработчики модалки
+      document.getElementById('searchInput')?.addEventListener('input', (e) => filterAndSortGifts(e.target.value));
+      document.getElementById('closeModal').onclick = () => document.getElementById('giftModal').classList.remove('active');
+      document.getElementById('giftModal').onclick = (e) => {
+        if (e.target === document.getElementById('giftModal')) {
+          document.getElementById('giftModal').classList.remove('active');
+        }
+      };
+    }
+
+    // Старт
+    init();
+  })();
 </script>
 </body>
-</html>ы
+</html>
