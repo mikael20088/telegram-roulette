@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все предыдущие стили + добавлены правила для video.gift-img */
+    /* Все стили без изменений (с чёрным фоном для видео) */
     html, body {
       margin: 0;
       padding: 0;
@@ -488,7 +488,6 @@
   </style>
 </head>
 <body>
-<!-- Вся разметка без изменений -->
 <div id="app">
   <div class="black-screen" id="blackScreen"></div>
   <canvas id="matrix"></canvas>
@@ -1055,6 +1054,30 @@
       var baseName = fileMap[name] || name;
       var img = new Image();
       img.src = 'videos/' + encodeURIComponent(baseName) + '.png';
+    });
+  })();
+</script>
+
+<!-- Предзагрузка видео для четырёх подарков -->
+<script>
+  (function preloadVideos() {
+    var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
+    var fileMap = {
+      "Durov's Cap": "Durov-Cap",
+      "Astral Shard": "Astral Shard",
+      "Kissed Frog": "Kissed Frog",
+      "Artisan Brick": "Artisan Brick"
+    };
+    gifts.forEach(function(name) {
+      var baseName = fileMap[name] || name;
+      var video = document.createElement('video');
+      video.preload = 'auto';
+      video.src = 'videos/' + encodeURIComponent(baseName) + '.mp4';
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('webkit-playsinline', '');
+      // Не добавляем в DOM, просто инициируем загрузку
+      video.load();
     });
   })();
 </script>
