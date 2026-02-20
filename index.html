@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все стили без изменений (с чёрным фоном для .selected-gift) */
+    /* Все предыдущие стили + добавлены правила для video.gift-img */
     html, body {
       margin: 0;
       padding: 0;
@@ -155,7 +155,7 @@
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
     .remove-gift {
-      display: none; /* скрываем крестики в квадратиках */
+      display: none;
     }
     .center-mini-square {
       position: absolute;
@@ -295,26 +295,32 @@
       opacity: 1;
       transform: scale(1);
     }
-    /* Для подарков с медиа (увеличенный размер) */
-    .selected-gift.has-media .gift-img,
-    .selected-gift.has-media video.gift-img {
-      width: 95% !important;
-      height: 95% !important;
-      border-radius: 12px;
+
+    /* Видео внутри подарка занимает весь контейнер, фон чёрный на время загрузки */
+    .selected-gift video.gift-img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      margin-bottom: 0;
+      background: #000;
+    }
+
+    /* Для подарков с медиа (увеличенный размер) */
+    .selected-gift.has-media video.gift-img {
+      width: 95%;
+      height: 95%;
+      border-radius: 12px;
       box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
     }
+
     .selected-gift.has-media .gift-name {
       display: none;
     }
+
     /* Старый класс для совместимости */
-    .selected-gift.durov-cap .gift-img {
-      width: 95% !important;
-      height: 95% !important;
+    .selected-gift.durov-cap video.gift-img {
+      width: 95%;
+      height: 95%;
       border-radius: 12px;
-      object-fit: cover;
-      margin-bottom: 0;
       box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
     }
     .selected-gift.durov-cap .gift-name { display: none; }
@@ -482,6 +488,7 @@
   </style>
 </head>
 <body>
+<!-- Вся разметка без изменений -->
 <div id="app">
   <div class="black-screen" id="blackScreen"></div>
   <canvas id="matrix"></canvas>
@@ -571,7 +578,6 @@
     "Artisan Brick": "Artisan Brick"
   };
 
-  // Множество подарков с медиа
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
   // Полный каталог подарков (80+)
@@ -807,7 +813,6 @@
     return container;
   }
 
-  // Удаление подарка из слота (вызывается из модалки)
   function removeGiftFromSlot(slotIndex, event) {
     event.stopPropagation();
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
@@ -836,7 +841,6 @@
     updateModalSelection();
   }
 
-  // Обновление выделения в модальном окне
   function updateModalSelection() {
     const giftItems = document.querySelectorAll('.gift-item');
     giftItems.forEach(item => {
@@ -865,7 +869,6 @@
     });
   }
 
-  // Создание 3D куба
   function createGiftCube() {
     const cubeFaces = [
       document.getElementById('cube-face-0'),
@@ -898,7 +901,6 @@
     giftCubeContainer.classList.add('active');
   }
 
-  // Поиск
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
     searchTerm = searchTerm.toLowerCase();
@@ -919,7 +921,6 @@
     return 0;
   }
 
-  // Фильтрация и отрисовка сетки
   function filterAndSortGifts(searchTerm) {
     const filteredGifts = rareGifts.filter(gift =>
       gift.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -955,7 +956,6 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота (без крестика)
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -994,7 +994,6 @@
     document.getElementById('giftModal').classList.remove('active');
   }
 
-  // Инициализация
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
@@ -1027,7 +1026,6 @@
     }, 3500);
   }
 
-  // Обработчики модального окна
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
   });
