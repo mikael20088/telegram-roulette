@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все стили без изменений (с чёрным фоном для видео) */
+    /* Все стили без изменений, плюс добавим класс .hidden-video */
     html, body {
       margin: 0;
       padding: 0;
@@ -349,6 +349,16 @@
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
 
+    /* Скрытые видео для предзагрузки */
+    .hidden-video {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
     /* Модальное окно */
     .modal {
       position: fixed;
@@ -579,33 +589,47 @@
 
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
-  // ========== ПРЕДЗАГРУЗКА ВИДЕО ==========
-  const preloadedVideos = {}; // хранилище готовых видео
+  // ========== ПРЕДЗАГРУЗКА ВИДЕО (СКРЫТЫЕ ЭЛЕМЕНТЫ) ==========
+  const hiddenVideos = {}; // хранилище скрытых видео для каждого подарка
 
-  function preloadGiftVideo(giftName) {
+  function createHiddenVideo(giftName) {
     const baseName = fileMap[giftName] || giftName;
     const encodedName = encodeURIComponent(baseName);
     const video = document.createElement('video');
-    video.className = 'gift-img'; // для стилей
+    video.className = 'gift-img hidden-video'; // hidden-video скрывает его
     video.src = `videos/${encodedName}.mp4`;
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
     video.setAttribute('webkit-playsinline', '');
     video.preload = 'auto';
-    
-    // Как только видео будет готово к воспроизведению, ставим на паузу (первый кадр)
-    video.addEventListener('canplay', function onCanPlay() {
-      video.pause(); // останавливаем на первом кадре
-      video.removeEventListener('canplay', onCanPlay);
-    });
-    
-    video.load(); // начинаем загрузку
-    preloadedVideos[giftName] = video;
+    // Добавляем в body, чтобы браузер начал загрузку
+    document.body.appendChild(video);
+    // Сохраняем ссылку
+    hiddenVideos[giftName] = video;
   }
 
-  // Запускаем предзагрузку для всех гарантированных подарков
-  mediaGifts.forEach(giftName => preloadGiftVideo(giftName));
+  // Создаём скрытые видео для всех гарантированных подарков
+  mediaGifts.forEach(giftName => createHiddenVideo(giftName));
+
+  // Функция для получения готового видео (и создания нового скрытого на замену)
+  function takePreloadedVideo(giftName) {
+    const video = hiddenVideos[giftName];
+    if (video) {
+      // Удаляем из хранилища, так как видео будет использовано
+      delete hiddenVideos[giftName];
+      // Убираем скрывающий класс
+      video.classList.remove('hidden-video');
+      // Сбрасываем на начало (на всякий случай)
+      video.pause();
+      video.currentTime = 0;
+      // Создаём новое скрытое видео для будущих выборов
+      createHiddenVideo(giftName);
+      return video;
+    }
+    // Если по какой-то причине нет скрытого видео, создаём новое (но это маловероятно)
+    return null;
+  }
 
   // Полный каталог подарков (80+)
   const rareGifts = [
@@ -777,7 +801,7 @@
     return container;
   }
 
-  // Функция для создания контента слота/куба (с использованием предзагруженных видео)
+  // Функция для создания контента слота/куба (использует предзагруженные видео)
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
@@ -786,23 +810,19 @@
       container.classList.add('has-media');
     }
 
-    // Если это для слота и подарок в списке гарантированных, и есть предзагруженное видео
-    if (forSlot && mediaGifts.has(gift.name) && preloadedVideos[gift.name]) {
-      const readyVideo = preloadedVideos[gift.name];
-      // Удаляем из хранилища, видео теперь будет в слоте
-      delete preloadedVideos[gift.name];
-      // Убедимся, что видео стоит на паузе и сброшено на начало
-      readyVideo.pause();
-      readyVideo.currentTime = 0;
-      // Добавляем класс для стилей (уже есть в container, но видео тоже может иметь)
-      readyVideo.classList.add('gift-img');
-      container.appendChild(readyVideo);
-      // Создаём новое видео для будущих выборов этого же подарка
-      preloadGiftVideo(gift.name);
-      return container;
+    // Если это для слота и подарок в списке гарантированных, используем предзагруженное видео
+    if (forSlot && mediaGifts.has(gift.name)) {
+      const readyVideo = takePreloadedVideo(gift.name);
+      if (readyVideo) {
+        // Видео уже имеет класс gift-img, добавляем его в контейнер
+        container.appendChild(readyVideo);
+        // Запускаем воспроизведение (важно!)
+        readyVideo.play().catch(() => {});
+        return container;
+      }
     }
 
-    // Старая логика для остальных случаев (без предзагрузки)
+    // Старая логика для остальных случаев (если видео не предзагружено или подарок не из списка)
     const baseName = fileMap[gift.name] || gift.name;
     const encodedName = encodeURIComponent(baseName);
 
@@ -817,7 +837,6 @@
       video.setAttribute('webkit-playsinline', '');
 
       video.onerror = () => {
-        // Пробуем показать изображение
         const img = new Image();
         img.onload = () => {
           container.innerHTML = '';
@@ -1006,7 +1025,7 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота (без крестика)
+  // Выбор подарка для слота (использует предзагруженные видео)
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
