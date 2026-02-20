@@ -789,10 +789,13 @@
     // Если это для слота и подарок в списке гарантированных, и есть предзагруженное видео
     if (forSlot && mediaGifts.has(gift.name) && preloadedVideos[gift.name]) {
       const readyVideo = preloadedVideos[gift.name];
-      delete preloadedVideos[gift.name]; // убираем из хранилища, видео теперь будет в слоте
+      // Удаляем из хранилища, видео теперь будет в слоте
+      delete preloadedVideos[gift.name];
       // Убедимся, что видео стоит на паузе и сброшено на начало
       readyVideo.pause();
       readyVideo.currentTime = 0;
+      // Добавляем класс для стилей (уже есть в container, но видео тоже может иметь)
+      readyVideo.classList.add('gift-img');
       container.appendChild(readyVideo);
       // Создаём новое видео для будущих выборов этого же подарка
       preloadGiftVideo(gift.name);
@@ -814,6 +817,7 @@
       video.setAttribute('webkit-playsinline', '');
 
       video.onerror = () => {
+        // Пробуем показать изображение
         const img = new Image();
         img.onload = () => {
           container.innerHTML = '';
