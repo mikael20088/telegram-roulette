@@ -41,27 +41,6 @@
   let videoPlayTimeout = null;
   let fourthGiftSelected = false;
 
-  // ========== КЭШИРОВАНИЕ В LOCALSTORAGE ==========
-  const CACHE_KEY = 'gift_png_cache';
-  let pngCache = new Map(); // true - есть PNG, false - нет
-
-  // Загружаем кэш при старте
-  try {
-    const saved = localStorage.getItem(CACHE_KEY);
-    if (saved) {
-      pngCache = new Map(JSON.parse(saved));
-    }
-  } catch (e) {
-    console.warn('Failed to load cache');
-  }
-
-  // Сохраняем кэш
-  function saveCache() {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(Array.from(pngCache.entries())));
-    } catch (e) {}
-  }
-
   // Полный каталог подарков (имена и эмодзи) - без изменений
   const rareGifts = [ /* ... ваш полный список ... */ ];
 
@@ -127,61 +106,11 @@
     }
   }
 
-  // Функция для создания элемента подарка в КАТАЛОГЕ (с кэшированием)
-  function createCatalogGiftElement(gift) {
-    const container = document.createElement('div');
-    container.className = 'gift-img';
-
-    // Проверяем кэш
-    if (pngCache.has(gift.name)) {
-      if (pngCache.get(gift.name)) {
-        // Есть PNG — сразу ставим изображение
-        const img = new Image();
-        img.src = `videos/${encodeURIComponent(gift.name)}.png`;
-        img.alt = gift.name;
-        container.appendChild(img);
-      } else {
-        // PNG нет — сразу эмодзи
-        const emoji = document.createElement('div');
-        emoji.className = 'gift-emoji';
-        emoji.textContent = gift.emoji;
-        container.appendChild(emoji);
-      }
-      return container;
-    }
-
-    // Нет в кэше — пробуем загрузить
-    const img = new Image();
-    img.src = `videos/${encodeURIComponent(gift.name)}.png`;
-    img.alt = gift.name;
-
-    img.onload = () => {
-      pngCache.set(gift.name, true);
-      saveCache();
-      // изображение уже в DOM, ничего не делаем
-    };
-
-    img.onerror = () => {
-      pngCache.set(gift.name, false);
-      saveCache();
-      // заменяем на эмодзи
-      container.innerHTML = '';
-      const emoji = document.createElement('div');
-      emoji.className = 'gift-emoji';
-      emoji.textContent = gift.emoji;
-      container.appendChild(emoji);
-    };
-
-    container.appendChild(img);
-    return container;
-  }
-
-  // Функция для создания содержимого СЛОТА или КУБА (видео, с запасным вариантом)
+  // Функция для создания элемента подарка (изображение или видео) с обработкой ошибок
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
 
-    // Функция для создания видео (без кэша — видео редко пересматриваются)
     const tryCreateVideo = () => {
       const video = document.createElement('video');
       video.className = 'gift-img';
@@ -191,9 +120,8 @@
       video.autoplay = true;
       video.playsInline = true;
       video.setAttribute('webkit-playsinline', '');
-
+      
       video.onerror = () => {
-        // Пробуем показать PNG
         const img = new Image();
         img.onload = () => {
           container.innerHTML = '';
@@ -209,33 +137,32 @@
         };
         img.src = `videos/${encodeURIComponent(gift.name)}.png`;
       };
-
+      
       video.oncanplay = () => video.play().catch(() => {});
       return video;
     };
 
     if (forSlot) {
-      container.appendChild(tryCreateVideo());
+      const video = tryCreateVideo();
+      container.appendChild(video);
     } else {
-      // для каталога не используется, но оставим для симметрии
       const img = new Image();
-      img.className = 'gift-img';
-      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
-      img.alt = gift.name;
+      img.onload = () => {
+        img.className = 'gift-img';
+        container.appendChild(img);
+      };
       img.onerror = () => {
-        container.innerHTML = '';
         const emoji = document.createElement('div');
         emoji.className = 'gift-emoji';
         emoji.textContent = gift.emoji;
         container.appendChild(emoji);
       };
-      container.appendChild(img);
+      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
     }
 
     return container;
   }
 
-  // Удаление подарка из слота (без изменений)
   function removeGiftFromSlot(slotIndex, event) {
     event.stopPropagation();
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
@@ -264,7 +191,6 @@
     updateModalSelection();
   }
 
-  // Обновление выделения в модальном окне (без изменений)
   function updateModalSelection() {
     const giftItems = document.querySelectorAll('.gift-item');
     giftItems.forEach(item => {
@@ -293,7 +219,6 @@
     });
   }
 
-  // Создание 3D куба (без изменений)
   function createGiftCube() {
     const cubeFaces = [
       document.getElementById('cube-face-0'),
@@ -331,7 +256,6 @@
     giftCubeContainer.classList.add('active');
   }
 
-  // Поиск (без изменений)
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
     searchTerm = searchTerm.toLowerCase();
@@ -352,7 +276,6 @@
     return 0;
   }
 
-  // Фильтрация и отрисовка сетки (используем createCatalogGiftElement с кэшем)
   function filterAndSortGifts(searchTerm) {
     const filteredGifts = rareGifts.filter(gift =>
       gift.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -367,12 +290,27 @@
       item.className = 'gift-item';
       item.dataset.name = gift.name;
 
-      const imgDiv = createCatalogGiftElement(gift);
+      const img = document.createElement('img');
+      img.className = 'gift-img';
+      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+      img.alt = gift.name;
+      img.onerror = () => {
+        img.style.display = 'none';
+        const emojiDiv = document.createElement('div');
+        emojiDiv.className = 'gift-emoji';
+        emojiDiv.textContent = gift.emoji;
+        img.parentNode.replaceChild(emojiDiv, img);
+      };
+
+      const giftImgDiv = document.createElement('div');
+      giftImgDiv.className = 'gift-img';
+      giftImgDiv.appendChild(img);
+
       const nameDiv = document.createElement('div');
       nameDiv.className = 'gift-name';
       nameDiv.textContent = gift.name;
 
-      item.appendChild(imgDiv);
+      item.appendChild(giftImgDiv);
       item.appendChild(nameDiv);
       item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
       grid.appendChild(item);
@@ -388,7 +326,6 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота (без изменений)
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -431,7 +368,6 @@
     document.getElementById('giftModal').classList.remove('active');
   }
 
-  // Инициализация
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
@@ -464,7 +400,6 @@
     }, 3500);
   }
 
-  // Обработчики модального окна
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
   });
@@ -478,6 +413,22 @@
       document.getElementById('giftModal').classList.remove('active');
     }
   };
+
+  // ========== ТИХАЯ ПРЕДЗАГРУЗКА ИЗОБРАЖЕНИЙ ДЛЯ 4 ПОДАРКОВ ==========
+  // Этот код ничего не меняет в интерфейсе, просто загружает картинки в кэш браузера.
+  (function preloadImages() {
+    const giftsToPreload = [
+      "Astral Shard",
+      "Kissed Frog",
+      "Durov's Cap",
+      "Artisan Brick"
+    ];
+    giftsToPreload.forEach(name => {
+      const img = new Image();
+      img.src = `videos/${encodeURIComponent(name)}.png`;
+      // Можно также предзагрузить видео, но это тяжелее
+    });
+  })();
 </script>
 </body>
 </html>
