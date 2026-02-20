@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все стили без изменений + новые для анимации выигрыша */
+    /* Все стили без изменений */
     html, body {
       margin: 0;
       padding: 0;
@@ -556,7 +556,7 @@
     </div>
 
     <div class="center-mini-square" id="centerSquare">
-      <video class="center-video" src="center-video.mp4" muted playsinline webkit-playsinline></video>
+      <video class="center-video" src="center-video.mp4" muted playsinline webkit-playsinline preload="auto"></video>
     </div>
 
     <div class="gift-cube-container" id="giftCubeContainer">
@@ -609,6 +609,7 @@
   let currentSlotElement = null;
   let filledSlots = new Array(4).fill(false);
   let videoPlayTimeout = null;
+  // fourthGiftSelected больше не используется для блокировки видео, но оставим для подсветки
   let fourthGiftSelected = false;
 
   // Карта соответствия имён файлов
@@ -622,7 +623,7 @@
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
   // ========== ПРЕДЗАГРУЗКА ВИДЕО (СКРЫТЫЕ ЭЛЕМЕНТЫ) ==========
-  const hiddenVideos = {}; // хранилище скрытых видео для каждого подарка
+  const hiddenVideos = {};
 
   function createHiddenVideo(giftName) {
     const baseName = fileMap[giftName] || giftName;
@@ -777,8 +778,9 @@
   window.addEventListener("resize", initMatrix);
   setInterval(drawMatrix, 50);
 
+  // Функция воспроизведения видео с начала (теперь без условия)
   function playVideoFromStart() {
-    if (centerVideo && !fourthGiftSelected) {
+    if (centerVideo) {
       if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
       centerVideo.currentTime = 0;
       centerVideo.play().catch(e => console.log('Ошибка воспроизведения видео'));
@@ -792,8 +794,9 @@
   function updateCenterSquareHighlight() {
     const centerSquare = document.getElementById('centerSquare');
     const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
+    if (filledCount > 0 && filledCount < 4) {
       centerSquare.classList.add('active-video');
+      centerSquare.classList.remove('completed');
     } else if (filledCount === 4) {
       centerSquare.classList.remove('active-video');
       centerSquare.classList.add('completed');
@@ -903,7 +906,6 @@
 
     selectedGifts[slotIndex] = null;
     filledSlots[slotIndex] = false;
-    fourthGiftSelected = false;
 
     slotGiftContainer.innerHTML = '';
     slotGiftContainer.classList.remove('active', 'durov-cap', 'has-media');
@@ -1002,43 +1004,30 @@
       const elapsed = (currentTime - startTime) / 1000;
 
       if (elapsed < ROTATION_PHASE_DURATION) {
-        // Вычисляем скорость в зависимости от времени
         let speedFactor;
         if (elapsed < 3) {
-          // Первые 3 секунды: медленно (0.3 об/с)
           speedFactor = 0.3;
         } else if (elapsed < 7) {
-          // 3-7 сек: ускорение от 0.3 до 2 об/с
-          const t = (elapsed - 3) / 4; // 0..1 за 4 секунды
+          const t = (elapsed - 3) / 4;
           speedFactor = 0.3 + (2 - 0.3) * t;
         } else {
-          // 7-10 сек: замедление от 2 до 0 об/с
-          const t = (elapsed - 7) / 3; // 0..1 за 3 секунды
+          const t = (elapsed - 7) / 3;
           speedFactor = 2 * (1 - t);
         }
 
-        // Приращение угла за кадр (примерно 60fps)
-        const delta = speedFactor * 360 * (1/60); // градусов за кадр
+        const delta = speedFactor * 360 * (1/60);
         angleY += delta;
-        angleX += delta * 0.5; // вращение по двум осям для красоты
+        angleX += delta * 0.5;
 
         giftCube.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg)`;
         animationFrame = requestAnimationFrame(rotatePhase);
       } else {
-        // Конец вращения: ставим куб с наклоном влево (rotateY -25deg) и небольшим вниз (rotateX -15deg)
-        // Чтобы верхняя пустая грань была хорошо видна и куб выглядел объёмно.
         giftCube.style.transform = 'rotateX(-15deg) rotateY(-25deg)';
         
-        // Ждём 0.5 секунды, затем куб падает вниз и появляется подарок
         setTimeout(() => {
-          // Куб падает
           giftCubeContainer.classList.add('fall');
-          
-          // Показываем подарок и поднимаем
           winningGift.classList.add('active');
           winningVideo.play().catch(() => {});
-          
-          // Через небольшой интервал запускаем подъём
           setTimeout(() => {
             winningGift.classList.add('rise');
           }, 100);
@@ -1051,7 +1040,6 @@
     animationFrame = requestAnimationFrame(rotatePhase);
   }
 
-  // Переопределяем функцию mergeToCube
   function mergeToCube() {
     const cornersContainer = document.getElementById('cornersContainer');
     const centerSquare = document.getElementById('centerSquare');
@@ -1063,11 +1051,10 @@
     createGiftCube();
     giftCubeContainer.classList.add('active');
 
-    // Запускаем анимацию выигрыша
     startWinAnimation();
   }
 
-  // Интеллектуальный поиск
+  // Поиск
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
     searchTerm = searchTerm.toLowerCase();
@@ -1088,7 +1075,6 @@
     return 0;
   }
 
-  // Фильтрация и отрисовка сетки
   function filterAndSortGifts(searchTerm) {
     const filteredGifts = rareGifts.filter(gift =>
       gift.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1124,7 +1110,7 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота
+  // Выбор подарка для слота (теперь видео играет после любого выбора)
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -1145,20 +1131,11 @@
     slotElement.querySelector('.plus-sign').style.opacity = '0';
     slotElement.classList.add('filled');
 
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount === 4) {
-      fourthGiftSelected = true;
-      if (centerVideo) {
-        centerVideo.pause();
-        centerVideo.currentTime = 0;
-        if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
-      }
-      updateCenterSquareHighlight();
-    } else {
-      playVideoFromStart();
-      updateCenterSquareHighlight();
-    }
+    // Всегда запускаем видео и обновляем подсветку
+    playVideoFromStart();
+    updateCenterSquareHighlight();
 
+    // Обновляем выделение в модальном окне
     updateModalSelection();
     document.getElementById('giftModal').classList.remove('active');
   }
@@ -1189,7 +1166,8 @@
       });
 
       document.getElementById('centerSquare').onclick = () => {
-        if (filledSlots.filter(filled => filled).length === 4) {
+        const filledCount = filledSlots.filter(filled => filled).length;
+        if (filledCount > 0) {
           mergeToCube();
         }
       };
