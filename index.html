@@ -15,6 +15,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
+    /* Все стили остаются без изменений */
     html, body {
       margin: 0;
       padding: 0;
@@ -30,7 +31,6 @@
       height: 100%;
     }
 
-    /* МАТРИЦА */
     canvas {
       position: absolute;
       inset: 0;
@@ -38,7 +38,6 @@
       transition: opacity 0.5s ease;
     }
 
-    /* АВАТАР СВЕРХУ */
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -60,7 +59,6 @@
       object-fit: cover;
     }
 
-    /* ЧЁРНЫЙ ФОН */
     .black-screen {
       position: absolute;
       inset: 0;
@@ -70,7 +68,6 @@
       transition: opacity 0.5s ease;
     }
 
-    /* ОСНОВНОЕ ВИДЕО */
     .video-wrapper {
       position: absolute;
       top: 50%;
@@ -90,7 +87,6 @@
       background: transparent;
     }
 
-    /* БОЛЬШОЙ КВАДРАТ */
     .main-square {
       position: absolute;
       top: 50%;
@@ -128,7 +124,6 @@
       100% { opacity: 1; transform: scale(1.03); }
     }
 
-    /* КОНТЕЙНЕР ДЛЯ 4 УГЛОВЫХ КВАДРАТИКОВ */
     .corners-container {
       position: absolute;
       inset: 0;
@@ -141,7 +136,6 @@
       pointer-events: none;
     }
 
-    /* 4 УГЛОВЫХ КВАДРАТИКА */
     .mini-square {
       position: absolute;
       width: 70px;
@@ -172,7 +166,6 @@
       border-color: rgba(0, 255, 136, 0.6);
     }
 
-    /* ПЛЮСИК */
     .plus-sign {
       font-size: 24px;
       color: #fff;
@@ -182,7 +175,6 @@
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
 
-    /* КРЕСТИК ДЛЯ УДАЛЕНИЯ */
     .remove-gift {
       position: absolute;
       top: -5px;
@@ -209,7 +201,6 @@
       opacity: 1;
     }
 
-    /* ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ВИДЕО */
     .center-mini-square {
       position: absolute;
       top: 50%;
@@ -259,7 +250,6 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
-    /* 3D КУБ С ПОДАРКАМИ */
     .gift-cube-container {
       position: absolute;
       top: 50%;
@@ -304,7 +294,6 @@
       justify-content: center;
       overflow: hidden;
       box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-      /* Фикс для мобильных устройств */
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
@@ -320,9 +309,12 @@
       border: none;
     }
 
-    .cube-face .selected-gift .gift-img {
+    .cube-face .selected-gift .gift-img,
+    .cube-face .selected-gift video.gift-img {
       width: 45px;
       height: 45px;
+      object-fit: cover;
+      border-radius: 8px;
     }
 
     .cube-face .selected-gift .gift-emoji {
@@ -340,7 +332,6 @@
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
-    /* СТИЛИ ПОДАРКОВ */
     .selected-gift {
       position: absolute;
       inset: 0;
@@ -380,7 +371,8 @@
       text-shadow: 0 0 10px rgba(255, 255, 255, 1);
     }
 
-    .selected-gift .gift-img {
+    .selected-gift .gift-img,
+    .selected-gift video.gift-img {
       width: 38px;
       height: 38px;
       border-radius: 8px;
@@ -398,7 +390,6 @@
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
 
-    /* МОДАЛЬНОЕ ОКНО */
     .modal {
       position: fixed;
       top: 0;
@@ -523,20 +514,6 @@
       transform: scale(1.05);
     }
 
-    .gift-item[data-id="1"] .gift-img img {
-      width: 65px !important;
-      height: 65px !important;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
-    }
-
-    .gift-item[data-id="1"] .gift-name {
-      font-size: 10px !important;
-      font-weight: 700;
-      color: #ffd700;
-      text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
-    }
-
     .gift-img {
       width: 60px;
       height: 60px;
@@ -551,7 +528,8 @@
       position: relative;
     }
 
-    .gift-img img {
+    .gift-img img,
+    .gift-img video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -567,25 +545,17 @@
 
 <body>
 <div id="app">
-  <!-- ЧЁРНЫЙ ФОН -->
   <div class="black-screen" id="blackScreen"></div>
-
-  <!-- МАТРИЦА -->
   <canvas id="matrix"></canvas>
 
-  <!-- ОСНОВНОЕ ВИДЕО -->
   <div class="video-wrapper" id="videoWrapper">
     <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
   </div>
 
-  <!-- АВАТАР -->
   <div class="avatar-top" id="avatar"></div>
 
-  <!-- БОЛЬШОЙ КВАДРАТ -->
   <div class="main-square" id="mainSquare">
-    <!-- КОНТЕЙНЕР ДЛЯ 4 УГЛОВЫХ КВАДРАТИКОВ -->
     <div class="corners-container" id="cornersContainer">
-      <!-- 4 УГЛОВЫХ КВАДРАТИКА -->
       <div class="mini-square" data-slot="0">
         <div class="plus-sign">+</div>
         <div class="selected-gift" id="gift-slot-0"></div>
@@ -604,15 +574,10 @@
       </div>
     </div>
 
-    <!-- ЦЕНТРАЛЬНЫЙ КВАДРАТИК С ЛОКАЛЬНЫМ ВИДЕО -->
     <div class="center-mini-square" id="centerSquare">
-      <video class="center-video" 
-             src="center-video.mp4"
-             muted playsinline webkit-playsinline>
-      </video>
+      <video class="center-video" src="center-video.mp4" muted playsinline webkit-playsinline></video>
     </div>
 
-    <!-- 3D КУБ С ПОДАРКАМИ -->
     <div class="gift-cube-container" id="giftCubeContainer">
       <div class="gift-cube" id="giftCube">
         <div class="cube-face front" id="cube-face-0"></div>
@@ -626,7 +591,6 @@
   </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО ПОДАРКОВ -->
 <div class="modal" id="giftModal">
   <div class="modal-content">
     <div class="close-btn" id="closeModal">×</div>
@@ -646,116 +610,107 @@
   tg.ready();
   tg.expand();
 
-  // ЗАМЕДЛЯЕМ ОСНОВНОЕ ВИДЕО
   document.querySelector('#videoWrapper video').playbackRate = 0.7;
 
-  // ПОЛУЧАЕМ ЦЕНТРАЛЬНОЕ ВИДЕО
   const centerVideo = document.querySelector('.center-video');
-  
-  // СТАВИМ ЕГО НА ПАУЗУ ИЗНАЧАЛЬНО
   if (centerVideo) {
     centerVideo.pause();
     centerVideo.currentTime = 0;
   }
 
-  // МАССИВ ДЛЯ ХРАНЕНИЯ ВЫБРАННЫХ ПОДАРКОВ
   let selectedGifts = [null, null, null, null];
   let currentSelectedSlot = null;
   let currentSlotElement = null;
-
-  // ОТСЛЕЖИВАЕМ ЗАПОЛНЕННЫЕ СЛОТЫ
   let filledSlots = new Array(4).fill(false);
   let videoPlayTimeout = null;
-
-  // ФЛАГ ДЛЯ 4ГО ПОДАРКА
   let fourthGiftSelected = false;
 
-  /* ✅ ПОЛНЫЙ КАТАЛОГ 80+ ТЕЛЕГРАМ ПОДАРКОВ */
+  // Полный каталог подарков (имена и эмодзи)
   const rareGifts = [
-    { name: "Durov's Cap", emoji: "🎩", image: "https://raw.githubusercontent.com/mikael20088/telegram-roulette/main/gift1.png", id: 1 },
-    { name: "Top Hat", emoji: "🎩", image: null, id: 70 },
-    { name: "Astral Shard", emoji: "💎", image: null, id: 2 },
-    { name: "Mini Oscar", emoji: "🏆", image: null, id: 3 },
-    { name: "Electric Skull", emoji: "💀", image: null, id: 4 },
-    { name: "Diamond Ring", emoji: "💍", image: null, id: 5 },
-    { name: "Stellar Rocket", emoji: "🚀", image: null, id: 6 },
-    { name: "Trapped Heart", emoji: "💖", image: null, id: 7 },
-    { name: "Gem Signet", emoji: "🔮", image: null, id: 8 },
-    { name: "Artisan Brick", emoji: "🧱", image: null, id: 9 },
-    { name: "Sharp Tongue", emoji: "🗡", image: null, id: 10 },
-    { name: "Jack-in-the-Box", emoji: "🎁", image: null, id: 11 },
-    { name: "Witch Hat", emoji: "🎃", image: null, id: 12 },
-    { name: "Moon Pendant", emoji: "🌙", image: null, id: 13 },
-    { name: "Lunar Snake", emoji: "🐍", image: null, id: 14 },
-    { name: "Holiday Drink", emoji: "🥂", image: null, id: 15 },
-    { name: "Record Player", emoji: "🎵", image: null, id: 16 },
-    { name: "Joyful Bundle", emoji: "🎉", image: null, id: 17 },
-    { name: "Restless Jar", emoji: "🫙", image: null, id: 18 },
-    { name: "Big Year", emoji: "🎈", image: null, id: 19 },
-    { name: "Light Sword", emoji: "⚔️", image: null, id: 20 },
-    { name: "Jingle Bells", emoji: "🔔", image: null, id: 21 },
-    { name: "Eternal Candle", emoji: "🕯", image: null, id: 22 },
-    { name: "Skull Flower", emoji: "💀🌸", image: null, id: 23 },
-    { name: "Sakura Flower", emoji: "🌸", image: null, id: 24 },
-    { name: "Jelly Bunny", emoji: "🐰", image: null, id: 25 },
-    { name: "Cupid Charm", emoji: "💘", image: null, id: 26 },
-    { name: "Hanging Star", emoji: "⭐️", image: null, id: 27 },
-    { name: "Easter Egg", emoji: "🥚", image: null, id: 28 },
-    { name: "Spy Agaric", emoji: "🍄", image: null, id: 29 },
-    { name: "Homemade Cake", emoji: "🍰", image: null, id: 30 },
-    { name: "Snow Globe", emoji: "❄️", image: null, id: 31 },
-    { name: "Xmas Stocking", emoji: "🧦", image: null, id: 32 },
-    { name: "Scared Cat", emoji: "😿", image: null, id: 33 },
-    { name: "Spiced Wine", emoji: "🍷", image: null, id: 34 },
-    { name: "Evil Eye", emoji: "👁", image: null, id: 35 },
-    { name: "Ionic Dryer", emoji: "💨", image: null, id: 36 },
-    { name: "Ginger Cookie", emoji: "🍪", image: null, id: 37 },
-    { name: "Hex Pot", emoji: "🪣", image: null, id: 38 },
-    { name: "Snake Box", emoji: "🐍📦", image: null, id: 39 },
-    { name: "Loot Bag", emoji: "💰", image: null, id: 40 },
-    { name: "Love Candle", emoji: "❤️🕯", image: null, id: 41 },
-    { name: "Love Potion", emoji: "💕", image: null, id: 42 },
-    { name: "Kissed Frog", emoji: "🐸", image: null, id: 43 },
-    { name: "Neko Helmet", emoji: "🐱⛑", image: null, id: 44 },
-    { name: "Pet Snake", emoji: "🐍", image: null, id: 45 },
-    { name: "Jester Hat", emoji: "🤡", image: null, id: 46 },
-    { name: "Flying Broom", emoji: "🧹", image: null, id: 47 },
-    { name: "Party Sparkler", emoji: "✨", image: null, id: 48 },
-    { name: "Star Notepad", emoji: "⭐️📝", image: null, id: 49 },
-    { name: "Voodoo Doll", emoji: "🎎", image: null, id: 50 },
-    { name: "Bonded Ring", emoji: "💞", image: null, id: 51 },
-    { name: "Snow Mittens", emoji: "🧤", image: null, id: 52 },
-    { name: "Crystal Ball", emoji: "🔮", image: null, id: 53 },
-    { name: "Berry Box", emoji: "🍓", image: null, id: 54 },
-    { name: "Tama Gadget", emoji: "📱", image: null, id: 55 },
-    { name: "Valentine Box", emoji: "💝", image: null, id: 56 },
-    { name: "Cookie Heart", emoji: "❤️🍪", image: null, id: 57 },
-    { name: "Precious Peach", emoji: "🍑", image: null, id: 58 },
-    { name: "Bow Tie", emoji: "🎀", image: null, id: 59 },
-    { name: "Signet Ring", emoji: "💎", image: null, id: 60 },
-    { name: "Lol Pop", emoji: "🍭", image: null, id: 61 },
-    { name: "Santa Hat", emoji: "🎅", image: null, id: 62 },
-    { name: "Hypno Lollipop", emoji: "🍬", image: null, id: 63 },
-    { name: "Winter Wreath", emoji: "🎄", image: null, id: 64 },
-    { name: "Vintage Cigar", emoji: "🚬", image: null, id: 65 },
-    { name: "Bunny Muffin", emoji: "🐰🧁", image: null, id: 66 },
-    { name: "Mad Pumpkin", emoji: "🎃", image: null, id: 67 },
-    { name: "Eternal Rose", emoji: "🌹", image: null, id: 68 },
-    { name: "Jolly Chimp", emoji: "🐵", image: null, id: 69 },
-    { name: "Toy Bear", emoji: "🧸", image: null, id: 71 },
-    { name: "Candy Cane", emoji: "🍭", image: null, id: 72 },
-    { name: "Sleigh Bell", emoji: "🔔", image: null, id: 73 },
-    { name: "Swiss Watch", emoji: "⌚️", image: null, id: 74 },
-    { name: "Genie Lamp", emoji: "🪔", image: null, id: 75 },
-    { name: "Plush Pepe", emoji: "🐸", image: null, id: 76 },
-    { name: "Perfume Bottle", emoji: "💨", image: null, id: 77 },
-    { name: "Magic Potion", emoji: "🧪", image: null, id: 78 },
-    { name: "Ion Gem", emoji: "💎", image: null, id: 79 },
-    { name: "Desk Calendar", emoji: "🗓", image: null, id: 80 },
-    { name: "B-Day Candle", emoji: "🕯", image: null, id: 81 }
+    { name: "Durov's Cap", emoji: "🎩" },
+    { name: "Top Hat", emoji: "🎩" },
+    { name: "Astral Shard", emoji: "💎" },
+    { name: "Mini Oscar", emoji: "🏆" },
+    { name: "Electric Skull", emoji: "💀" },
+    { name: "Diamond Ring", emoji: "💍" },
+    { name: "Stellar Rocket", emoji: "🚀" },
+    { name: "Trapped Heart", emoji: "💖" },
+    { name: "Gem Signet", emoji: "🔮" },
+    { name: "Artisan Brick", emoji: "🧱" },
+    { name: "Sharp Tongue", emoji: "🗡" },
+    { name: "Jack-in-the-Box", emoji: "🎁" },
+    { name: "Witch Hat", emoji: "🎃" },
+    { name: "Moon Pendant", emoji: "🌙" },
+    { name: "Lunar Snake", emoji: "🐍" },
+    { name: "Holiday Drink", emoji: "🥂" },
+    { name: "Record Player", emoji: "🎵" },
+    { name: "Joyful Bundle", emoji: "🎉" },
+    { name: "Restless Jar", emoji: "🫙" },
+    { name: "Big Year", emoji: "🎈" },
+    { name: "Light Sword", emoji: "⚔️" },
+    { name: "Jingle Bells", emoji: "🔔" },
+    { name: "Eternal Candle", emoji: "🕯" },
+    { name: "Skull Flower", emoji: "💀🌸" },
+    { name: "Sakura Flower", emoji: "🌸" },
+    { name: "Jelly Bunny", emoji: "🐰" },
+    { name: "Cupid Charm", emoji: "💘" },
+    { name: "Hanging Star", emoji: "⭐️" },
+    { name: "Easter Egg", emoji: "🥚" },
+    { name: "Spy Agaric", emoji: "🍄" },
+    { name: "Homemade Cake", emoji: "🍰" },
+    { name: "Snow Globe", emoji: "❄️" },
+    { name: "Xmas Stocking", emoji: "🧦" },
+    { name: "Scared Cat", emoji: "😿" },
+    { name: "Spiced Wine", emoji: "🍷" },
+    { name: "Evil Eye", emoji: "👁" },
+    { name: "Ionic Dryer", emoji: "💨" },
+    { name: "Ginger Cookie", emoji: "🍪" },
+    { name: "Hex Pot", emoji: "🪣" },
+    { name: "Snake Box", emoji: "🐍📦" },
+    { name: "Loot Bag", emoji: "💰" },
+    { name: "Love Candle", emoji: "❤️🕯" },
+    { name: "Love Potion", emoji: "💕" },
+    { name: "Kissed Frog", emoji: "🐸" },
+    { name: "Neko Helmet", emoji: "🐱⛑" },
+    { name: "Pet Snake", emoji: "🐍" },
+    { name: "Jester Hat", emoji: "🤡" },
+    { name: "Flying Broom", emoji: "🧹" },
+    { name: "Party Sparkler", emoji: "✨" },
+    { name: "Star Notepad", emoji: "⭐️📝" },
+    { name: "Voodoo Doll", emoji: "🎎" },
+    { name: "Bonded Ring", emoji: "💞" },
+    { name: "Snow Mittens", emoji: "🧤" },
+    { name: "Crystal Ball", emoji: "🔮" },
+    { name: "Berry Box", emoji: "🍓" },
+    { name: "Tama Gadget", emoji: "📱" },
+    { name: "Valentine Box", emoji: "💝" },
+    { name: "Cookie Heart", emoji: "❤️🍪" },
+    { name: "Precious Peach", emoji: "🍑" },
+    { name: "Bow Tie", emoji: "🎀" },
+    { name: "Signet Ring", emoji: "💎" },
+    { name: "Lol Pop", emoji: "🍭" },
+    { name: "Santa Hat", emoji: "🎅" },
+    { name: "Hypno Lollipop", emoji: "🍬" },
+    { name: "Winter Wreath", emoji: "🎄" },
+    { name: "Vintage Cigar", emoji: "🚬" },
+    { name: "Bunny Muffin", emoji: "🐰🧁" },
+    { name: "Mad Pumpkin", emoji: "🎃" },
+    { name: "Eternal Rose", emoji: "🌹" },
+    { name: "Jolly Chimp", emoji: "🐵" },
+    { name: "Toy Bear", emoji: "🧸" },
+    { name: "Candy Cane", emoji: "🍭" },
+    { name: "Sleigh Bell", emoji: "🔔" },
+    { name: "Swiss Watch", emoji: "⌚️" },
+    { name: "Genie Lamp", emoji: "🪔" },
+    { name: "Plush Pepe", emoji: "🐸" },
+    { name: "Perfume Bottle", emoji: "💨" },
+    { name: "Magic Potion", emoji: "🧪" },
+    { name: "Ion Gem", emoji: "💎" },
+    { name: "Desk Calendar", emoji: "🗓" },
+    { name: "B-Day Candle", emoji: "🕯" }
   ];
 
-  /* МАТРИЦА */
+  // Матрица (код без изменений)
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
   let drops = [];
@@ -793,18 +748,12 @@
   window.addEventListener("resize", initMatrix);
   setInterval(drawMatrix, 50);
 
-  // ФУНКЦИЯ ДЛЯ ВОСПРОИЗВЕДЕНИЯ ВИДЕО С НАЧАЛА
+  // Функции управления видео и подсветкой (без изменений)
   function playVideoFromStart() {
     if (centerVideo && !fourthGiftSelected) {
-      // Очищаем предыдущий таймаут
-      if (videoPlayTimeout) {
-        clearTimeout(videoPlayTimeout);
-      }
-      
+      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
       centerVideo.currentTime = 0;
       centerVideo.play().catch(e => console.log('Ошибка воспроизведения видео'));
-      
-      // Останавливаем видео через 2 секунды
       videoPlayTimeout = setTimeout(() => {
         centerVideo.pause();
         centerVideo.currentTime = 0;
@@ -812,11 +761,9 @@
     }
   }
 
-  // ФУНКЦИЯ ПОДСВЕТКИ ЦЕНТРАЛЬНОГО КВАДРАТА
   function updateCenterSquareHighlight() {
     const centerSquare = document.getElementById('centerSquare');
     const filledCount = filledSlots.filter(filled => filled).length;
-    
     if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
       centerSquare.classList.add('active-video');
     } else if (filledCount === 4) {
@@ -827,14 +774,76 @@
     }
   }
 
-  // ФУНКЦИЯ ДЛЯ ОТМЕНЫ ВЫБОРА ПОДАРКА
+  // Функция для создания элемента подарка (изображение или видео) с обработкой ошибок
+  function createGiftContent(gift, forSlot = false) {
+    const container = document.createElement('div');
+    container.className = 'selected-gift active';
+
+    // Функция для создания видео
+    const tryCreateVideo = () => {
+      const video = document.createElement('video');
+      video.className = 'gift-img';
+      video.src = `videos/${encodeURIComponent(gift.name)}.mp4`;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.setAttribute('webkit-playsinline', '');
+      
+      // Если видео не загружается, пробуем показать изображение
+      video.onerror = () => {
+        // Пробуем загрузить изображение
+        const img = new Image();
+        img.onload = () => {
+          container.innerHTML = '';
+          img.className = 'gift-img';
+          container.appendChild(img);
+        };
+        img.onerror = () => {
+          // Если и изображения нет, показываем эмодзи
+          container.innerHTML = '';
+          const emoji = document.createElement('div');
+          emoji.className = 'gift-emoji';
+          emoji.textContent = gift.emoji;
+          container.appendChild(emoji);
+        };
+        img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+      };
+      
+      video.oncanplay = () => video.play().catch(() => {});
+      return video;
+    };
+
+    // Пытаемся сразу создать видео (для слотов и куба)
+    if (forSlot) {
+      const video = tryCreateVideo();
+      container.appendChild(video);
+    } else {
+      // Для каталога сначала пробуем изображение
+      const img = new Image();
+      img.onload = () => {
+        img.className = 'gift-img';
+        container.appendChild(img);
+      };
+      img.onerror = () => {
+        // Если нет изображения, показываем эмодзи
+        const emoji = document.createElement('div');
+        emoji.className = 'gift-emoji';
+        emoji.textContent = gift.emoji;
+        container.appendChild(emoji);
+      };
+      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+    }
+
+    return container;
+  }
+
+  // Удаление подарка из слота
   function removeGiftFromSlot(slotIndex, event) {
     event.stopPropagation();
-    
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
     const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
     
-    // Очищаем слот
     selectedGifts[slotIndex] = null;
     filledSlots[slotIndex] = false;
     fourthGiftSelected = false;
@@ -844,47 +853,34 @@
     slotElement.querySelector('.plus-sign').style.opacity = '1';
     slotElement.classList.remove('filled');
     
-    // Удаляем крестик
     const removeBtn = slotElement.querySelector('.remove-gift');
-    if (removeBtn) {
-      removeBtn.remove();
-    }
+    if (removeBtn) removeBtn.remove();
     
-    // Обновляем подсветку центрального квадрата
     updateCenterSquareHighlight();
     
-    // Если были выбранные подарки, останавливаем видео
     if (centerVideo) {
       centerVideo.pause();
       centerVideo.currentTime = 0;
-      if (videoPlayTimeout) {
-        clearTimeout(videoPlayTimeout);
-      }
+      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
     }
     
-    // Обновляем отображение в модальном окне
     updateModalSelection();
   }
 
-  // ФУНКЦИЯ ОБНОВЛЕНИЯ ВЫДЕЛЕНИЯ В МОДАЛЬНОМ ОКНЕ
+  // Обновление выделения в модальном окне
   function updateModalSelection() {
     const giftItems = document.querySelectorAll('.gift-item');
     giftItems.forEach(item => {
       item.classList.remove('selected');
       const removeBtn = item.querySelector('.remove-selected');
-      if (removeBtn) {
-        removeBtn.remove();
-      }
+      if (removeBtn) removeBtn.remove();
     });
     
-    // Добавляем выделение для выбранных подарков
     selectedGifts.forEach((gift, index) => {
       if (gift) {
-        const giftItem = document.querySelector(`.gift-item[data-id="${gift.id}"]`);
+        const giftItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
         if (giftItem) {
           giftItem.classList.add('selected');
-          
-          // Добавляем крестик, если его нет
           if (!giftItem.querySelector('.remove-selected')) {
             const removeBtn = document.createElement('div');
             removeBtn.className = 'remove-selected';
@@ -900,7 +896,7 @@
     });
   }
 
-  // ФУНКЦИЯ СОЗДАНИЯ 3D КУБА С ПОДАРКАМИ
+  // Создание 3D куба
   function createGiftCube() {
     const cubeFaces = [
       document.getElementById('cube-face-0'),
@@ -909,51 +905,23 @@
       document.getElementById('cube-face-3')
     ];
 
-    // КОПИРУЕМ ПОДАРКИ В ГРАНИ КУБА
     cubeFaces.forEach((face, index) => {
       if (selectedGifts[index]) {
         const gift = selectedGifts[index];
-        const giftContainer = document.createElement('div');
-        giftContainer.className = 'selected-gift active';
-
-        if (gift.image) {
-          const giftImg = document.createElement('img');
-          giftImg.className = 'gift-img';
-          giftImg.src = gift.image;
-          giftImg.alt = gift.name;
-          giftContainer.appendChild(giftImg);
-        } else {
-          const giftEmoji = document.createElement('div');
-          giftEmoji.className = 'gift-emoji';
-          giftEmoji.textContent = gift.emoji;
-          giftContainer.appendChild(giftEmoji);
-        }
-
+        const content = createGiftContent(gift, true); // для куба тоже видео
         face.innerHTML = '';
-        face.appendChild(giftContainer);
+        face.appendChild(content);
       }
     });
 
-    // ВЕРХНЯЯ И НИЖНЯЯ ГРАНИ - ПРОСТО ЗЕРКАЛЬНЫЕ
     const topFace = document.querySelector('.cube-face.top');
     const bottomFace = document.querySelector('.cube-face.bottom');
-    
     if (selectedGifts[0]) {
-      const topGift = document.createElement('div');
-      topGift.className = 'selected-gift active';
-      topGift.innerHTML = '<div class="gift-emoji">✨</div>';
-      topFace.innerHTML = '';
-      topFace.appendChild(topGift);
-      
-      const bottomGift = document.createElement('div');
-      bottomGift.className = 'selected-gift active';
-      bottomGift.innerHTML = '<div class="gift-emoji">💫</div>';
-      bottomFace.innerHTML = '';
-      bottomFace.appendChild(bottomGift);
+      topFace.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">✨</div></div>';
+      bottomFace.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">💫</div></div>';
     }
   }
 
-  // ФУНКЦИЯ ОБЪЕДИНЕНИЯ В 3D КУБ
   function mergeToCube() {
     const cornersContainer = document.getElementById('cornersContainer');
     const centerSquare = document.getElementById('centerSquare');
@@ -966,52 +934,31 @@
     giftCubeContainer.classList.add('active');
   }
 
-  /* ✅ ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК */
+  // Интеллектуальный поиск (без изменений)
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
-
     searchTerm = searchTerm.toLowerCase();
-
     return gifts.sort((a, b) => {
       const scoreA = getSearchScore(a.name, searchTerm);
       const scoreB = getSearchScore(b.name, searchTerm);
-
-      if (scoreA !== scoreB) {
-        return scoreB - scoreA;
-      }
-
+      if (scoreA !== scoreB) return scoreB - scoreA;
       return a.name.localeCompare(b.name);
     });
   }
 
   function getSearchScore(name, searchTerm) {
     const lowerName = name.toLowerCase();
-
-    if (lowerName.startsWith(searchTerm)) {
-      return 1000;
-    }
-
-    if (lowerName.includes(` ${searchTerm}`)) {
-      return 800;
-    }
-
-    if (lowerName[0] === searchTerm[0]) {
-      return 500;
-    }
-
-    if (lowerName.includes(searchTerm)) {
-      return 100;
-    }
-
+    if (lowerName.startsWith(searchTerm)) return 1000;
+    if (lowerName.includes(` ${searchTerm}`)) return 800;
+    if (lowerName[0] === searchTerm[0]) return 500;
+    if (lowerName.includes(searchTerm)) return 100;
     return 0;
   }
 
-  /* ✅ ФИЛЬТР + СОРТИРОВКА ПО ПОИСКУ */
   function filterAndSortGifts(searchTerm) {
     const filteredGifts = rareGifts.filter(gift =>
       gift.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
     const sortedGifts = sortGiftsByRelevance(filteredGifts, searchTerm);
 
     const grid = document.getElementById('giftsGrid');
@@ -1020,115 +967,91 @@
     sortedGifts.forEach(gift => {
       const item = document.createElement('div');
       item.className = 'gift-item';
-      item.dataset.id = gift.id;
+      item.dataset.name = gift.name;
 
-      if (gift.image) {
-        item.innerHTML = `
-          <div class="gift-img">
-            <img src="${gift.image}" alt="${gift.name}">
-          </div>
-          <div class="gift-name">${gift.name}</div>
-        `;
-      } else {
-        item.innerHTML = `
-          <div class="gift-img">${gift.emoji}</div>
-          <div class="gift-name">${gift.name}</div>
-        `;
-      }
+      // Для каталога используем изображение (png)
+      const img = document.createElement('img');
+      img.className = 'gift-img';
+      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+      img.alt = gift.name;
+      img.onerror = () => {
+        // Если изображение не загрузилось, заменяем на эмодзи
+        img.style.display = 'none';
+        const emojiDiv = document.createElement('div');
+        emojiDiv.className = 'gift-emoji';
+        emojiDiv.textContent = gift.emoji;
+        img.parentNode.replaceChild(emojiDiv, img);
+      };
+
+      const giftImgDiv = document.createElement('div');
+      giftImgDiv.className = 'gift-img';
+      giftImgDiv.appendChild(img);
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'gift-name';
+      nameDiv.textContent = gift.name;
+
+      item.appendChild(giftImgDiv);
+      item.appendChild(nameDiv);
 
       item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
       grid.appendChild(item);
     });
-    
-    // Восстанавливаем выделение
+
     updateModalSelection();
   }
 
-  /* ✅ ПОКАЗАТЬ ПОДАРКИ */
   function showGifts(slotElement) {
     currentSelectedSlot = slotElement.dataset.slot;
     currentSlotElement = slotElement;
-
     filterAndSortGifts('');
     document.getElementById('giftModal').classList.add('active');
   }
 
-  /* ✅ ВЫБОР ПОДАРКА */
+  // Выбор подарка для слота
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
-    
-    // Если слот уже заполнен, ничего не делаем
-    if (filledSlots[slotIndex]) {
-      return;
-    }
-    
-    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
+    if (filledSlots[slotIndex]) return;
 
-    // СОХРАНЯЕМ ВЫБРАННЫЙ ПОДАРОК
+    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
     selectedGifts[slotIndex] = gift;
     filledSlots[slotIndex] = true;
 
     slotGiftContainer.innerHTML = '';
-
-    if (gift.image) {
-      const giftImg = document.createElement('img');
-      giftImg.className = 'gift-img';
-      giftImg.src = gift.image;
-      giftImg.alt = gift.name;
-
-      if (gift.id === 1) slotGiftContainer.classList.add('durov-cap');
-
-      slotGiftContainer.appendChild(giftImg);
-    } else {
-      const giftEmoji = document.createElement('div');
-      giftEmoji.className = 'gift-emoji';
-      giftEmoji.textContent = gift.emoji;
-      slotGiftContainer.appendChild(giftEmoji);
-    }
-
-    const giftName = document.createElement('div');
-    giftName.className = 'gift-name';
-    giftName.textContent = gift.name;
-    slotGiftContainer.appendChild(giftName);
+    const content = createGiftContent(gift, true); // для слота видео
+    slotGiftContainer.appendChild(content);
 
     slotGiftContainer.classList.add('active');
+    if (gift.name === "Durov's Cap") slotGiftContainer.classList.add('durov-cap');
+
     slotElement.querySelector('.plus-sign').style.opacity = '0';
     slotElement.classList.add('filled');
-    
-    // ДОБАВЛЯЕМ КРЕСТИК ДЛЯ УДАЛЕНИЯ
+
     const removeBtn = document.createElement('div');
     removeBtn.className = 'remove-gift';
     removeBtn.innerHTML = '×';
     removeBtn.onclick = (e) => removeGiftFromSlot(slotIndex, e);
     slotElement.appendChild(removeBtn);
 
-    // ПРОВЕРЯЕМ, ЭТО 4-Й ПОДАРОК?
     const filledCount = filledSlots.filter(filled => filled).length;
-    
     if (filledCount === 4) {
       fourthGiftSelected = true;
-      // ОСТАНАВЛИВАЕМ ВИДЕО И ДЕЛАЕМ КВАДРАТ ГОТОВЫМ
       if (centerVideo) {
         centerVideo.pause();
         centerVideo.currentTime = 0;
-        if (videoPlayTimeout) {
-          clearTimeout(videoPlayTimeout);
-        }
+        if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
       }
       updateCenterSquareHighlight();
     } else {
-      // ВОСПРОИЗВОДИМ ВИДЕО С НАЧАЛА
       playVideoFromStart();
       updateCenterSquareHighlight();
     }
 
-    // Обновляем выделение в модальном окне
     updateModalSelection();
-    
     document.getElementById('giftModal').classList.remove('active');
   }
 
-  /* ✅ ИНИЦИАЛИЗАЦИЯ */
+  // Инициализация
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
@@ -1148,15 +1071,11 @@
 
       document.querySelectorAll('.mini-square').forEach(square => {
         square.onclick = (e) => {
-          // Не открываем модалку если кликнули по крестику
-          if (e.target.classList.contains('remove-gift')) {
-            return;
-          }
+          if (e.target.classList.contains('remove-gift')) return;
           showGifts(square);
         };
       });
 
-      // ДОБАВЛЯЕМ ОБРАБОТЧИК НА ЦЕНТРАЛЬНЫЙ КВАДРАТ
       document.getElementById('centerSquare').onclick = () => {
         if (filledSlots.filter(filled => filled).length === 4) {
           mergeToCube();
@@ -1165,7 +1084,7 @@
     }, 3500);
   }
 
-  /* ✅ ОБРАБОТЧИКИ СОБЫТИЙ */
+  // Обработчики модального окна
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
   });
