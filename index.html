@@ -579,6 +579,34 @@
 
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
+  // ========== ПРЕДЗАГРУЗКА ВИДЕО ==========
+  const preloadedVideos = {}; // хранилище готовых видео
+
+  function preloadGiftVideo(giftName) {
+    const baseName = fileMap[giftName] || giftName;
+    const encodedName = encodeURIComponent(baseName);
+    const video = document.createElement('video');
+    video.className = 'gift-img'; // для стилей
+    video.src = `videos/${encodedName}.mp4`;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute('webkit-playsinline', '');
+    video.preload = 'auto';
+    
+    // Как только видео будет готово к воспроизведению, ставим на паузу (первый кадр)
+    video.addEventListener('canplay', function onCanPlay() {
+      video.pause(); // останавливаем на первом кадре
+      video.removeEventListener('canplay', onCanPlay);
+    });
+    
+    video.load(); // начинаем загрузку
+    preloadedVideos[giftName] = video;
+  }
+
+  // Запускаем предзагрузку для всех гарантированных подарков
+  mediaGifts.forEach(giftName => preloadGiftVideo(giftName));
+
   // Полный каталог подарков (80+)
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩" },
@@ -727,7 +755,7 @@
     }
   }
 
-  // Создание элемента для каталога
+  // Создание элемента для каталога (без изменений)
   function createCatalogGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'gift-img';
@@ -749,7 +777,7 @@
     return container;
   }
 
-  // Создание контента для слота/куба
+  // Функция для создания контента слота/куба (с использованием предзагруженных видео)
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
@@ -758,6 +786,20 @@
       container.classList.add('has-media');
     }
 
+    // Если это для слота и подарок в списке гарантированных, и есть предзагруженное видео
+    if (forSlot && mediaGifts.has(gift.name) && preloadedVideos[gift.name]) {
+      const readyVideo = preloadedVideos[gift.name];
+      delete preloadedVideos[gift.name]; // убираем из хранилища, видео теперь будет в слоте
+      // Убедимся, что видео стоит на паузе и сброшено на начало
+      readyVideo.pause();
+      readyVideo.currentTime = 0;
+      container.appendChild(readyVideo);
+      // Создаём новое видео для будущих выборов этого же подарка
+      preloadGiftVideo(gift.name);
+      return container;
+    }
+
+    // Старая логика для остальных случаев (без предзагрузки)
     const baseName = fileMap[gift.name] || gift.name;
     const encodedName = encodeURIComponent(baseName);
 
@@ -812,6 +854,7 @@
     return container;
   }
 
+  // Удаление подарка из слота
   function removeGiftFromSlot(slotIndex, event) {
     event.stopPropagation();
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
@@ -840,6 +883,7 @@
     updateModalSelection();
   }
 
+  // Обновление выделения в модальном окне
   function updateModalSelection() {
     const giftItems = document.querySelectorAll('.gift-item');
     giftItems.forEach(item => {
@@ -868,6 +912,7 @@
     });
   }
 
+  // Создание 3D куба
   function createGiftCube() {
     const cubeFaces = [
       document.getElementById('cube-face-0'),
@@ -900,6 +945,7 @@
     giftCubeContainer.classList.add('active');
   }
 
+  // Интеллектуальный поиск
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
     searchTerm = searchTerm.toLowerCase();
@@ -920,6 +966,7 @@
     return 0;
   }
 
+  // Фильтрация и отрисовка сетки
   function filterAndSortGifts(searchTerm) {
     const filteredGifts = rareGifts.filter(gift =>
       gift.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -955,6 +1002,7 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
+  // Выбор подарка для слота (без крестика)
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -993,6 +1041,7 @@
     document.getElementById('giftModal').classList.remove('active');
   }
 
+  // Инициализация
   const user = tg.initDataUnsafe?.user;
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
@@ -1025,6 +1074,7 @@
     }, 3500);
   }
 
+  // Обработчики модального окна
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
   });
@@ -1040,7 +1090,7 @@
   };
 </script>
 
-<!-- Предзагрузка изображений для четырёх подарков -->
+<!-- Предзагрузка изображений для четырёх подарков (оставляем на всякий случай) -->
 <script>
   (function preloadImages() {
     var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
@@ -1054,30 +1104,6 @@
       var baseName = fileMap[name] || name;
       var img = new Image();
       img.src = 'videos/' + encodeURIComponent(baseName) + '.png';
-    });
-  })();
-</script>
-
-<!-- Предзагрузка видео для четырёх подарков -->
-<script>
-  (function preloadVideos() {
-    var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
-    var fileMap = {
-      "Durov's Cap": "Durov-Cap",
-      "Astral Shard": "Astral Shard",
-      "Kissed Frog": "Kissed Frog",
-      "Artisan Brick": "Artisan Brick"
-    };
-    gifts.forEach(function(name) {
-      var baseName = fileMap[name] || name;
-      var video = document.createElement('video');
-      video.preload = 'auto';
-      video.src = 'videos/' + encodeURIComponent(baseName) + '.mp4';
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      // Не добавляем в DOM, просто инициируем загрузку
-      video.load();
     });
   })();
 </script>
