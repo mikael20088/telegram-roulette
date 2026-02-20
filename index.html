@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все стили без изменений, плюс добавим класс .hidden-video */
+    /* Все стили без изменений + новые для анимации выигрыша */
     html, body {
       margin: 0;
       padding: 0;
@@ -222,11 +222,7 @@
       height: 100%;
       position: relative;
       transform-style: preserve-3d;
-      animation: rotate3d 8s infinite linear;
-    }
-    @keyframes rotate3d {
-      0% { transform: rotateX(0deg) rotateY(0deg); }
-      100% { transform: rotateX(360deg) rotateY(360deg); }
+      /* Убираем CSS-анимацию, будем вращать через JS */
     }
     .cube-face {
       position: absolute;
@@ -495,6 +491,31 @@
       color: #fff;
       font-weight: 500;
     }
+
+    /* Элемент для выигрышного подарка */
+    .winning-gift {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 70px;
+      height: 70px;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 20;
+      transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.5s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .winning-gift.active {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    .winning-gift video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 14px;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+    }
   </style>
 </head>
 <body>
@@ -541,6 +562,11 @@
         <div class="cube-face top"></div>
         <div class="cube-face bottom"></div>
       </div>
+    </div>
+
+    <!-- Выигрышный подарок -->
+    <div class="winning-gift" id="winningGift">
+      <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video>
     </div>
   </div>
 </div>
@@ -596,38 +622,29 @@
     const baseName = fileMap[giftName] || giftName;
     const encodedName = encodeURIComponent(baseName);
     const video = document.createElement('video');
-    video.className = 'gift-img hidden-video'; // hidden-video скрывает его
+    video.className = 'gift-img hidden-video';
     video.src = `videos/${encodedName}.mp4`;
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
     video.setAttribute('webkit-playsinline', '');
     video.preload = 'auto';
-    // Добавляем в body, чтобы браузер начал загрузку
     document.body.appendChild(video);
-    // Сохраняем ссылку
     hiddenVideos[giftName] = video;
   }
 
-  // Создаём скрытые видео для всех гарантированных подарков
   mediaGifts.forEach(giftName => createHiddenVideo(giftName));
 
-  // Функция для получения готового видео (и создания нового скрытого на замену)
   function takePreloadedVideo(giftName) {
     const video = hiddenVideos[giftName];
     if (video) {
-      // Удаляем из хранилища, так как видео будет использовано
       delete hiddenVideos[giftName];
-      // Убираем скрывающий класс
       video.classList.remove('hidden-video');
-      // Сбрасываем на начало (на всякий случай)
       video.pause();
       video.currentTime = 0;
-      // Создаём новое скрытое видео для будущих выборов
       createHiddenVideo(giftName);
       return video;
     }
-    // Если по какой-то причине нет скрытого видео, создаём новое (но это маловероятно)
     return null;
   }
 
@@ -779,7 +796,7 @@
     }
   }
 
-  // Создание элемента для каталога (без изменений)
+  // Создание элемента для каталога
   function createCatalogGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'gift-img';
@@ -801,7 +818,7 @@
     return container;
   }
 
-  // Функция для создания контента слота/куба (использует предзагруженные видео)
+  // Функция для создания контента слота/куба
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
@@ -810,19 +827,15 @@
       container.classList.add('has-media');
     }
 
-    // Если это для слота и подарок в списке гарантированных, используем предзагруженное видео
     if (forSlot && mediaGifts.has(gift.name)) {
       const readyVideo = takePreloadedVideo(gift.name);
       if (readyVideo) {
-        // Видео уже имеет класс gift-img, добавляем его в контейнер
         container.appendChild(readyVideo);
-        // Запускаем воспроизведение (важно!)
         readyVideo.play().catch(() => {});
         return container;
       }
     }
 
-    // Старая логика для остальных случаев (если видео не предзагружено или подарок не из списка)
     const baseName = fileMap[gift.name] || gift.name;
     const encodedName = encodeURIComponent(baseName);
 
@@ -877,7 +890,6 @@
     return container;
   }
 
-  // Удаление подарка из слота
   function removeGiftFromSlot(slotIndex, event) {
     event.stopPropagation();
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
@@ -906,7 +918,6 @@
     updateModalSelection();
   }
 
-  // Обновление выделения в модальном окне
   function updateModalSelection() {
     const giftItems = document.querySelectorAll('.gift-item');
     giftItems.forEach(item => {
@@ -935,7 +946,6 @@
     });
   }
 
-  // Создание 3D куба
   function createGiftCube() {
     const cubeFaces = [
       document.getElementById('cube-face-0'),
@@ -956,6 +966,77 @@
     });
   }
 
+  // ========== АНИМАЦИЯ ВЫИГРЫША ==========
+  let animationFrame = null;
+  let startTime = null;
+  const CUBE_SPEED_INITIAL = 0.5; // оборотов в секунду
+  const CUBE_SPEED_FINAL = 2.0;
+  const ACCELERATION_START = 10; // секунд
+  const ACCELERATION_END = 20;
+  const TOTAL_DURATION = 20;
+
+  function stopCubeAnimation() {
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
+  }
+
+  function startWinAnimation() {
+    const giftCube = document.getElementById('giftCube');
+    const winningGift = document.getElementById('winningGift');
+    const winningVideo = winningGift.querySelector('video');
+    
+    // Сброс позиции куба
+    giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    
+    let angleX = 0;
+    let angleY = 0;
+    startTime = performance.now();
+
+    function animate(currentTime) {
+      const elapsed = (currentTime - startTime) / 1000; // в секундах
+
+      if (elapsed < TOTAL_DURATION) {
+        // Первые 10 секунд постоянная скорость
+        if (elapsed < ACCELERATION_START) {
+          angleY += CUBE_SPEED_INITIAL * 360 * (1/60); // примерно 60fps
+          angleX += CUBE_SPEED_INITIAL * 180 * (1/60);
+        }
+        // С 10 по 20 секунду ускорение
+        else if (elapsed < ACCELERATION_END) {
+          const t = (elapsed - ACCELERATION_START) / (ACCELERATION_END - ACCELERATION_START);
+          const speed = CUBE_SPEED_INITIAL + (CUBE_SPEED_FINAL - CUBE_SPEED_INITIAL) * t;
+          angleY += speed * 360 * (1/60);
+          angleX += speed * 180 * (1/60);
+        }
+        
+        giftCube.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg)`;
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        // Останавливаем в нужном положении: верхняя грань пустая.
+        // Мы хотим, чтобы грань top (пустая) была сверху.
+        // Это значит, что ось X должна быть такой, что top направлена вверх.
+        // При transform: rotateX(0) rotateY(0) top смотрит вверх.
+        // Нам нужно довернуть до ближайшего кратного 90° по X и Y, чтобы top была сверху.
+        // Проще установить transform в rotateX(0deg) rotateY(0deg) и затем добавить небольшой поворот,
+        // чтобы куб встал ровно (можно оставить как есть, если мы уверены).
+        // Для красоты установим в rotateX(0) rotateY(0).
+        giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        
+        // Показываем выигрышный подарок
+        winningGift.classList.add('active');
+        winningVideo.play().catch(() => {});
+        
+        // Можно скрыть куб или оставить как есть
+        // Через некоторое время убрать или оставить
+      }
+    }
+
+    animationFrame = requestAnimationFrame(animate);
+  }
+
+  // Переопределяем функцию mergeToCube
   function mergeToCube() {
     const cornersContainer = document.getElementById('cornersContainer');
     const centerSquare = document.getElementById('centerSquare');
@@ -966,6 +1047,9 @@
 
     createGiftCube();
     giftCubeContainer.classList.add('active');
+
+    // Запускаем анимацию выигрыша
+    startWinAnimation();
   }
 
   // Интеллектуальный поиск
@@ -1025,7 +1109,7 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота (использует предзагруженные видео)
+  // Выбор подарка для слота
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -1113,7 +1197,7 @@
   };
 </script>
 
-<!-- Предзагрузка изображений для четырёх подарков (оставляем на всякий случай) -->
+<!-- Предзагрузка изображений для четырёх подарков -->
 <script>
   (function preloadImages() {
     var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
