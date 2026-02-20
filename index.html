@@ -218,7 +218,7 @@
       pointer-events: auto;
     }
     .gift-cube-container.fall {
-      transform: translate(-50%, calc(-50% + 80px)) scale(0.9);
+      transform: translate(-50%, calc(-50% + 60px)) scale(0.9);
     }
     .gift-cube {
       width: 100%;
@@ -513,7 +513,7 @@
     }
     .winning-gift.rise {
       transition: transform 2s ease-out;
-      transform: translate(-50%, -200%) scale(1.2);
+      transform: translate(-50%, -120%) scale(1.2);
     }
     .winning-gift video {
       width: 100%;
@@ -1025,8 +1025,8 @@
         giftCube.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg)`;
         animationFrame = requestAnimationFrame(rotatePhase);
       } else {
-        // Конец вращения: ставим куб ровно, но сохраняем его как 3D
-        giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        // Конец вращения: ставим куб в положение с небольшим наклоном, чтобы был виден 3D-эффект
+        giftCube.style.transform = 'rotateX(15deg) rotateY(15deg)';
         
         // Ждём 0.5 секунды, затем куб падает вниз и появляется подарок
         setTimeout(() => {
