@@ -8,14 +8,10 @@
                  initial-scale=1.0,
                  maximum-scale=1.0,
                  user-scalable=no" />
-
   <title>Telegram Roulette</title>
-
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
   <style>
-    /* Все ваши стили (полностью скопированы из последнего рабочего кода) */
+    /* Все ваши стили (без изменений) */
     html, body {
       margin: 0;
       padding: 0;
@@ -24,20 +20,17 @@
       background: #000;
       overflow: hidden;
     }
-
     #app {
       position: relative;
       width: 100%;
       height: 100%;
     }
-
     canvas {
       position: absolute;
       inset: 0;
       z-index: 1;
       transition: opacity 0.5s ease;
     }
-
     .avatar-top {
       position: absolute;
       top: 18px;
@@ -52,13 +45,11 @@
       z-index: 4;
       box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
     }
-
     .avatar-top img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
     .black-screen {
       position: absolute;
       inset: 0;
@@ -67,7 +58,6 @@
       opacity: 0;
       transition: opacity 0.5s ease;
     }
-
     .video-wrapper {
       position: absolute;
       top: 50%;
@@ -79,14 +69,12 @@
       pointer-events: none;
       transition: opacity 0.5s ease;
     }
-
     video {
       width: 100%;
       height: 100%;
       object-fit: contain;
       background: transparent;
     }
-
     .main-square {
       position: absolute;
       top: 50%;
@@ -103,7 +91,6 @@
       position: relative;
       transition: all 0.5s ease;
     }
-
     .main-square::before {
       content: '';
       position: absolute;
@@ -118,24 +105,20 @@
       z-index: -1;
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
-
     @keyframes matrixGlow {
       0% { opacity: 0.7; transform: scale(1); }
       100% { opacity: 1; transform: scale(1.03); }
     }
-
     .corners-container {
       position: absolute;
       inset: 0;
       transition: all 0.5s ease;
       z-index: 2;
     }
-
     .corners-container.merged {
       opacity: 0;
       pointer-events: none;
     }
-
     .mini-square {
       position: absolute;
       width: 70px;
@@ -155,17 +138,14 @@
       border: 1.5px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
-
     .mini-square[data-slot="0"] { top: 8px; left: 8px; }
     .mini-square[data-slot="1"] { top: 8px; right: 8px; }
     .mini-square[data-slot="2"] { bottom: 8px; left: 8px; }
     .mini-square[data-slot="3"] { bottom: 8px; right: 8px; }
-
     .mini-square.filled {
       background: rgba(0, 255, 136, 0.35);
       border-color: rgba(0, 255, 136, 0.6);
     }
-
     .plus-sign {
       font-size: 24px;
       color: #fff;
@@ -174,7 +154,6 @@
       transition: opacity 0.3s ease;
       text-shadow: 0 0 12px rgba(0, 255, 136, 1);
     }
-
     .remove-gift {
       position: absolute;
       top: -5px;
@@ -196,11 +175,9 @@
       opacity: 0;
       transition: opacity 0.2s ease;
     }
-
     .mini-square:hover .remove-gift {
       opacity: 1;
     }
-
     .center-mini-square {
       position: absolute;
       top: 50%;
@@ -222,26 +199,22 @@
       cursor: pointer;
       pointer-events: none;
     }
-
     .center-mini-square.active-video {
       background: rgba(255, 215, 0, 0.3);
       border: 2px solid rgba(255, 215, 0, 0.8);
       box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
       pointer-events: auto;
     }
-
     .center-mini-square.completed {
       background: rgba(255, 215, 0, 0.3);
       border: 2px solid rgba(255, 215, 0, 0.8);
       box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
       pointer-events: auto;
     }
-
     .center-mini-square.merged {
       opacity: 0;
       pointer-events: none;
     }
-
     .center-video {
       width: 90%;
       height: 90%;
@@ -249,7 +222,6 @@
       border-radius: 6px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
-
     .gift-cube-container {
       position: absolute;
       top: 50%;
@@ -262,12 +234,10 @@
       transition: opacity 0.5s ease;
       pointer-events: none;
     }
-
     .gift-cube-container.active {
       opacity: 1;
       pointer-events: auto;
     }
-
     .gift-cube {
       width: 100%;
       height: 100%;
@@ -275,12 +245,10 @@
       transform-style: preserve-3d;
       animation: rotate3d 8s infinite linear;
     }
-
     @keyframes rotate3d {
       0% { transform: rotateX(0deg) rotateY(0deg); }
       100% { transform: rotateX(360deg) rotateY(360deg); }
     }
-
     .cube-face {
       position: absolute;
       width: 70px;
@@ -297,7 +265,6 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
-
     .cube-face .selected-gift {
       position: relative;
       opacity: 1;
@@ -308,7 +275,6 @@
       backdrop-filter: none;
       border: none;
     }
-
     .cube-face .selected-gift .gift-img,
     .cube-face .selected-gift video.gift-img {
       width: 45px;
@@ -316,22 +282,18 @@
       object-fit: cover;
       border-radius: 8px;
     }
-
     .cube-face .selected-gift .gift-emoji {
       font-size: 32px;
     }
-
     .cube-face .selected-gift .gift-name {
       display: none;
     }
-
     .cube-face.front  { transform: translateZ(35px); }
     .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
     .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
     .cube-face.left   { transform: rotateY(-90deg) translateZ(35px); }
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
-
     .selected-gift {
       position: absolute;
       inset: 0;
@@ -348,12 +310,10 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(0, 255, 136, 0.6);
     }
-
     .selected-gift.active {
       opacity: 1;
       transform: scale(1);
     }
-
     .selected-gift.durov-cap .gift-img {
       width: 95% !important;
       height: 95% !important;
@@ -362,15 +322,12 @@
       margin-bottom: 0;
       box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
     }
-
     .selected-gift.durov-cap .gift-name { display: none; }
-
     .selected-gift .gift-emoji {
       font-size: 28px;
       margin-bottom: 2px;
       text-shadow: 0 0 10px rgba(255, 255, 255, 1);
     }
-
     .selected-gift .gift-img,
     .selected-gift video.gift-img {
       width: 38px;
@@ -379,7 +336,6 @@
       object-fit: cover;
       margin-bottom: 2px;
     }
-
     .selected-gift .gift-name {
       font-size: 10px;
       color: #fff;
@@ -389,7 +345,6 @@
       line-height: 1.1;
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
-
     .modal {
       position: fixed;
       top: 0;
@@ -404,9 +359,7 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-
     .modal.active { display: flex; opacity: 1; }
-
     .modal-content {
       background: rgba(20, 20, 20, 0.95);
       border-radius: 20px;
@@ -417,7 +370,6 @@
       position: relative;
       width: 90%;
     }
-
     .close-btn {
       position: absolute;
       top: 15px;
@@ -433,12 +385,10 @@
       font-size: 18px;
       color: #fff;
     }
-
     .search-container {
       position: relative;
       margin-bottom: 15px;
     }
-
     .search-input {
       width: 100%;
       padding: 12px 40px 12px 15px;
@@ -450,9 +400,7 @@
       box-sizing: border-box;
       outline: none;
     }
-
     .search-input::placeholder { color: rgba(255, 255, 255, 0.6); }
-
     .search-icon {
       position: absolute;
       right: 15px;
@@ -462,14 +410,12 @@
       font-size: 18px;
       pointer-events: none;
     }
-
     .gifts-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 15px;
       margin-top: 10px;
     }
-
     .gift-item {
       position: relative;
       text-align: center;
@@ -483,12 +429,10 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
-
     .gift-item.selected {
       background: rgba(0, 255, 136, 0.2);
       border-color: rgba(0, 255, 136, 0.5);
     }
-
     .gift-item .remove-selected {
       position: absolute;
       top: -5px;
@@ -508,12 +452,10 @@
       border: 1px solid rgba(255, 255, 255, 0.5);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
-
     .gift-item:hover {
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.05);
     }
-
     .gift-img {
       width: 60px;
       height: 60px;
@@ -527,14 +469,12 @@
       overflow: hidden;
       position: relative;
     }
-
     .gift-img img,
     .gift-img video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
     .gift-name {
       font-size: 12px;
       color: #fff;
@@ -542,7 +482,6 @@
     }
   </style>
 </head>
-
 <body>
 <div id="app">
   <div class="black-screen" id="blackScreen"></div>
@@ -624,6 +563,14 @@
   let filledSlots = new Array(4).fill(false);
   let videoPlayTimeout = null;
   let fourthGiftSelected = false;
+
+  // ========== КАРТА СООТВЕТСТВИЯ ИМЁН ФАЙЛОВ ==========
+  const fileMap = {
+    "Durov's Cap": "Durov-Cap",
+    "Astral Shard": "Astral Shard",
+    "Kissed Frog": "Kissed Frog",
+    "Artisan Brick": "Artisan Brick"
+  };
 
   // Полный каталог подарков (имена и эмодзи)
   const rareGifts = [
@@ -748,7 +695,6 @@
   window.addEventListener("resize", initMatrix);
   setInterval(drawMatrix, 50);
 
-  // Функции управления видео и подсветкой (без изменений)
   function playVideoFromStart() {
     if (centerVideo && !fourthGiftSelected) {
       if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
@@ -774,25 +720,48 @@
     }
   }
 
-  // Функция для создания элемента подарка (изображение или видео) с обработкой ошибок
+  // Функция для создания элемента подарка в КАТАЛОГЕ
+  function createCatalogGiftElement(gift) {
+    const container = document.createElement('div');
+    container.className = 'gift-img';
+
+    const baseName = fileMap[gift.name] || gift.name;
+    const encodedName = encodeURIComponent(baseName);
+
+    const img = new Image();
+    img.src = `videos/${encodedName}.png`;
+    img.alt = gift.name;
+    img.onerror = () => {
+      container.innerHTML = '';
+      const emoji = document.createElement('div');
+      emoji.className = 'gift-emoji';
+      emoji.textContent = gift.emoji;
+      container.appendChild(emoji);
+    };
+    container.appendChild(img);
+    return container;
+  }
+
+  // Функция для создания содержимого СЛОТА или КУБА (видео)
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
 
-    // Функция для создания видео
+    const baseName = fileMap[gift.name] || gift.name;
+    const encodedName = encodeURIComponent(baseName);
+
     const tryCreateVideo = () => {
       const video = document.createElement('video');
       video.className = 'gift-img';
-      video.src = `videos/${encodeURIComponent(gift.name)}.mp4`;
+      video.src = `videos/${encodedName}.mp4`;
       video.muted = true;
       video.loop = true;
       video.autoplay = true;
       video.playsInline = true;
       video.setAttribute('webkit-playsinline', '');
-      
-      // Если видео не загружается, пробуем показать изображение
+
       video.onerror = () => {
-        // Пробуем загрузить изображение
+        // Пробуем показать изображение
         const img = new Image();
         img.onload = () => {
           container.innerHTML = '';
@@ -800,39 +769,35 @@
           container.appendChild(img);
         };
         img.onerror = () => {
-          // Если и изображения нет, показываем эмодзи
           container.innerHTML = '';
           const emoji = document.createElement('div');
           emoji.className = 'gift-emoji';
           emoji.textContent = gift.emoji;
           container.appendChild(emoji);
         };
-        img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+        img.src = `videos/${encodedName}.png`;
       };
-      
+
       video.oncanplay = () => video.play().catch(() => {});
       return video;
     };
 
-    // Пытаемся сразу создать видео (для слотов и куба)
     if (forSlot) {
-      const video = tryCreateVideo();
-      container.appendChild(video);
+      container.appendChild(tryCreateVideo());
     } else {
-      // Для каталога сначала пробуем изображение
+      // для каталога не используется
       const img = new Image();
-      img.onload = () => {
-        img.className = 'gift-img';
-        container.appendChild(img);
-      };
+      img.className = 'gift-img';
+      img.src = `videos/${encodedName}.png`;
+      img.alt = gift.name;
       img.onerror = () => {
-        // Если нет изображения, показываем эмодзи
+        container.innerHTML = '';
         const emoji = document.createElement('div');
         emoji.className = 'gift-emoji';
         emoji.textContent = gift.emoji;
         container.appendChild(emoji);
       };
-      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+      container.appendChild(img);
     }
 
     return container;
@@ -843,27 +808,27 @@
     event.stopPropagation();
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
     const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-    
+
     selectedGifts[slotIndex] = null;
     filledSlots[slotIndex] = false;
     fourthGiftSelected = false;
-    
+
     slotGiftContainer.innerHTML = '';
     slotGiftContainer.classList.remove('active', 'durov-cap');
     slotElement.querySelector('.plus-sign').style.opacity = '1';
     slotElement.classList.remove('filled');
-    
+
     const removeBtn = slotElement.querySelector('.remove-gift');
     if (removeBtn) removeBtn.remove();
-    
+
     updateCenterSquareHighlight();
-    
+
     if (centerVideo) {
       centerVideo.pause();
       centerVideo.currentTime = 0;
       if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
     }
-    
+
     updateModalSelection();
   }
 
@@ -875,7 +840,7 @@
       const removeBtn = item.querySelector('.remove-selected');
       if (removeBtn) removeBtn.remove();
     });
-    
+
     selectedGifts.forEach((gift, index) => {
       if (gift) {
         const giftItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
@@ -908,7 +873,7 @@
     cubeFaces.forEach((face, index) => {
       if (selectedGifts[index]) {
         const gift = selectedGifts[index];
-        const content = createGiftContent(gift, true); // для куба тоже видео
+        const content = createGiftContent(gift, true);
         face.innerHTML = '';
         face.appendChild(content);
       }
@@ -929,12 +894,12 @@
 
     cornersContainer.classList.add('merged');
     centerSquare.classList.add('merged');
-    
+
     createGiftCube();
     giftCubeContainer.classList.add('active');
   }
 
-  // Интеллектуальный поиск (без изменений)
+  // Интеллектуальный поиск
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
     searchTerm = searchTerm.toLowerCase();
@@ -955,6 +920,7 @@
     return 0;
   }
 
+  // Фильтрация и отрисовка сетки
   function filterAndSortGifts(searchTerm) {
     const filteredGifts = rareGifts.filter(gift =>
       gift.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -969,31 +935,13 @@
       item.className = 'gift-item';
       item.dataset.name = gift.name;
 
-      // Для каталога используем изображение (png)
-      const img = document.createElement('img');
-      img.className = 'gift-img';
-      img.src = `videos/${encodeURIComponent(gift.name)}.png`;
-      img.alt = gift.name;
-      img.onerror = () => {
-        // Если изображение не загрузилось, заменяем на эмодзи
-        img.style.display = 'none';
-        const emojiDiv = document.createElement('div');
-        emojiDiv.className = 'gift-emoji';
-        emojiDiv.textContent = gift.emoji;
-        img.parentNode.replaceChild(emojiDiv, img);
-      };
-
-      const giftImgDiv = document.createElement('div');
-      giftImgDiv.className = 'gift-img';
-      giftImgDiv.appendChild(img);
-
+      const imgDiv = createCatalogGiftElement(gift);
       const nameDiv = document.createElement('div');
       nameDiv.className = 'gift-name';
       nameDiv.textContent = gift.name;
 
-      item.appendChild(giftImgDiv);
+      item.appendChild(imgDiv);
       item.appendChild(nameDiv);
-
       item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
       grid.appendChild(item);
     });
@@ -1018,7 +966,7 @@
     filledSlots[slotIndex] = true;
 
     slotGiftContainer.innerHTML = '';
-    const content = createGiftContent(gift, true); // для слота видео
+    const content = createGiftContent(gift, true);
     slotGiftContainer.appendChild(content);
 
     slotGiftContainer.classList.add('active');
@@ -1100,13 +1048,20 @@
   };
 </script>
 
-<!-- Предзагрузка изображений для четырёх подарков -->
+<!-- Предзагрузка изображений для четырёх подарков с учётом карты имён -->
 <script>
   (function preloadImages() {
     var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
+    var fileMap = {
+      "Durov's Cap": "Durov-Cap",
+      "Astral Shard": "Astral Shard",
+      "Kissed Frog": "Kissed Frog",
+      "Artisan Brick": "Artisan Brick"
+    };
     gifts.forEach(function(name) {
+      var baseName = fileMap[name] || name;
       var img = new Image();
-      img.src = 'videos/' + encodeURIComponent(name) + '.png';
+      img.src = 'videos/' + encodeURIComponent(baseName) + '.png';
     });
   })();
 </script>
