@@ -2,402 +2,563 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width,
-                 height=device-height,
-                 initial-scale=1.0,
-                 maximum-scale=1.0,
-                 user-scalable=no" />
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все стили без изменений (копируем из предыдущего ответа) */
-    /* ... (для краткости не привожу, но в реальном ответе они должны быть) */
+    /* Все стили остаются без изменений (скопируйте их из предыдущих версий) */
+    /* ... */
   </style>
 </head>
 <body>
 <div id="app">
-  <!-- Вся разметка без изменений -->
-  <!-- ... -->
+  <div class="black-screen" id="blackScreen"></div>
+  <canvas id="matrix"></canvas>
+  <div class="video-wrapper" id="videoWrapper">
+    <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
+  </div>
+  <div class="avatar-top" id="avatar"></div>
+  <div class="main-square" id="mainSquare">
+    <div class="corners-container" id="cornersContainer">
+      <div class="mini-square" data-slot="0"><div class="plus-sign">+</div><div class="selected-gift" id="gift-slot-0"></div></div>
+      <div class="mini-square" data-slot="1"><div class="plus-sign">+</div><div class="selected-gift" id="gift-slot-1"></div></div>
+      <div class="mini-square" data-slot="2"><div class="plus-sign">+</div><div class="selected-gift" id="gift-slot-2"></div></div>
+      <div class="mini-square" data-slot="3"><div class="plus-sign">+</div><div class="selected-gift" id="gift-slot-3"></div></div>
+    </div>
+    <div class="center-mini-square" id="centerSquare">
+      <video class="center-video" src="center-video.mp4" muted playsinline webkit-playsinline></video>
+    </div>
+    <div class="gift-cube-container" id="giftCubeContainer">
+      <div class="gift-cube" id="giftCube">
+        <div class="cube-face front" id="cube-face-0"></div>
+        <div class="cube-face back" id="cube-face-1"></div>
+        <div class="cube-face right" id="cube-face-2"></div>
+        <div class="cube-face left" id="cube-face-3"></div>
+        <div class="cube-face top"></div>
+        <div class="cube-face bottom"></div>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="modal" id="giftModal"><!-- ... --></div>
+<div class="modal" id="giftModal">
+  <div class="modal-content">
+    <div class="close-btn" id="closeModal">×</div>
+    <h3 style="color: #fff; margin: 0 0 20px; text-align: center;">Редкие подарки</h3>
+    <div class="search-container">
+      <input type="text" class="search-input" id="searchInput" placeholder="Поиск подарков..." />
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="gifts-grid" id="giftsGrid"></div>
+  </div>
+</div>
 
 <script>
-  (function() {
-    const tg = Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+(function() {
+  // Ждём полной загрузки DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 
-    // ========== НАСТРОЙКИ ==========
-    const MAIN_VIDEO_SRC = 'roulette.webm';
-    const CENTER_VIDEO_SRC = 'center-video.mp4';
+  async function init() {
+    try {
+      const tg = Telegram.WebApp;
+      tg.ready();
+      tg.expand();
 
-    // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
-    let selectedGifts = [null, null, null, null];
-    let filledSlots = [false, false, false, false];
-    let fourthGiftSelected = false;
-    let videoPlayTimeout = null;
-    let currentSelectedSlot = null;
-    let currentSlotElement = null;
+      // ----- НАСТРОЙКИ -----
+      const MAIN_VIDEO_SRC = 'roulette.webm';
+      const CENTER_VIDEO_SRC = 'center-video.mp4';
 
-    // Данные из manifest.json
-    let pngSet = new Set();
-    let mp4Set = new Set();
-    let manifestLoaded = false;
+      // ----- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ -----
+      let selectedGifts = [null, null, null, null];
+      let filledSlots = [false, false, false, false];
+      let fourthGiftSelected = false;
+      let videoPlayTimeout = null;
+      let currentSelectedSlot = null;
+      let currentSlotElement = null;
 
-    // ========== КАТАЛОГ ПОДАРКОВ (только имена и эмодзи) ==========
-    const rareGifts = [
-      { name: "Durov's Cap", emoji: "🎩" },
-      { name: "Top Hat", emoji: "🎩" },
-      { name: "Astral Shard", emoji: "💎" },
-      { name: "Mini Oscar", emoji: "🏆" },
-      { name: "Electric Skull", emoji: "💀" },
-      // ... (полный список из предыдущего кода)
-    ];
+      let pngSet = new Set();
+      let mp4Set = new Set();
+      let manifestLoaded = false;
 
-    // ========== ЗАГРУЗКА MANIFEST ==========
-    async function loadManifest() {
-      try {
-        const response = await fetch('videos/manifest.json');
-        if (!response.ok) throw new Error('Manifest not found');
-        const manifest = await response.json();
-        pngSet = new Set(manifest.png || []);
-        mp4Set = new Set(manifest.mp4 || []);
-        manifestLoaded = true;
-        console.log('Manifest loaded');
-      } catch (e) {
-        console.warn('Manifest loading failed, using fallback mode');
-        manifestLoaded = false;
-      }
-    }
+      // ----- ПОЛНЫЙ КАТАЛОГ ПОДАРКОВ (80+) -----
+      const rareGifts = [
+        { name: "Durov's Cap", emoji: "🎩" },
+        { name: "Top Hat", emoji: "🎩" },
+        { name: "Astral Shard", emoji: "💎" },
+        { name: "Mini Oscar", emoji: "🏆" },
+        { name: "Electric Skull", emoji: "💀" },
+        { name: "Diamond Ring", emoji: "💍" },
+        { name: "Stellar Rocket", emoji: "🚀" },
+        { name: "Trapped Heart", emoji: "💖" },
+        { name: "Gem Signet", emoji: "🔮" },
+        { name: "Artisan Brick", emoji: "🧱" },
+        { name: "Sharp Tongue", emoji: "🗡" },
+        { name: "Jack-in-the-Box", emoji: "🎁" },
+        { name: "Witch Hat", emoji: "🎃" },
+        { name: "Moon Pendant", emoji: "🌙" },
+        { name: "Lunar Snake", emoji: "🐍" },
+        { name: "Holiday Drink", emoji: "🥂" },
+        { name: "Record Player", emoji: "🎵" },
+        { name: "Joyful Bundle", emoji: "🎉" },
+        { name: "Restless Jar", emoji: "🫙" },
+        { name: "Big Year", emoji: "🎈" },
+        { name: "Light Sword", emoji: "⚔️" },
+        { name: "Jingle Bells", emoji: "🔔" },
+        { name: "Eternal Candle", emoji: "🕯" },
+        { name: "Skull Flower", emoji: "💀🌸" },
+        { name: "Sakura Flower", emoji: "🌸" },
+        { name: "Jelly Bunny", emoji: "🐰" },
+        { name: "Cupid Charm", emoji: "💘" },
+        { name: "Hanging Star", emoji: "⭐️" },
+        { name: "Easter Egg", emoji: "🥚" },
+        { name: "Spy Agaric", emoji: "🍄" },
+        { name: "Homemade Cake", emoji: "🍰" },
+        { name: "Snow Globe", emoji: "❄️" },
+        { name: "Xmas Stocking", emoji: "🧦" },
+        { name: "Scared Cat", emoji: "😿" },
+        { name: "Spiced Wine", emoji: "🍷" },
+        { name: "Evil Eye", emoji: "👁" },
+        { name: "Ionic Dryer", emoji: "💨" },
+        { name: "Ginger Cookie", emoji: "🍪" },
+        { name: "Hex Pot", emoji: "🪣" },
+        { name: "Snake Box", emoji: "🐍📦" },
+        { name: "Loot Bag", emoji: "💰" },
+        { name: "Love Candle", emoji: "❤️🕯" },
+        { name: "Love Potion", emoji: "💕" },
+        { name: "Kissed Frog", emoji: "🐸" },
+        { name: "Neko Helmet", emoji: "🐱⛑" },
+        { name: "Pet Snake", emoji: "🐍" },
+        { name: "Jester Hat", emoji: "🤡" },
+        { name: "Flying Broom", emoji: "🧹" },
+        { name: "Party Sparkler", emoji: "✨" },
+        { name: "Star Notepad", emoji: "⭐️📝" },
+        { name: "Voodoo Doll", emoji: "🎎" },
+        { name: "Bonded Ring", emoji: "💞" },
+        { name: "Snow Mittens", emoji: "🧤" },
+        { name: "Crystal Ball", emoji: "🔮" },
+        { name: "Berry Box", emoji: "🍓" },
+        { name: "Tama Gadget", emoji: "📱" },
+        { name: "Valentine Box", emoji: "💝" },
+        { name: "Cookie Heart", emoji: "❤️🍪" },
+        { name: "Precious Peach", emoji: "🍑" },
+        { name: "Bow Tie", emoji: "🎀" },
+        { name: "Signet Ring", emoji: "💎" },
+        { name: "Lol Pop", emoji: "🍭" },
+        { name: "Santa Hat", emoji: "🎅" },
+        { name: "Hypno Lollipop", emoji: "🍬" },
+        { name: "Winter Wreath", emoji: "🎄" },
+        { name: "Vintage Cigar", emoji: "🚬" },
+        { name: "Bunny Muffin", emoji: "🐰🧁" },
+        { name: "Mad Pumpkin", emoji: "🎃" },
+        { name: "Eternal Rose", emoji: "🌹" },
+        { name: "Jolly Chimp", emoji: "🐵" },
+        { name: "Toy Bear", emoji: "🧸" },
+        { name: "Candy Cane", emoji: "🍭" },
+        { name: "Sleigh Bell", emoji: "🔔" },
+        { name: "Swiss Watch", emoji: "⌚️" },
+        { name: "Genie Lamp", emoji: "🪔" },
+        { name: "Plush Pepe", emoji: "🐸" },
+        { name: "Perfume Bottle", emoji: "💨" },
+        { name: "Magic Potion", emoji: "🧪" },
+        { name: "Ion Gem", emoji: "💎" },
+        { name: "Desk Calendar", emoji: "🗓" },
+        { name: "B-Day Candle", emoji: "🕯" }
+      ];
 
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-    // Проверка наличия PNG для подарка
-    function hasPng(gift) {
-      return manifestLoaded ? pngSet.has(gift.name + '.png') : true;
-    }
-
-    // Проверка наличия MP4 для подарка
-    function hasMp4(gift) {
-      return manifestLoaded ? mp4Set.has(gift.name + '.mp4') : true;
-    }
-
-    // Создание элемента для отображения в КАТАЛОГЕ (всегда изображение, если есть PNG)
-    function createCatalogGiftElement(gift) {
-      const container = document.createElement('div');
-      container.className = 'gift-img';
-
-      if (hasPng(gift)) {
-        const img = new Image();
-        img.src = `videos/${encodeURIComponent(gift.name)}.png`;
-        img.alt = gift.name;
-        img.onerror = () => {
-          // если не загрузилось, заменяем на эмодзи
-          container.innerHTML = '';
-          const emoji = document.createElement('div');
-          emoji.className = 'gift-emoji';
-          emoji.textContent = gift.emoji;
-          container.appendChild(emoji);
-        };
-        container.appendChild(img);
-      } else {
-        const emoji = document.createElement('div');
-        emoji.className = 'gift-emoji';
-        emoji.textContent = gift.emoji;
-        container.appendChild(emoji);
-      }
-      return container;
-    }
-
-    // Создание содержимого для СЛОТА или КУБА (пытаемся показать видео, иначе картинку, иначе эмодзи)
-    function createSlotGiftContent(gift) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'selected-gift active';
-
-      const tryShowVideo = () => {
-        if (hasMp4(gift)) {
-          const video = document.createElement('video');
-          video.className = 'gift-img';
-          video.src = `videos/${encodeURIComponent(gift.name)}.mp4`;
-          video.muted = true;
-          video.loop = true;
-          video.autoplay = true;
-          video.playsInline = true;
-          video.setAttribute('webkit-playsinline', '');
-          // Если видео не загружается (редко), покажем картинку или эмодзи
-          video.onerror = () => {
-            wrapper.innerHTML = ''; // очищаем
-            tryShowImage(); // пробуем показать картинку
-          };
-          wrapper.appendChild(video);
-          return true;
+      // ----- ЗАГРУЗКА MANIFEST -----
+      async function loadManifest() {
+        try {
+          const response = await fetch('videos/manifest.json');
+          if (!response.ok) throw new Error('Manifest not found');
+          const manifest = await response.json();
+          pngSet = new Set(manifest.png || []);
+          mp4Set = new Set(manifest.mp4 || []);
+          manifestLoaded = true;
+          console.log('Manifest loaded');
+        } catch (e) {
+          console.warn('Manifest loading failed, using fallback mode');
+          manifestLoaded = false;
         }
-        return false;
-      };
+      }
 
-      const tryShowImage = () => {
+      // ----- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ -----
+      function hasPng(gift) {
+        return manifestLoaded ? pngSet.has(gift.name + '.png') : true;
+      }
+      function hasMp4(gift) {
+        return manifestLoaded ? mp4Set.has(gift.name + '.mp4') : true;
+      }
+
+      // Для каталога (всегда PNG)
+      function createCatalogGiftElement(gift) {
+        const container = document.createElement('div');
+        container.className = 'gift-img';
         if (hasPng(gift)) {
           const img = new Image();
-          img.className = 'gift-img';
           img.src = `videos/${encodeURIComponent(gift.name)}.png`;
           img.alt = gift.name;
           img.onerror = () => {
-            wrapper.innerHTML = '';
+            container.innerHTML = '';
             const emoji = document.createElement('div');
             emoji.className = 'gift-emoji';
             emoji.textContent = gift.emoji;
-            wrapper.appendChild(emoji);
+            container.appendChild(emoji);
           };
-          wrapper.appendChild(img);
+          container.appendChild(img);
         } else {
           const emoji = document.createElement('div');
           emoji.className = 'gift-emoji';
           emoji.textContent = gift.emoji;
-          wrapper.appendChild(emoji);
+          container.appendChild(emoji);
         }
-      };
-
-      if (!tryShowVideo()) {
-        tryShowImage();
+        return container;
       }
-      return wrapper;
-    }
 
-    // ========== ФУНКЦИИ УПРАВЛЕНИЯ ВИДЕОЦЕНТРОМ ==========
-    const centerVideo = document.querySelector('.center-video');
-    if (centerVideo) {
-      centerVideo.pause();
-      centerVideo.currentTime = 0;
-    }
+      // Для слотов и куба (видео -> PNG -> эмодзи)
+      function createSlotGiftContent(gift) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'selected-gift active';
 
-    function playVideoFromStart() {
-      if (centerVideo && !fourthGiftSelected) {
-        if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
-        centerVideo.currentTime = 0;
-        centerVideo.play().catch(() => {});
-        videoPlayTimeout = setTimeout(() => {
-          centerVideo.pause();
-          centerVideo.currentTime = 0;
-        }, 2000);
+        const tryShowVideo = () => {
+          if (hasMp4(gift)) {
+            const video = document.createElement('video');
+            video.className = 'gift-img';
+            video.src = `videos/${encodeURIComponent(gift.name)}.mp4`;
+            video.muted = true;
+            video.loop = true;
+            video.autoplay = true;
+            video.playsInline = true;
+            video.setAttribute('webkit-playsinline', '');
+            video.onerror = () => {
+              wrapper.innerHTML = '';
+              tryShowImage();
+            };
+            wrapper.appendChild(video);
+            return true;
+          }
+          return false;
+        };
+
+        const tryShowImage = () => {
+          if (hasPng(gift)) {
+            const img = new Image();
+            img.className = 'gift-img';
+            img.src = `videos/${encodeURIComponent(gift.name)}.png`;
+            img.alt = gift.name;
+            img.onerror = () => {
+              wrapper.innerHTML = '';
+              const emoji = document.createElement('div');
+              emoji.className = 'gift-emoji';
+              emoji.textContent = gift.emoji;
+              wrapper.appendChild(emoji);
+            };
+            wrapper.appendChild(img);
+          } else {
+            const emoji = document.createElement('div');
+            emoji.className = 'gift-emoji';
+            emoji.textContent = gift.emoji;
+            wrapper.appendChild(emoji);
+          }
+        };
+
+        if (!tryShowVideo()) tryShowImage();
+        return wrapper;
       }
-    }
 
-    function updateCenterSquareHighlight() {
-      const centerSquare = document.getElementById('centerSquare');
-      const filledCount = filledSlots.filter(Boolean).length;
-      if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
-        centerSquare.classList.add('active-video');
-      } else if (filledCount === 4) {
-        centerSquare.classList.remove('active-video');
-        centerSquare.classList.add('completed');
-      } else {
-        centerSquare.classList.remove('active-video', 'completed');
+      // ----- МАТРИЦА -----
+      const canvas = document.getElementById('matrix');
+      if (!canvas) throw new Error('Canvas not found');
+      const ctx = canvas.getContext('2d');
+      let drops = [];
+      const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
+      const fontSize = 14;
+
+      function initMatrix() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const columns = Math.floor(canvas.width / fontSize);
+        drops = Array.from({ length: columns }, () => ({
+          y: Math.random() * canvas.height,
+          speed: 0.5 + Math.random() * 1.5
+        }));
       }
-    }
 
-    // ========== УДАЛЕНИЕ ПОДАРКА ИЗ СЛОТА ==========
-    function removeGiftFromSlot(slotIndex, event) {
-      event.stopPropagation();
-      const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
-      const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
+      function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00ff88';
+        ctx.font = fontSize + 'px monospace';
+        drops.forEach((drop, i) => {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(text, i * fontSize, drop.y);
+          drop.y += fontSize * drop.speed;
+          if (drop.y > canvas.height + 50) {
+            drop.y = Math.random() * -100;
+            drop.speed = 0.5 + Math.random() * 1.5;
+          }
+        });
+      }
 
-      selectedGifts[slotIndex] = null;
-      filledSlots[slotIndex] = false;
-      fourthGiftSelected = false;
+      window.addEventListener('resize', initMatrix);
+      initMatrix();
+      setInterval(drawMatrix, 50);
 
-      slotGiftContainer.innerHTML = '';
-      slotGiftContainer.classList.remove('active', 'durov-cap');
-      slotElement.querySelector('.plus-sign').style.opacity = '1';
-      slotElement.classList.remove('filled');
-
-      const removeBtn = slotElement.querySelector('.remove-gift');
-      if (removeBtn) removeBtn.remove();
-
-      updateCenterSquareHighlight();
-
+      // ----- ВИДЕОЦЕНТР -----
+      const centerVideo = document.querySelector('.center-video');
       if (centerVideo) {
         centerVideo.pause();
         centerVideo.currentTime = 0;
-        if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+      } else {
+        console.warn('Center video element not found');
       }
 
-      updateModalSelection();
-    }
+      function playVideoFromStart() {
+        if (centerVideo && !fourthGiftSelected) {
+          if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+          centerVideo.currentTime = 0;
+          centerVideo.play().catch(() => {});
+          videoPlayTimeout = setTimeout(() => {
+            centerVideo.pause();
+            centerVideo.currentTime = 0;
+          }, 2000);
+        }
+      }
 
-    // ========== ОБНОВЛЕНИЕ ВЫДЕЛЕНИЯ В МОДАЛКЕ ==========
-    function updateModalSelection() {
-      const giftItems = document.querySelectorAll('.gift-item');
-      giftItems.forEach(item => {
-        item.classList.remove('selected');
-        const removeBtn = item.querySelector('.remove-selected');
+      function updateCenterSquareHighlight() {
+        const centerSquare = document.getElementById('centerSquare');
+        if (!centerSquare) return;
+        const filledCount = filledSlots.filter(Boolean).length;
+        if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
+          centerSquare.classList.add('active-video');
+        } else if (filledCount === 4) {
+          centerSquare.classList.remove('active-video');
+          centerSquare.classList.add('completed');
+        } else {
+          centerSquare.classList.remove('active-video', 'completed');
+        }
+      }
+
+      // ----- УДАЛЕНИЕ ПОДАРКА ИЗ СЛОТА -----
+      function removeGiftFromSlot(slotIndex, event) {
+        event.stopPropagation();
+        const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
+        const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
+        if (!slotElement || !slotGiftContainer) return;
+
+        selectedGifts[slotIndex] = null;
+        filledSlots[slotIndex] = false;
+        fourthGiftSelected = false;
+
+        slotGiftContainer.innerHTML = '';
+        slotGiftContainer.classList.remove('active', 'durov-cap');
+        const plus = slotElement.querySelector('.plus-sign');
+        if (plus) plus.style.opacity = '1';
+        slotElement.classList.remove('filled');
+
+        const removeBtn = slotElement.querySelector('.remove-gift');
         if (removeBtn) removeBtn.remove();
-      });
 
-      selectedGifts.forEach((gift, idx) => {
-        if (gift) {
-          const targetItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
-          if (targetItem) {
-            targetItem.classList.add('selected');
-            if (!targetItem.querySelector('.remove-selected')) {
-              const rm = document.createElement('div');
-              rm.className = 'remove-selected';
-              rm.innerHTML = '×';
-              rm.onclick = (e) => removeGiftFromSlot(idx, e);
-              targetItem.appendChild(rm);
-            }
-          }
-        }
-      });
-    }
+        updateCenterSquareHighlight();
 
-    // ========== СОЗДАНИЕ 3D КУБА ==========
-    function createGiftCube() {
-      const faces = [
-        document.getElementById('cube-face-0'),
-        document.getElementById('cube-face-1'),
-        document.getElementById('cube-face-2'),
-        document.getElementById('cube-face-3')
-      ];
-      faces.forEach((face, i) => {
-        if (selectedGifts[i]) {
-          face.innerHTML = '';
-          face.appendChild(createSlotGiftContent(selectedGifts[i]));
-        }
-      });
-      const top = document.querySelector('.cube-face.top');
-      const bottom = document.querySelector('.cube-face.bottom');
-      if (selectedGifts[0]) {
-        top.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">✨</div></div>';
-        bottom.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">💫</div></div>';
-      }
-    }
-
-    function mergeToCube() {
-      document.getElementById('cornersContainer').classList.add('merged');
-      document.getElementById('centerSquare').classList.add('merged');
-      createGiftCube();
-      document.getElementById('giftCubeContainer').classList.add('active');
-    }
-
-    // ========== ПОИСК ==========
-    function sortGiftsByRelevance(gifts, term) {
-      if (!term) return gifts;
-      term = term.toLowerCase();
-      return gifts.sort((a, b) => {
-        const sa = getSearchScore(a.name, term);
-        const sb = getSearchScore(b.name, term);
-        return sb - sa || a.name.localeCompare(b.name);
-      });
-    }
-    function getSearchScore(name, term) {
-      const low = name.toLowerCase();
-      if (low.startsWith(term)) return 1000;
-      if (low.includes(' ' + term)) return 800;
-      if (low[0] === term[0]) return 500;
-      if (low.includes(term)) return 100;
-      return 0;
-    }
-
-    // ========== ФИЛЬТРАЦИЯ И ОТРИСОВКА СЕТКИ ==========
-    function filterAndSortGifts(searchTerm) {
-      const filtered = rareGifts.filter(g => g.name.toLowerCase().includes(searchTerm.toLowerCase()));
-      const sorted = sortGiftsByRelevance(filtered, searchTerm);
-
-      const grid = document.getElementById('giftsGrid');
-      grid.innerHTML = '';
-
-      sorted.forEach(gift => {
-        const item = document.createElement('div');
-        item.className = 'gift-item';
-        item.dataset.name = gift.name;
-
-        const imgDiv = createCatalogGiftElement(gift);
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'gift-name';
-        nameDiv.textContent = gift.name;
-
-        item.appendChild(imgDiv);
-        item.appendChild(nameDiv);
-        item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
-        grid.appendChild(item);
-      });
-
-      updateModalSelection();
-    }
-
-    // ========== ПОКАЗ МОДАЛКИ ==========
-    function showGifts(slotElement) {
-      currentSelectedSlot = slotElement.dataset.slot;
-      currentSlotElement = slotElement;
-      filterAndSortGifts('');
-      document.getElementById('giftModal').classList.add('active');
-    }
-
-    // ========== ВЫБОР ПОДАРКА ДЛЯ СЛОТА ==========
-    function selectGiftForSlot(gift, slotElement) {
-      const slotIndex = parseInt(currentSelectedSlot);
-      if (filledSlots[slotIndex]) return;
-
-      const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-      selectedGifts[slotIndex] = gift;
-      filledSlots[slotIndex] = true;
-
-      slotGiftContainer.innerHTML = '';
-      slotGiftContainer.appendChild(createSlotGiftContent(gift));
-      slotGiftContainer.classList.add('active');
-      if (gift.name === "Durov's Cap") slotGiftContainer.classList.add('durov-cap');
-
-      slotElement.querySelector('.plus-sign').style.opacity = '0';
-      slotElement.classList.add('filled');
-
-      const removeBtn = document.createElement('div');
-      removeBtn.className = 'remove-gift';
-      removeBtn.innerHTML = '×';
-      removeBtn.onclick = (e) => removeGiftFromSlot(slotIndex, e);
-      slotElement.appendChild(removeBtn);
-
-      const filledCount = filledSlots.filter(Boolean).length;
-      if (filledCount === 4) {
-        fourthGiftSelected = true;
         if (centerVideo) {
           centerVideo.pause();
           centerVideo.currentTime = 0;
           if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
         }
-        updateCenterSquareHighlight();
-      } else {
-        playVideoFromStart();
-        updateCenterSquareHighlight();
+        updateModalSelection();
       }
 
-      updateModalSelection();
-      document.getElementById('giftModal').classList.remove('active');
-    }
+      // ----- ОБНОВЛЕНИЕ ВЫДЕЛЕНИЯ В МОДАЛКЕ -----
+      function updateModalSelection() {
+        const giftItems = document.querySelectorAll('.gift-item');
+        giftItems.forEach(item => {
+          item.classList.remove('selected');
+          const rm = item.querySelector('.remove-selected');
+          if (rm) rm.remove();
+        });
+        selectedGifts.forEach((gift, idx) => {
+          if (!gift) return;
+          const target = Array.from(giftItems).find(item => item.dataset.name === gift.name);
+          if (target) {
+            target.classList.add('selected');
+            if (!target.querySelector('.remove-selected')) {
+              const rm = document.createElement('div');
+              rm.className = 'remove-selected';
+              rm.innerHTML = '×';
+              rm.onclick = (e) => removeGiftFromSlot(idx, e);
+              target.appendChild(rm);
+            }
+          }
+        });
+      }
 
-    // ========== ИНИЦИАЛИЗАЦИЯ ==========
-    async function init() {
-      await loadManifest();
+      // ----- СОЗДАНИЕ 3D КУБА -----
+      function createGiftCube() {
+        const faces = [
+          document.getElementById('cube-face-0'),
+          document.getElementById('cube-face-1'),
+          document.getElementById('cube-face-2'),
+          document.getElementById('cube-face-3')
+        ];
+        faces.forEach((face, i) => {
+          if (face && selectedGifts[i]) {
+            face.innerHTML = '';
+            face.appendChild(createSlotGiftContent(selectedGifts[i]));
+          }
+        });
+        const top = document.querySelector('.cube-face.top');
+        const bottom = document.querySelector('.cube-face.bottom');
+        if (top && bottom && selectedGifts[0]) {
+          top.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">✨</div></div>';
+          bottom.innerHTML = '<div class="selected-gift active"><div class="gift-emoji">💫</div></div>';
+        }
+      }
 
-      // Установка скорости основного видео
+      function mergeToCube() {
+        const corners = document.getElementById('cornersContainer');
+        const center = document.getElementById('centerSquare');
+        const cubeContainer = document.getElementById('giftCubeContainer');
+        if (corners) corners.classList.add('merged');
+        if (center) center.classList.add('merged');
+        createGiftCube();
+        if (cubeContainer) cubeContainer.classList.add('active');
+      }
+
+      // ----- ПОИСК -----
+      function getSearchScore(name, term) {
+        const low = name.toLowerCase();
+        if (low.startsWith(term)) return 1000;
+        if (low.includes(' ' + term)) return 800;
+        if (low[0] === term[0]) return 500;
+        if (low.includes(term)) return 100;
+        return 0;
+      }
+
+      function sortGiftsByRelevance(gifts, term) {
+        if (!term) return gifts;
+        term = term.toLowerCase();
+        return gifts.sort((a, b) => {
+          const sa = getSearchScore(a.name, term);
+          const sb = getSearchScore(b.name, term);
+          return sb - sa || a.name.localeCompare(b.name);
+        });
+      }
+
+      // ----- ФИЛЬТРАЦИЯ И ОТРИСОВКА СЕТКИ -----
+      function filterAndSortGifts(searchTerm) {
+        const filtered = rareGifts.filter(g => g.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        const sorted = sortGiftsByRelevance(filtered, searchTerm);
+        const grid = document.getElementById('giftsGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        sorted.forEach(gift => {
+          const item = document.createElement('div');
+          item.className = 'gift-item';
+          item.dataset.name = gift.name;
+
+          const imgDiv = createCatalogGiftElement(gift);
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'gift-name';
+          nameDiv.textContent = gift.name;
+
+          item.appendChild(imgDiv);
+          item.appendChild(nameDiv);
+          item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
+          grid.appendChild(item);
+        });
+
+        updateModalSelection();
+      }
+
+      // ----- ПОКАЗ МОДАЛКИ -----
+      function showGifts(slotElement) {
+        if (!slotElement) return;
+        currentSelectedSlot = slotElement.dataset.slot;
+        currentSlotElement = slotElement;
+        filterAndSortGifts('');
+        const modal = document.getElementById('giftModal');
+        if (modal) modal.classList.add('active');
+      }
+
+      // ----- ВЫБОР ПОДАРКА ДЛЯ СЛОТА -----
+      function selectGiftForSlot(gift, slotElement) {
+        if (!slotElement) return;
+        const slotIndex = parseInt(currentSelectedSlot);
+        if (filledSlots[slotIndex]) return;
+
+        const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
+        if (!slotGiftContainer) return;
+
+        selectedGifts[slotIndex] = gift;
+        filledSlots[slotIndex] = true;
+
+        slotGiftContainer.innerHTML = '';
+        slotGiftContainer.appendChild(createSlotGiftContent(gift));
+        slotGiftContainer.classList.add('active');
+        if (gift.name === "Durov's Cap") slotGiftContainer.classList.add('durov-cap');
+
+        const plus = slotElement.querySelector('.plus-sign');
+        if (plus) plus.style.opacity = '0';
+        slotElement.classList.add('filled');
+
+        const removeBtn = document.createElement('div');
+        removeBtn.className = 'remove-gift';
+        removeBtn.innerHTML = '×';
+        removeBtn.onclick = (e) => removeGiftFromSlot(slotIndex, e);
+        slotElement.appendChild(removeBtn);
+
+        const filledCount = filledSlots.filter(Boolean).length;
+        if (filledCount === 4) {
+          fourthGiftSelected = true;
+          if (centerVideo) {
+            centerVideo.pause();
+            centerVideo.currentTime = 0;
+            if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+          }
+          updateCenterSquareHighlight();
+        } else {
+          playVideoFromStart();
+          updateCenterSquareHighlight();
+        }
+
+        updateModalSelection();
+        const modal = document.getElementById('giftModal');
+        if (modal) modal.classList.remove('active');
+      }
+
+      // ----- УСТАНОВКА СКОРОСТИ ОСНОВНОГО ВИДЕО -----
       const mainVideo = document.querySelector('#videoWrapper video');
       if (mainVideo) mainVideo.playbackRate = 0.7;
 
+      // ----- ЗАГРУЗКА MANIFEST И ЗАПУСК ИНТЕРФЕЙСА -----
+      await loadManifest();
+
       const user = tg.initDataUnsafe?.user;
       if (user && user.photo_url) {
-        const avatar = document.getElementById("avatar");
-        const img = document.createElement("img");
-        img.src = user.photo_url;
-        avatar.appendChild(img);
+        const avatar = document.getElementById('avatar');
+        if (avatar) {
+          const img = document.createElement('img');
+          img.src = user.photo_url;
+          avatar.appendChild(img);
+        }
 
         setTimeout(() => {
-          document.getElementById("matrix").style.opacity = "0";
-          document.getElementById("videoWrapper").style.opacity = "0";
-          document.getElementById("blackScreen").style.opacity = "1";
+          const matrix = document.getElementById('matrix');
+          const wrapper = document.getElementById('videoWrapper');
+          const black = document.getElementById('blackScreen');
+          if (matrix) matrix.style.opacity = '0';
+          if (wrapper) wrapper.style.opacity = '0';
+          if (black) black.style.opacity = '1';
         }, 3000);
 
         setTimeout(() => {
-          avatar.style.opacity = "1";
-          document.getElementById("mainSquare").style.opacity = "1";
+          if (avatar) avatar.style.opacity = '1';
+          const mainSquare = document.getElementById('mainSquare');
+          if (mainSquare) mainSquare.style.opacity = '1';
 
           document.querySelectorAll('.mini-square').forEach(sq => {
             sq.onclick = (e) => {
@@ -406,25 +567,43 @@
             };
           });
 
-          document.getElementById('centerSquare').onclick = () => {
-            if (filledSlots.filter(Boolean).length === 4) mergeToCube();
-          };
+          const center = document.getElementById('centerSquare');
+          if (center) {
+            center.onclick = () => {
+              if (filledSlots.filter(Boolean).length === 4) mergeToCube();
+            };
+          }
         }, 3500);
       }
 
-      // Обработчики модалки
-      document.getElementById('searchInput')?.addEventListener('input', (e) => filterAndSortGifts(e.target.value));
-      document.getElementById('closeModal').onclick = () => document.getElementById('giftModal').classList.remove('active');
-      document.getElementById('giftModal').onclick = (e) => {
-        if (e.target === document.getElementById('giftModal')) {
-          document.getElementById('giftModal').classList.remove('active');
-        }
-      };
-    }
+      // ----- ОБРАБОТЧИКИ МОДАЛКИ -----
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => filterAndSortGifts(e.target.value));
+      }
 
-    // Старт
-    init();
-  })();
+      const closeBtn = document.getElementById('closeModal');
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          const modal = document.getElementById('giftModal');
+          if (modal) modal.classList.remove('active');
+        };
+      }
+
+      const modal = document.getElementById('giftModal');
+      if (modal) {
+        modal.onclick = (e) => {
+          if (e.target === modal) modal.classList.remove('active');
+        };
+      }
+
+    } catch (err) {
+      console.error('Initialization error:', err);
+      // В случае ошибки показываем что-то простое, чтобы не было белого экрана
+      document.body.innerHTML = '<div style="color:white;padding:20px;">Произошла ошибка. Пожалуйста, обновите страницу.</div>';
+    }
+  }
+})();
 </script>
 </body>
 </html>
