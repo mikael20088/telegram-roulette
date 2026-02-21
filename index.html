@@ -243,30 +243,47 @@
       box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-    }
-    .cube-face .selected-gift {
-      position: relative;
-      opacity: 1;
-      transform: scale(1);
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      backdrop-filter: none;
-      border: none;
-    }
-    .cube-face .selected-gift .gift-img,
-    .cube-face .selected-gift video.gift-img {
-      width: 45px;
-      height: 45px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .cube-face .selected-gift .gift-emoji {
       font-size: 32px;
+      color: rgba(255, 255, 255, 0.8);
+      text-shadow: 0 0 10px currentColor;
     }
-    .cube-face .selected-gift .gift-name {
-      display: none;
+    /* Классы для разных редкостей куба */
+    .gift-cube-container.rarity-common .cube-face {
+      background: rgba(0, 255, 136, 0.2);
+      border-color: rgba(0, 255, 136, 0.5);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+      color: #00ff88;
     }
+    .gift-cube-container.rarity-rare .cube-face {
+      background: rgba(0, 100, 255, 0.2);
+      border-color: rgba(0, 100, 255, 0.5);
+      box-shadow: 0 0 20px rgba(0, 100, 255, 0.3);
+      color: #3a7bff;
+    }
+    .gift-cube-container.rarity-epic .cube-face {
+      background: rgba(155, 48, 255, 0.2);
+      border-color: rgba(155, 48, 255, 0.5);
+      box-shadow: 0 0 20px rgba(155, 48, 255, 0.3);
+      color: #b883ff;
+    }
+    .gift-cube-container.rarity-legendary .cube-face {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+      color: #ffd700;
+    }
+
+    .cube-face .selected-gift {
+      display: none; /* Больше не используем */
+    }
+    /* Стиль для вопросительного знака */
+    .cube-question {
+      font-size: 36px;
+      font-weight: bold;
+      opacity: 0.7;
+      filter: drop-shadow(0 0 8px currentColor);
+    }
+
     .cube-face.front  { transform: translateZ(35px); }
     .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
     .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
@@ -534,12 +551,12 @@
 
     <div class="gift-cube-container" id="giftCubeContainer">
       <div class="gift-cube" id="giftCube">
-        <div class="cube-face front" id="cube-face-0"></div>
-        <div class="cube-face back" id="cube-face-1"></div>
-        <div class="cube-face right" id="cube-face-2"></div>
-        <div class="cube-face left" id="cube-face-3"></div>
-        <div class="cube-face top"></div>
-        <div class="cube-face bottom"></div>
+        <div class="cube-face front" id="cube-face-0"><div class="cube-question">?</div></div>
+        <div class="cube-face back" id="cube-face-1"><div class="cube-question">?</div></div>
+        <div class="cube-face right" id="cube-face-2"><div class="cube-question">?</div></div>
+        <div class="cube-face left" id="cube-face-3"><div class="cube-question">?</div></div>
+        <div class="cube-face top"><div class="cube-question">?</div></div>
+        <div class="cube-face bottom"><div class="cube-question">?</div></div>
       </div>
     </div>
   </div>
@@ -631,89 +648,89 @@
     return null;
   }
 
-  // Полный каталог подарков (80+)
+  // Полный каталог подарков (80+) с добавлением редкостей для четырёх ключевых
   const rareGifts = [
-    { name: "Durov's Cap", emoji: "🎩" },
-    { name: "Top Hat", emoji: "🎩" },
-    { name: "Astral Shard", emoji: "💎" },
-    { name: "Mini Oscar", emoji: "🏆" },
-    { name: "Electric Skull", emoji: "💀" },
-    { name: "Diamond Ring", emoji: "💍" },
-    { name: "Stellar Rocket", emoji: "🚀" },
-    { name: "Trapped Heart", emoji: "💖" },
-    { name: "Gem Signet", emoji: "🔮" },
-    { name: "Artisan Brick", emoji: "🧱" },
-    { name: "Sharp Tongue", emoji: "🗡" },
-    { name: "Jack-in-the-Box", emoji: "🎁" },
-    { name: "Witch Hat", emoji: "🎃" },
-    { name: "Moon Pendant", emoji: "🌙" },
-    { name: "Lunar Snake", emoji: "🐍" },
-    { name: "Holiday Drink", emoji: "🥂" },
-    { name: "Record Player", emoji: "🎵" },
-    { name: "Joyful Bundle", emoji: "🎉" },
-    { name: "Restless Jar", emoji: "🫙" },
-    { name: "Big Year", emoji: "🎈" },
-    { name: "Light Sword", emoji: "⚔️" },
-    { name: "Jingle Bells", emoji: "🔔" },
-    { name: "Eternal Candle", emoji: "🕯" },
-    { name: "Skull Flower", emoji: "💀🌸" },
-    { name: "Sakura Flower", emoji: "🌸" },
-    { name: "Jelly Bunny", emoji: "🐰" },
-    { name: "Cupid Charm", emoji: "💘" },
-    { name: "Hanging Star", emoji: "⭐️" },
-    { name: "Easter Egg", emoji: "🥚" },
-    { name: "Spy Agaric", emoji: "🍄" },
-    { name: "Homemade Cake", emoji: "🍰" },
-    { name: "Snow Globe", emoji: "❄️" },
-    { name: "Xmas Stocking", emoji: "🧦" },
-    { name: "Scared Cat", emoji: "😿" },
-    { name: "Spiced Wine", emoji: "🍷" },
-    { name: "Evil Eye", emoji: "👁" },
-    { name: "Ionic Dryer", emoji: "💨" },
-    { name: "Ginger Cookie", emoji: "🍪" },
-    { name: "Hex Pot", emoji: "🪣" },
-    { name: "Snake Box", emoji: "🐍📦" },
-    { name: "Loot Bag", emoji: "💰" },
-    { name: "Love Candle", emoji: "❤️🕯" },
-    { name: "Love Potion", emoji: "💕" },
-    { name: "Kissed Frog", emoji: "🐸" },
-    { name: "Neko Helmet", emoji: "🐱⛑" },
-    { name: "Pet Snake", emoji: "🐍" },
-    { name: "Jester Hat", emoji: "🤡" },
-    { name: "Flying Broom", emoji: "🧹" },
-    { name: "Party Sparkler", emoji: "✨" },
-    { name: "Star Notepad", emoji: "⭐️📝" },
-    { name: "Voodoo Doll", emoji: "🎎" },
-    { name: "Bonded Ring", emoji: "💞" },
-    { name: "Snow Mittens", emoji: "🧤" },
-    { name: "Crystal Ball", emoji: "🔮" },
-    { name: "Berry Box", emoji: "🍓" },
-    { name: "Tama Gadget", emoji: "📱" },
-    { name: "Valentine Box", emoji: "💝" },
-    { name: "Cookie Heart", emoji: "❤️🍪" },
-    { name: "Precious Peach", emoji: "🍑" },
-    { name: "Bow Tie", emoji: "🎀" },
-    { name: "Signet Ring", emoji: "💎" },
-    { name: "Lol Pop", emoji: "🍭" },
-    { name: "Santa Hat", emoji: "🎅" },
-    { name: "Hypno Lollipop", emoji: "🍬" },
-    { name: "Winter Wreath", emoji: "🎄" },
-    { name: "Vintage Cigar", emoji: "🚬" },
-    { name: "Bunny Muffin", emoji: "🐰🧁" },
-    { name: "Mad Pumpkin", emoji: "🎃" },
-    { name: "Eternal Rose", emoji: "🌹" },
-    { name: "Jolly Chimp", emoji: "🐵" },
-    { name: "Toy Bear", emoji: "🧸" },
-    { name: "Candy Cane", emoji: "🍭" },
-    { name: "Sleigh Bell", emoji: "🔔" },
-    { name: "Swiss Watch", emoji: "⌚️" },
-    { name: "Genie Lamp", emoji: "🪔" },
-    { name: "Plush Pepe", emoji: "🐸" },
-    { name: "Perfume Bottle", emoji: "💨" },
-    { name: "Magic Potion", emoji: "🧪" },
-    { name: "Ion Gem", emoji: "💎" },
-    { name: "Desk Calendar", emoji: "🗓" },
-    { name: "B-Day Candle", emoji: "🕯" }
+    { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
+    { name: "Top Hat", emoji: "🎩", rarity: "common" },
+    { name: "Astral Shard", emoji: "💎", rarity: "uncommon" },
+    { name: "Mini Oscar", emoji: "🏆", rarity: "common" },
+    { name: "Electric Skull", emoji: "💀", rarity: "common" },
+    { name: "Diamond Ring", emoji: "💍", rarity: "common" },
+    { name: "Stellar Rocket", emoji: "🚀", rarity: "common" },
+    { name: "Trapped Heart", emoji: "💖", rarity: "common" },
+    { name: "Gem Signet", emoji: "🔮", rarity: "common" },
+    { name: "Artisan Brick", emoji: "🧱", rarity: "epic" },
+    { name: "Sharp Tongue", emoji: "🗡", rarity: "common" },
+    { name: "Jack-in-the-Box", emoji: "🎁", rarity: "common" },
+    { name: "Witch Hat", emoji: "🎃", rarity: "common" },
+    { name: "Moon Pendant", emoji: "🌙", rarity: "common" },
+    { name: "Lunar Snake", emoji: "🐍", rarity: "common" },
+    { name: "Holiday Drink", emoji: "🥂", rarity: "common" },
+    { name: "Record Player", emoji: "🎵", rarity: "common" },
+    { name: "Joyful Bundle", emoji: "🎉", rarity: "common" },
+    { name: "Restless Jar", emoji: "🫙", rarity: "common" },
+    { name: "Big Year", emoji: "🎈", rarity: "common" },
+    { name: "Light Sword", emoji: "⚔️", rarity: "common" },
+    { name: "Jingle Bells", emoji: "🔔", rarity: "common" },
+    { name: "Eternal Candle", emoji: "🕯", rarity: "common" },
+    { name: "Skull Flower", emoji: "💀🌸", rarity: "common" },
+    { name: "Sakura Flower", emoji: "🌸", rarity: "common" },
+    { name: "Jelly Bunny", emoji: "🐰", rarity: "common" },
+    { name: "Cupid Charm", emoji: "💘", rarity: "common" },
+    { name: "Hanging Star", emoji: "⭐️", rarity: "common" },
+    { name: "Easter Egg", emoji: "🥚", rarity: "common" },
+    { name: "Spy Agaric", emoji: "🍄", rarity: "common" },
+    { name: "Homemade Cake", emoji: "🍰", rarity: "common" },
+    { name: "Snow Globe", emoji: "❄️", rarity: "common" },
+    { name: "Xmas Stocking", emoji: "🧦", rarity: "common" },
+    { name: "Scared Cat", emoji: "😿", rarity: "common" },
+    { name: "Spiced Wine", emoji: "🍷", rarity: "common" },
+    { name: "Evil Eye", emoji: "👁", rarity: "common" },
+    { name: "Ionic Dryer", emoji: "💨", rarity: "common" },
+    { name: "Ginger Cookie", emoji: "🍪", rarity: "common" },
+    { name: "Hex Pot", emoji: "🪣", rarity: "common" },
+    { name: "Snake Box", emoji: "🐍📦", rarity: "common" },
+    { name: "Loot Bag", emoji: "💰", rarity: "common" },
+    { name: "Love Candle", emoji: "❤️🕯", rarity: "common" },
+    { name: "Love Potion", emoji: "💕", rarity: "common" },
+    { name: "Kissed Frog", emoji: "🐸", rarity: "rare" },
+    { name: "Neko Helmet", emoji: "🐱⛑", rarity: "common" },
+    { name: "Pet Snake", emoji: "🐍", rarity: "common" },
+    { name: "Jester Hat", emoji: "🤡", rarity: "common" },
+    { name: "Flying Broom", emoji: "🧹", rarity: "common" },
+    { name: "Party Sparkler", emoji: "✨", rarity: "common" },
+    { name: "Star Notepad", emoji: "⭐️📝", rarity: "common" },
+    { name: "Voodoo Doll", emoji: "🎎", rarity: "common" },
+    { name: "Bonded Ring", emoji: "💞", rarity: "common" },
+    { name: "Snow Mittens", emoji: "🧤", rarity: "common" },
+    { name: "Crystal Ball", emoji: "🔮", rarity: "common" },
+    { name: "Berry Box", emoji: "🍓", rarity: "common" },
+    { name: "Tama Gadget", emoji: "📱", rarity: "common" },
+    { name: "Valentine Box", emoji: "💝", rarity: "common" },
+    { name: "Cookie Heart", emoji: "❤️🍪", rarity: "common" },
+    { name: "Precious Peach", emoji: "🍑", rarity: "common" },
+    { name: "Bow Tie", emoji: "🎀", rarity: "common" },
+    { name: "Signet Ring", emoji: "💎", rarity: "common" },
+    { name: "Lol Pop", emoji: "🍭", rarity: "common" },
+    { name: "Santa Hat", emoji: "🎅", rarity: "common" },
+    { name: "Hypno Lollipop", emoji: "🍬", rarity: "common" },
+    { name: "Winter Wreath", emoji: "🎄", rarity: "common" },
+    { name: "Vintage Cigar", emoji: "🚬", rarity: "common" },
+    { name: "Bunny Muffin", emoji: "🐰🧁", rarity: "common" },
+    { name: "Mad Pumpkin", emoji: "🎃", rarity: "common" },
+    { name: "Eternal Rose", emoji: "🌹", rarity: "common" },
+    { name: "Jolly Chimp", emoji: "🐵", rarity: "common" },
+    { name: "Toy Bear", emoji: "🧸", rarity: "common" },
+    { name: "Candy Cane", emoji: "🍭", rarity: "common" },
+    { name: "Sleigh Bell", emoji: "🔔", rarity: "common" },
+    { name: "Swiss Watch", emoji: "⌚️", rarity: "common" },
+    { name: "Genie Lamp", emoji: "🪔", rarity: "common" },
+    { name: "Plush Pepe", emoji: "🐸", rarity: "common" },
+    { name: "Perfume Bottle", emoji: "💨", rarity: "common" },
+    { name: "Magic Potion", emoji: "🧪", rarity: "common" },
+    { name: "Ion Gem", emoji: "💎", rarity: "common" },
+    { name: "Desk Calendar", emoji: "🗓", rarity: "common" },
+    { name: "B-Day Candle", emoji: "🕯", rarity: "common" }
   ];
 
   // Матрица
@@ -801,7 +818,7 @@
     return container;
   }
 
-  // Функция для создания контента слота/куба (использует предзагруженные видео)
+  // Функция для создания контента слота (использует предзагруженные видео)
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
@@ -935,25 +952,24 @@
     });
   }
 
-  // Создание 3D куба
-  function createGiftCube() {
-    const cubeFaces = [
-      document.getElementById('cube-face-0'),
-      document.getElementById('cube-face-1'),
-      document.getElementById('cube-face-2'),
-      document.getElementById('cube-face-3')
-    ];
+  // Функция определения редкости куба на основе выбранных подарков
+  function getCubeRarity() {
+    const rarities = selectedGifts.map(g => g ? g.rarity : null).filter(Boolean);
+    if (rarities.includes('legendary')) return 'legendary';
+    if (rarities.includes('epic')) return 'epic';
+    if (rarities.includes('rare')) return 'rare';
+    return 'common'; // включая uncommon
+  }
 
-    cubeFaces.forEach((face, index) => {
-      if (selectedGifts[index]) {
-        const gift = selectedGifts[index];
-        const content = createGiftContent(gift, true);
-        face.innerHTML = '';
-        face.appendChild(content);
-      } else {
-        face.innerHTML = '';
-      }
-    });
+  // Создание 3D куба (теперь с вопросительными знаками)
+  function createGiftCube() {
+    const cubeContainer = document.getElementById('giftCubeContainer');
+    const rarity = getCubeRarity();
+    // Удаляем предыдущие классы редкости
+    cubeContainer.classList.remove('rarity-common', 'rarity-rare', 'rarity-epic', 'rarity-legendary');
+    // Добавляем соответствующий класс
+    cubeContainer.classList.add(`rarity-${rarity}`);
+    // Грани уже содержат вопросительные знаки в HTML, ничего менять не нужно
   }
 
   function mergeToCube() {
