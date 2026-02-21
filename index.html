@@ -218,13 +218,19 @@
       height: 100%;
       position: relative;
       transform-style: preserve-3d;
-      animation: rotate3d 8s infinite linear;
+      /* animation: rotate3d 8s infinite linear; Убрали вращение, добавим прыжок */
+      animation: bounce 1s infinite ease-in-out;
       will-change: transform; /* аппаратное ускорение */
     }
-    @keyframes rotate3d {
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    /* Убрали ключевые кадры вращения, если не нужны */
+    /* @keyframes rotate3d {
       0% { transform: rotateX(0deg) rotateY(0deg); }
       100% { transform: rotateX(360deg) rotateY(360deg); }
-    }
+    } */
     .cube-face {
       position: absolute;
       width: 70px;
@@ -511,6 +517,45 @@
       color: #fff;
       font-weight: 500;
     }
+
+    /* Счётчик предметов (как в Brawl Stars) */
+    .item-counter {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border-radius: 30px;
+      border: 2px solid rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      z-index: 20;
+      display: none;
+      backdrop-filter: blur(5px);
+    }
+    .item-counter.active {
+      display: block;
+    }
+
+    /* Временное отображение выпавшего предмета */
+    .drop-item {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      z-index: 30;
+      pointer-events: none;
+      animation: dropPop 0.5s ease-out forwards;
+    }
+    @keyframes dropPop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -559,6 +604,12 @@
       </div>
     </div>
   </div>
+
+  <!-- Счётчик предметов (как в Brawl Stars) -->
+  <div class="item-counter" id="itemCounter">0/4</div>
+
+  <!-- Временный элемент для анимации выпадения -->
+  <div id="dropItem" class="drop-item" style="display: none;"></div>
 </div>
 
 <div class="modal" id="giftModal">
@@ -594,6 +645,10 @@
   let filledSlots = new Array(4).fill(false);
   let videoPlayTimeout = null;
   let fourthGiftSelected = false;
+
+  // Переменные для системы ящиков (как в Brawl Stars)
+  let currentLootBox = null; // { rarity, items: [{ name, emoji, rarity }], currentIndex }
+  let isOpening = false; // предотвращаем множественные клики
 
   // Карта соответствия имён файлов
   const fileMap = {
@@ -957,6 +1012,101 @@
     return 'common'; // включая uncommon
   }
 
+  // Функция для создания ящика (loot box) с набором предметов
+  function createLootBox() {
+    // Всегда четыре конкретных подарка (можно расширить позже)
+    const allGifts = [
+      rareGifts.find(g => g.name === "Astral Shard"),
+      rareGifts.find(g => g.name === "Kissed Frog"),
+      rareGifts.find(g => g.name === "Durov's Cap"),
+      rareGifts.find(g => g.name === "Artisan Brick")
+    ];
+    // Перемешиваем массив, чтобы порядок был случайным
+    const shuffled = [...allGifts].sort(() => Math.random() - 0.5);
+    const rarity = getCubeRarity(); // определяем редкость куба по выбранным подаркам
+    return {
+      rarity: rarity,
+      items: shuffled,
+      currentIndex: 0
+    };
+  }
+
+  // Функция для показа анимации выпавшего предмета
+  function showDropItem(gift) {
+    const dropDiv = document.getElementById('dropItem');
+    dropDiv.style.display = 'block';
+    dropDiv.innerHTML = ''; // очищаем
+
+    if (mediaGifts.has(gift.name)) {
+      // Используем предзагруженное видео
+      const video = takePreloadedVideo(gift.name);
+      if (video) {
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.play().catch(() => {});
+        dropDiv.appendChild(video);
+      } else {
+        // fallback на эмодзи
+        dropDiv.textContent = gift.emoji;
+        dropDiv.style.fontSize = '40px';
+        dropDiv.style.display = 'flex';
+        dropDiv.style.alignItems = 'center';
+        dropDiv.style.justifyContent = 'center';
+      }
+    } else {
+      dropDiv.textContent = gift.emoji;
+      dropDiv.style.fontSize = '40px';
+      dropDiv.style.display = 'flex';
+      dropDiv.style.alignItems = 'center';
+      dropDiv.style.justifyContent = 'center';
+    }
+
+    // Убираем через время
+    setTimeout(() => {
+      dropDiv.style.display = 'none';
+      dropDiv.innerHTML = '';
+    }, 500);
+  }
+
+  // Функция для открытия следующего предмета
+  function openNextItem() {
+    if (!currentLootBox || isOpening) return;
+    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
+      // Ящик пуст, можно скрыть куб и вернуть исходное состояние
+      document.getElementById('giftCubeContainer').classList.remove('active');
+      document.getElementById('itemCounter').classList.remove('active');
+      currentLootBox = null;
+      // Можно также показать сообщение, что всё открыто
+      return;
+    }
+
+    isOpening = true;
+    const gift = currentLootBox.items[currentLootBox.currentIndex];
+    currentLootBox.currentIndex++;
+
+    // Обновляем счётчик
+    const counter = document.getElementById('itemCounter');
+    counter.textContent = `${currentLootBox.currentIndex}/${currentLootBox.items.length}`;
+
+    // Показываем анимацию выпадения
+    showDropItem(gift);
+
+    // Здесь можно также добавить предмет в коллекцию пользователя (если нужно)
+
+    // Если это был последний предмет, через небольшую задержку скрываем куб
+    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
+      setTimeout(() => {
+        document.getElementById('giftCubeContainer').classList.remove('active');
+        document.getElementById('itemCounter').classList.remove('active');
+        currentLootBox = null;
+        isOpening = false;
+      }, 600);
+    } else {
+      isOpening = false;
+    }
+  }
+
   // Создание 3D куба (только вопросительные знаки, цвет зависит от редкости)
   function createGiftCube() {
     const cubeContainer = document.getElementById('giftCubeContainer');
@@ -988,12 +1138,19 @@
     const cornersContainer = document.getElementById('cornersContainer');
     const centerSquare = document.getElementById('centerSquare');
     const giftCubeContainer = document.getElementById('giftCubeContainer');
+    const counter = document.getElementById('itemCounter');
 
     cornersContainer.classList.add('merged');
     centerSquare.classList.add('merged');
 
-    createGiftCube();
+    // Создаём ящик с предметами
+    currentLootBox = createLootBox();
+    // Устанавливаем цвет куба
+    createGiftCube(); // это установит класс редкости на giftCubeContainer
+
     giftCubeContainer.classList.add('active');
+    counter.textContent = `0/${currentLootBox.items.length}`;
+    counter.classList.add('active');
   }
 
   // Интеллектуальный поиск
@@ -1140,6 +1297,13 @@
       document.getElementById('giftModal').classList.remove('active');
     }
   };
+
+  // Обработчик клика по кубу для открытия предметов
+  document.getElementById('giftCubeContainer').addEventListener('click', () => {
+    if (currentLootBox && !isOpening) {
+      openNextItem();
+    }
+  });
 </script>
 
 <!-- Предзагрузка изображений для четырёх подарков -->
