@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все стили без изменений */
+    /* Все предыдущие стили остаются без изменений */
     html, body {
       margin: 0;
       padding: 0;
@@ -75,6 +75,34 @@
       object-fit: contain;
       background: transparent;
     }
+    /* Матричная рамка вокруг видео */
+    .matrix-frame {
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+      border-radius: 30px; /* Чуть больше, чем у видео, чтобы скрыть острые углы */
+      border: 2px solid rgba(0, 255, 136, 0.8);
+      box-shadow: 0 0 20px #00ff88, inset 0 0 20px #00ff88;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(0, 255, 136, 0.2) 0px,
+        rgba(0, 255, 136, 0.2) 2px,
+        transparent 2px,
+        transparent 8px
+      );
+      background-size: 20px 20px;
+      animation: matrixFrameMove 5s linear infinite;
+      pointer-events: none;
+      z-index: 4;
+    }
+    @keyframes matrixFrameMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+
+    /* Остальные стили без изменений */
     .main-square {
       position: absolute;
       top: 50%;
@@ -272,7 +300,6 @@
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
-    /* Основной стиль для подарков в квадратиках: чёрный фон */
     .selected-gift {
       position: absolute;
       inset: 0;
@@ -293,28 +320,21 @@
       opacity: 1;
       transform: scale(1);
     }
-
-    /* Видео внутри подарка занимает весь контейнер, фон чёрный на время загрузки */
     .selected-gift video.gift-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       background: #000;
     }
-
-    /* Для подарков с медиа (увеличенный размер) */
     .selected-gift.has-media video.gift-img {
       width: 95%;
       height: 95%;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
     }
-
     .selected-gift.has-media .gift-name {
       display: none;
     }
-
-    /* Старый класс для совместимости */
     .selected-gift.durov-cap video.gift-img {
       width: 95%;
       height: 95%;
@@ -322,7 +342,6 @@
       box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
     }
     .selected-gift.durov-cap .gift-name { display: none; }
-
     .selected-gift .gift-emoji {
       font-size: 28px;
       margin-bottom: 2px;
@@ -346,8 +365,6 @@
       line-height: 1.1;
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
-
-    /* Скрытые видео для предзагрузки */
     .hidden-video {
       position: absolute;
       width: 1px;
@@ -356,8 +373,6 @@
       pointer-events: none;
       z-index: -1;
     }
-
-    /* Модальное окно */
     .modal {
       position: fixed;
       top: 0;
@@ -493,8 +508,6 @@
       color: #fff;
       font-weight: 500;
     }
-
-    /* Выигрышный подарок */
     .winning-gift {
       position: absolute;
       top: 50%;
@@ -531,6 +544,8 @@
 
   <div class="video-wrapper" id="videoWrapper">
     <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
+    <!-- Матричная рамка поверх видео -->
+    <div class="matrix-frame"></div>
   </div>
 
   <div class="avatar-top" id="avatar"></div>
@@ -570,7 +585,6 @@
       </div>
     </div>
 
-    <!-- Выигрышный подарок -->
     <div class="winning-gift" id="winningGift">
       <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video>
     </div>
@@ -609,10 +623,8 @@
   let currentSlotElement = null;
   let filledSlots = new Array(4).fill(false);
   let videoPlayTimeout = null;
-  // fourthGiftSelected больше не используется для блокировки видео, но оставим для подсветки
   let fourthGiftSelected = false;
 
-  // Карта соответствия имён файлов
   const fileMap = {
     "Durov's Cap": "Durov-Cap",
     "Astral Shard": "Astral Shard",
@@ -622,7 +634,7 @@
 
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
-  // ========== ПРЕДЗАГРУЗКА ВИДЕО (СКРЫТЫЕ ЭЛЕМЕНТЫ) ==========
+  // ========== ПРЕДЗАГРУЗКА ВИДЕО ==========
   const hiddenVideos = {};
 
   function createHiddenVideo(giftName) {
@@ -655,7 +667,6 @@
     return null;
   }
 
-  // Полный каталог подарков (80+)
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩" },
     { name: "Top Hat", emoji: "🎩" },
@@ -778,7 +789,6 @@
   window.addEventListener("resize", initMatrix);
   setInterval(drawMatrix, 50);
 
-  // Функция воспроизведения видео с начала (теперь без условия)
   function playVideoFromStart() {
     if (centerVideo) {
       if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
@@ -805,7 +815,6 @@
     }
   }
 
-  // Создание элемента для каталога
   function createCatalogGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'gift-img';
@@ -827,7 +836,6 @@
     return container;
   }
 
-  // Функция для создания контента слота/куба
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
@@ -977,7 +985,7 @@
   // ========== АНИМАЦИЯ ВЫИГРЫША ==========
   let animationFrame = null;
   let startTime = null;
-  const ROTATION_PHASE_DURATION = 10; // секунд
+  const ROTATION_PHASE_DURATION = 10;
 
   function stopCubeAnimation() {
     if (animationFrame) {
@@ -992,14 +1000,12 @@
     const winningGift = document.getElementById('winningGift');
     const winningVideo = winningGift.querySelector('video');
     
-    // Сброс позиции куба
     giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
     
     let angleX = 0;
     let angleY = 0;
     startTime = performance.now();
 
-    // Фаза вращения (0-10 сек)
     function rotatePhase(currentTime) {
       const elapsed = (currentTime - startTime) / 1000;
 
@@ -1110,7 +1116,6 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота (теперь видео играет после любого выбора)
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -1131,11 +1136,9 @@
     slotElement.querySelector('.plus-sign').style.opacity = '0';
     slotElement.classList.add('filled');
 
-    // Всегда запускаем видео и обновляем подсветку
     playVideoFromStart();
     updateCenterSquareHighlight();
 
-    // Обновляем выделение в модальном окне
     updateModalSelection();
     document.getElementById('giftModal').classList.remove('active');
   }
@@ -1174,7 +1177,6 @@
     }, 3500);
   }
 
-  // Обработчики модального окна
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
   });
@@ -1190,7 +1192,6 @@
   };
 </script>
 
-<!-- Предзагрузка изображений для четырёх подарков -->
 <script>
   (function preloadImages() {
     var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
