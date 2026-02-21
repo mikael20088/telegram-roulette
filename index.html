@@ -414,17 +414,23 @@
     .obtained-gift-item {
       width: 30px;
       height: 30px;
-      background: rgba(0, 0, 0, 0.5);
+      background: #000;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
       backdrop-filter: blur(4px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
       animation: giftAppear 0.2s ease-out;
       flex-shrink: 0;
+      overflow: hidden;
+    }
+    .obtained-gift-item video,
+    .obtained-gift-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     @keyframes giftAppear {
       0% { opacity: 0; transform: scale(0.5); }
@@ -473,6 +479,33 @@
       100% {
         opacity: 0;
         transform: translate(var(--target-x), var(--target-y)) scale(0.5) rotate(30deg);
+      }
+    }
+
+    /* Искры (sparks) */
+    .spark {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: gold;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 51;
+      animation: sparkFly 0.6s ease-out forwards;
+      box-shadow: 0 0 10px currentColor;
+    }
+    .spark:nth-child(2) { background: #ffaa00; width: 8px; height: 8px; }
+    .spark:nth-child(3) { background: #ffdd44; width: 4px; height: 4px; }
+    .spark:nth-child(4) { background: #ff8888; width: 5px; height: 5px; }
+    .spark:nth-child(5) { background: #aaffaa; width: 7px; height: 7px; }
+    @keyframes sparkFly {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * 1px)) scale(0.2);
       }
     }
 
@@ -777,6 +810,38 @@
     }
     // Если по какой-то причине нет скрытого видео, создаём новое (но это маловероятно)
     return null;
+  }
+
+  // Функция для создания маленького видео для панели (не изымает из hiddenVideos)
+  function createTinyGiftElement(gift) {
+    const container = document.createElement('div');
+    container.className = 'obtained-gift-item';
+
+    if (mediaGifts.has(gift.name)) {
+      // Создаём новое видео, не трогая скрытые
+      const baseName = fileMap[gift.name] || gift.name;
+      const encodedName = encodeURIComponent(baseName);
+      const video = document.createElement('video');
+      video.src = `videos/${encodedName}.mp4`;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.setAttribute('webkit-playsinline', '');
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'cover';
+      container.appendChild(video);
+      video.play().catch(() => {});
+    } else {
+      // Эмодзи для остальных (но в нашем случае используются только четыре)
+      container.textContent = gift.emoji;
+      container.style.fontSize = '20px';
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.justifyContent = 'center';
+    }
+    return container;
   }
 
   // Полный каталог подарков с редкостями
@@ -1108,12 +1173,10 @@
     };
   }
 
-  // Функция добавления полученного подарка в верхний контейнер
+  // Функция добавления полученного подарка в верхний контейнер (с видео)
   function addObtainedGift(gift) {
     const container = document.getElementById('obtainedGifts');
-    const item = document.createElement('div');
-    item.className = 'obtained-gift-item';
-    item.textContent = gift.emoji; // используем эмодзи для простоты
+    const item = createTinyGiftElement(gift);
     container.appendChild(item);
     // Автоматически скроллим вправо, чтобы последний добавленный был виден
     container.scrollLeft = container.scrollWidth;
@@ -1132,8 +1195,6 @@
 
     // Координаты цели (новая иконка в панели). Приблизительно.
     const panel = document.getElementById('obtainedGifts');
-    // Мы не знаем точную позицию будущего элемента, но можно использовать приближение:
-    // пусть цель будет примерно в правой части панели, сдвиг зависит от количества уже полученных.
     const panelRect = panel.getBoundingClientRect();
     // Цель: позиция последнего элемента + небольшой отступ
     const targetX = panelRect.left + panel.scrollLeft + (targetIndex * 36) + 18 - mainRect.left; // 36 = ширина + gap
@@ -1150,23 +1211,23 @@
 
     // Наполнение
     if (mediaGifts.has(gift.name)) {
-      const video = takePreloadedVideo(gift.name);
-      if (video) {
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        video.play().catch(() => {});
-        flying.appendChild(video);
-      } else {
-        // fallback
-        flying.textContent = gift.emoji;
-        flying.style.fontSize = '30px';
-        flying.style.display = 'flex';
-        flying.style.alignItems = 'center';
-        flying.style.justifyContent = 'center';
-        flying.style.background = '#000';
-      }
+      // Создаём новое видео для летящего элемента (не из хранилища)
+      const baseName = fileMap[gift.name] || gift.name;
+      const encodedName = encodeURIComponent(baseName);
+      const video = document.createElement('video');
+      video.src = `videos/${encodedName}.mp4`;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.setAttribute('webkit-playsinline', '');
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'cover';
+      flying.appendChild(video);
+      video.play().catch(() => {});
     } else {
+      // fallback
       flying.textContent = gift.emoji;
       flying.style.fontSize = '30px';
       flying.style.display = 'flex';
@@ -1178,7 +1239,25 @@
 
     mainSquare.appendChild(flying);
 
-    // Удаляем после окончания анимации
+    // Создаём искры вокруг стартовой позиции
+    for (let i = 0; i < 8; i++) {
+      const spark = document.createElement('div');
+      spark.className = 'spark';
+      spark.style.left = startX + 'px';
+      spark.style.top = startY + 'px';
+      // Случайное направление
+      const dx = (Math.random() - 0.5) * 60;
+      const dy = (Math.random() - 0.5) * 60 - 20; // немного вверх
+      spark.style.setProperty('--dx', dx);
+      spark.style.setProperty('--dy', dy);
+      mainSquare.appendChild(spark);
+
+      setTimeout(() => {
+        if (spark.parentNode) spark.remove();
+      }, 600);
+    }
+
+    // Удаляем летящий элемент после окончания анимации
     setTimeout(() => {
       if (flying.parentNode) flying.remove();
     }, 600);
