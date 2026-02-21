@@ -1,1596 +1,242 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width,
-                 height=device-height,
-                 initial-scale=1.0,
-                 maximum-scale=1.0,
-                 user-scalable=no" />
-  <title>Telegram Roulette</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    /* Все стили */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      overflow: hidden;
-    }
-    #app {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-    canvas {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      transition: opacity 0.5s ease;
-    }
-    .avatar-top {
-      position: absolute;
-      top: 18px;
-      left: 50%;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      overflow: hidden;
-      transform: translateX(-50%);
-      opacity: 0;
-      transition: opacity 0.6s ease;
-      z-index: 4;
-      box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
-    }
-    .avatar-top img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .black-screen {
-      position: absolute;
-      inset: 0;
-      background: #000;
-      z-index: 2;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-    .video-wrapper {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 220px;
-      height: 220px;
-      z-index: 3;
-      pointer-events: none;
-      transition: opacity 0.5s ease;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: transparent;
-    }
-    .main-square {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 190px;
-      height: 190px;
-      background: rgba(10, 20, 10, 0.3);
-      border-radius: 20px;
-      transform: translate(-50%, -50%);
-      opacity: 0;
-      z-index: 5;
-      padding: 8px;
-      box-sizing: border-box;
-      position: relative;
-      transition: all 0.5s ease;
-    }
-    .main-square::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      border-radius: 20px;
-      z-index: -1;
-      animation: matrixGlow 4s ease-in-out infinite alternate;
-    }
-    @keyframes matrixGlow {
-      0% { opacity: 0.7; transform: scale(1); }
-      100% { opacity: 1; transform: scale(1.03); }
-    }
-    .corners-container {
-      position: absolute;
-      inset: 0;
-      transition: all 0.5s ease;
-      z-index: 2;
-    }
-    .corners-container.merged {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .mini-square {
-      position: absolute;
-      width: 70px;
-      height: 70px;
-      background: rgba(255, 255, 255, 0.18);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(12px);
-      border: 1.5px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-    }
-    .mini-square[data-slot="0"] { top: 8px; left: 8px; }
-    .mini-square[data-slot="1"] { top: 8px; right: 8px; }
-    .mini-square[data-slot="2"] { bottom: 8px; left: 8px; }
-    .mini-square[data-slot="3"] { bottom: 8px; right: 8px; }
-    .mini-square.filled {
-      background: rgba(0, 255, 136, 0.35);
-      border-color: rgba(0, 255, 136, 0.6);
-    }
-    .plus-sign {
-      font-size: 24px;
-      color: #fff;
-      font-weight: bold;
-      z-index: 3;
-      transition: opacity 0.3s ease;
-      text-shadow: 0 0 12px rgba(0, 255, 136, 1);
-    }
-    .remove-gift {
-      display: none;
-    }
-    .center-mini-square {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 50px;
-      height: 50px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 10px;
-      transform: translate(-50%, -50%);
-      z-index: 6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      box-shadow: none;
-      backdrop-filter: blur(15px);
-      overflow: hidden;
-      transition: all 0.5s ease;
-      cursor: pointer;
-      pointer-events: none;
-    }
-    .center-mini-square.craftable {
-      background: rgba(255, 215, 0, 0.3);
-      border: 2px solid rgba(255, 215, 0, 0.8);
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
-      pointer-events: auto;
-    }
-    .center-mini-square.merged {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .center-video {
-      width: 90%;
-      height: 90%;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Telegram Craft</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    /* Синий фон на весь экран */
-    .blue-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at center, #0066ff 0%, #0033cc 100%);
-      z-index: 30;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .blue-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#000;
+  overflow:hidden;
+  font-family:system-ui;
+}
+#app{position:relative;width:100%;height:100%;}
 
-    /* Контейнер для куба */
-    .blue-overlay .gift-cube-container {
-      position: relative;
-      width: 70px;
-      height: 70px;
-      filter: drop-shadow(0 0 15px currentColor);
-      will-change: transform, opacity;
-      perspective: 400px;
-      transition: opacity 0.3s ease;
-      margin: 0 auto;
-    }
-    .gift-cube {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      animation: idleBounce 1s infinite ease-in-out;
-      transform: rotateX(-15deg) rotateY(20deg);
-      will-change: transform;
-    }
-    @keyframes idleBounce {
-      0%, 100% { transform: rotateX(-15deg) rotateY(20deg) scale(1); }
-      50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.03) translateY(-3px); }
-    }
-    .gift-cube.opening {
-      animation: openBox 0.8s ease-out forwards;
-    }
-    @keyframes openBox {
-      0% { transform: rotateX(-15deg) rotateY(20deg) scale(1); opacity: 1; }
-      50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.1); opacity: 1; }
-      100% { transform: rotateX(-15deg) rotateY(20deg) scale(0); opacity: 0; }
-    }
-    .cube-glow {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
-      transform: translate(-50%, -50%);
-      z-index: 11;
-      pointer-events: none;
-      transition: width 0.5s ease, height 0.5s ease;
-    }
-    .cube-glow.active {
-      width: 200px;
-      height: 200px;
-    }
-    .cube-face {
-      position: absolute;
-      width: 70px;
-      height: 70px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      font-size: 36px;
-      font-weight: bold;
-      transition: none;
-      border-width: 3px;
-      border-style: solid;
-    }
-    /* Классы для разных редкостей куба */
-    .gift-cube-container.rarity-common .cube-face {
-      background: rgba(0, 255, 136, 0.45);
-      border-color: rgba(0, 255, 136, 1);
-      box-shadow: 0 0 50px rgba(0, 255, 136, 1), inset 0 0 25px rgba(0, 255, 136, 0.8);
-      color: #ffffff;
-      text-shadow: 0 0 30px #00ff88, 0 0 60px #00ff88;
-    }
-    .gift-cube-container.rarity-rare .cube-face {
-      background: rgba(0, 100, 255, 0.45);
-      border-color: rgba(0, 100, 255, 1);
-      box-shadow: 0 0 50px rgba(0, 100, 255, 1), inset 0 0 25px rgba(0, 100, 255, 0.8);
-      color: #ffffff;
-      text-shadow: 0 0 30px #3a7bff, 0 0 60px #3a7bff;
-    }
-    .gift-cube-container.rarity-epic .cube-face {
-      background: rgba(155, 48, 255, 0.45);
-      border-color: rgba(155, 48, 255, 1);
-      box-shadow: 0 0 50px rgba(155, 48, 255, 1), inset 0 0 25px rgba(155, 48, 255, 0.8);
-      color: #ffffff;
-      text-shadow: 0 0 30px #b883ff, 0 0 60px #b883ff;
-    }
-    .gift-cube-container.rarity-legendary .cube-face {
-      background: rgba(255, 215, 0, 0.45);
-      border-color: rgba(255, 215, 0, 1);
-      box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(255, 215, 0, 0.8);
-      color: #ffffff;
-      text-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
-    }
+/* ===== СИНИЙ ЭКРАН ===== */
+.blue-overlay{
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at center,#0a5cff,#002c88);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .4s ease;
+  z-index:50;
+}
+.blue-overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
 
-    .cube-face .selected-gift {
-      display: none;
-    }
-    .cube-question {
-      font-size: 36px;
-      font-weight: bold;
-      opacity: 0.95;
-      filter: drop-shadow(0 0 8px currentColor);
-    }
+/* ===== КУБ ===== */
+.cube-wrap{
+  width:90px;
+  height:90px;
+  perspective:600px;
+}
+.cube{
+  width:100%;
+  height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  animation:idle 1.4s infinite ease-in-out;
+}
+@keyframes idle{
+  0%,100%{transform:rotateX(-15deg) rotateY(20deg)}
+  50%{transform:rotateX(-15deg) rotateY(20deg) translateY(-6px)}
+}
+.cube.open{
+  animation:open .7s forwards ease-out;
+}
+@keyframes open{
+  to{transform:scale(0);opacity:0}
+}
+.face{
+  position:absolute;
+  width:90px;
+  height:90px;
+  background:rgba(255,255,255,.15);
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
+  color:#fff;
+  border:2px solid rgba(255,255,255,.6);
+}
+.face.f{transform:translateZ(45px)}
+.face.b{transform:rotateY(180deg) translateZ(45px)}
+.face.r{transform:rotateY(90deg) translateZ(45px)}
+.face.l{transform:rotateY(-90deg) translateZ(45px)}
+.face.t{transform:rotateX(90deg) translateZ(45px)}
+.face.d{transform:rotateX(-90deg) translateZ(45px)}
 
-    .cube-face.front  { transform: translateZ(35px); }
-    .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
-    .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
-    .cube-face.left   { transform: rotateY(-90deg) translateZ(35px); }
-    .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
-    .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
+/* ===== СВЕЧЕНИЕ ===== */
+.glow{
+  position:absolute;
+  width:0;height:0;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.8),transparent 70%);
+  transition:.4s;
+}
+.glow.active{
+  width:260px;
+  height:260px;
+}
 
-    /* Одиночный предмет (появляется на месте куба) */
-    .single-gift-display {
-      width: 70px;
-      height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      animation: popIn 0.3s ease-out;
-    }
-    .single-gift-display video,
-    .single-gift-display img,
-    .single-gift-display .gift-emoji {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 0; /* без фона */
-    }
-    .single-gift-display .gift-emoji {
-      font-size: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      text-shadow: 0 0 10px rgba(255,255,255,0.5);
-    }
-    @keyframes popIn {
-      0% { opacity: 0; transform: scale(0.5); }
-      100% { opacity: 1; transform: scale(1); }
-    }
+/* ===== ВЫПАВШИЙ ПРЕДМЕТ ===== */
+.single{
+  width:90px;
+  height:90px;
+  display:none;
+  animation:pop .3s ease;
+}
+@keyframes pop{
+  from{transform:scale(.5);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+.single video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 
-    /* Ряд полученных подарков */
-    .blue-gift-row {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      align-items: center;
-      margin-top: 20px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-    .blue-gift-row.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .blue-gift-item {
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .blue-gift-item video,
-    .blue-gift-item img,
-    .blue-gift-item .gift-emoji {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .blue-gift-item .gift-emoji {
-      font-size: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      text-shadow: 0 0 10px rgba(255,255,255,0.5);
-    }
+/* ===== РЯД ===== */
+.row{
+  display:flex;
+  gap:12px;
+  margin-top:24px;
+  opacity:0;
+}
+.row.active{opacity:1}
+.row video{
+  width:60px;
+  height:60px;
+}
 
-    /* Счётчик предметов (красный) */
-    .blue-counter {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(255, 0, 0, 0.8);
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      padding: 10px 20px;
-      border-radius: 40px;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
-      z-index: 31;
-      display: none;
-      backdrop-filter: blur(5px);
-    }
-    .blue-counter.active {
-      display: block;
-    }
-
-    /* Основной стиль для подарков в квадратиках */
-    .selected-gift {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #000;
-      border-radius: 14px;
-      opacity: 0;
-      transform: scale(0.5);
-      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      z-index: 2;
-      backdrop-filter: none;
-      border: none;
-    }
-    .selected-gift.active {
-      opacity: 1;
-      transform: scale(1);
-    }
-    .selected-gift video.gift-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      background: #000;
-    }
-    .selected-gift.has-media video.gift-img {
-      width: 95%;
-      height: 95%;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
-    }
-    .selected-gift.has-media .gift-name {
-      display: none;
-    }
-    .selected-gift.durov-cap video.gift-img {
-      width: 95%;
-      height: 95%;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
-    }
-    .selected-gift.durov-cap .gift-name { display: none; }
-    .selected-gift .gift-emoji {
-      font-size: 28px;
-      margin-bottom: 2px;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 1);
-      color: #fff;
-    }
-    .selected-gift .gift-img,
-    .selected-gift video.gift-img {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      object-fit: cover;
-      margin-bottom: 2px;
-    }
-    .selected-gift .gift-name {
-      font-size: 10px;
-      color: #fff;
-      font-weight: 600;
-      text-align: center;
-      max-width: 75px;
-      line-height: 1.1;
-      text-shadow: 0 0 6px rgba(0, 0, 0, 1);
-    }
-
-    /* Скрытые видео */
-    .hidden-video {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    /* Контейнер для полученных подарков в главном квадрате */
-    .obtained-gifts {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      right: 8px;
-      height: 34px;
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      gap: 6px;
-      padding: 0 4px;
-      z-index: 15;
-      pointer-events: none;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    .obtained-gifts::-webkit-scrollbar {
-      display: none;
-    }
-    .obtained-gift-item {
-      width: 30px;
-      height: 30px;
-      background: #000;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      animation: giftAppear 0.2s ease-out;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-    .obtained-gift-item video,
-    .obtained-gift-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    @keyframes giftAppear {
-      0% { opacity: 0; transform: scale(0.5); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    /* Модальное окно */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .modal.active { display: flex; opacity: 1; }
-    .modal-content {
-      background: rgba(20, 20, 20, 0.95);
-      border-radius: 20px;
-      padding: 20px;
-      max-width: 90%;
-      max-height: 80%;
-      overflow-y: auto;
-      position: relative;
-      width: 90%;
-    }
-    .close-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 30px;
-      height: 30px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
-      color: #fff;
-    }
-    .search-container {
-      position: relative;
-      margin-bottom: 15px;
-    }
-    .search-input {
-      width: 100%;
-      padding: 12px 40px 12px 15px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
-      color: #fff;
-      font-size: 16px;
-      box-sizing: border-box;
-      outline: none;
-    }
-    .search-input::placeholder { color: rgba(255, 255, 255, 0.6); }
-    .search-icon {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 18px;
-      pointer-events: none;
-    }
-    .gifts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 15px;
-      margin-top: 10px;
-    }
-    .gift-item {
-      position: relative;
-      text-align: center;
-      cursor: pointer;
-      padding: 10px;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-      opacity: 1;
-      transform: scale(1);
-      backdrop-filter: blur(4px);
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .gift-item.selected {
-      background: rgba(0, 255, 136, 0.2);
-      border-color: rgba(0, 255, 136, 0.5);
-    }
-    .gift-item .remove-selected {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      width: 20px;
-      height: 20px;
-      background: rgba(255, 0, 0, 0.9);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 10;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    }
-    .gift-item:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: scale(1.05);
-    }
-    .gift-img {
-      width: 60px;
-      height: 60px;
-      border-radius: 10px;
-      margin: 0 auto 8px;
-      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      overflow: hidden;
-      position: relative;
-    }
-    .gift-img img,
-    .gift-img video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .gift-name {
-      font-size: 12px;
-      color: #fff;
-      font-weight: 500;
-    }
-  </style>
+/* ===== СЧЁТЧИК ===== */
+.counter{
+  position:absolute;
+  bottom:20px;
+  right:20px;
+  background:#ff0033;
+  padding:10px 18px;
+  border-radius:30px;
+  font-weight:bold;
+  color:#fff;
+}
+</style>
 </head>
+
 <body>
 <div id="app">
-  <div class="black-screen" id="blackScreen"></div>
-  <canvas id="matrix"></canvas>
 
-  <div class="video-wrapper" id="videoWrapper">
-    <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
+<div class="blue-overlay" id="overlay">
+
+  <div class="cube-wrap" id="cubeWrap">
+    <div class="cube" id="cube">
+      <div class="face f">?</div>
+      <div class="face b">?</div>
+      <div class="face r">?</div>
+      <div class="face l">?</div>
+      <div class="face t">?</div>
+      <div class="face d">?</div>
+    </div>
+    <div class="glow" id="glow"></div>
   </div>
 
-  <div class="avatar-top" id="avatar"></div>
+  <div class="single" id="single"></div>
+  <div class="row" id="row"></div>
+  <div class="counter" id="counter">4</div>
 
-  <div class="main-square" id="mainSquare">
-    <div class="obtained-gifts" id="obtainedGifts"></div>
-
-    <div class="corners-container" id="cornersContainer">
-      <div class="mini-square" data-slot="0">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-0"></div>
-      </div>
-      <div class="mini-square" data-slot="1">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-1"></div>
-      </div>
-      <div class="mini-square" data-slot="2">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-2"></div>
-      </div>
-      <div class="mini-square" data-slot="3">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-3"></div>
-      </div>
-    </div>
-
-    <div class="center-mini-square" id="centerSquare">
-      <video class="center-video" src="center-video.mp4" muted playsinline webkit-playsinline></video>
-    </div>
-  </div>
-
-  <!-- Синий оверлей -->
-  <div class="blue-overlay" id="blueOverlay">
-    <div class="gift-cube-container" id="blueCubeContainer">
-      <div class="gift-cube" id="blueCube">
-        <div class="cube-face front" id="blue-face-0"></div>
-        <div class="cube-face back" id="blue-face-1"></div>
-        <div class="cube-face right" id="blue-face-2"></div>
-        <div class="cube-face left" id="blue-face-3"></div>
-        <div class="cube-face top"></div>
-        <div class="cube-face bottom"></div>
-      </div>
-      <div class="cube-glow" id="blueCubeGlow"></div>
-    </div>
-
-    <!-- Одиночный предмет (появляется после исчезновения куба) -->
-    <div class="single-gift-display" id="singleGiftDisplay" style="display: none;"></div>
-
-    <!-- Ряд полученных подарков -->
-    <div class="blue-gift-row" id="blueGiftRow"></div>
-
-    <div class="blue-counter" id="blueCounter">4</div>
-  </div>
 </div>
 
-<div class="modal" id="giftModal">
-  <div class="modal-content">
-    <div class="close-btn" id="closeModal">×</div>
-    <h3 style="color: #fff; margin: 0 0 20px 0; text-align: center;">Редкие подарки</h3>
-    
-    <div class="search-container">
-      <input type="text" class="search-input" id="searchInput" placeholder="Поиск подарков..." />
-      <span class="search-icon">🔍</span>
-    </div>
-    
-    <div class="gifts-grid" id="giftsGrid"></div>
-  </div>
 </div>
 
 <script>
-  const tg = Telegram.WebApp;
-  tg.ready();
-  tg.expand();
+Telegram.WebApp.ready();
+Telegram.WebApp.expand();
 
-  document.querySelector('#videoWrapper video').playbackRate = 0.7;
+/* ===== ДАННЫЕ ===== */
+const gifts=[
+ {name:"Astral Shard",file:"Astral%20Shard.mp4"},
+ {name:"Kissed Frog",file:"Kissed%20Frog.mp4"},
+ {name:"Durov's Cap",file:"Durov-Cap.mp4"},
+ {name:"Artisan Brick",file:"Artisan%20Brick.mp4"}
+];
 
-  const centerVideo = document.querySelector('.center-video');
-  if (centerVideo) {
-    centerVideo.pause();
-    centerVideo.currentTime = 0;
+let index=0;
+let stage="cube";
+
+/* ===== СТАРТ (ИМИТАЦИЯ CRAFT) ===== */
+setTimeout(()=>document.getElementById("overlay").classList.add("active"),1000);
+
+/* ===== КЛИК ПО ЭКРАНУ ===== */
+overlay.addEventListener("click",()=>{
+
+  if(stage==="cube"){
+    cube.classList.add("open");
+    glow.classList.add("active");
+    stage="drop";
+    setTimeout(()=>{
+      cubeWrap.style.display="none";
+      glow.style.display="none";
+      showGift();
+    },700);
+    return;
   }
 
-  let selectedGifts = [null, null, null, null];
-  let currentSelectedSlot = null;
-  let currentSlotElement = null;
-  let filledSlots = new Array(4).fill(false);
-  let videoPlayTimeout = null;
-  let fourthGiftSelected = false;
-
-  // Переменные для системы ящиков
-  let currentLootBox = null; // { rarity, items: [{ name, emoji, rarity }], currentIndex }
-  let isOpening = false;
-  let showingFinalRow = false;
-
-  // Карта соответствия имён файлов
-  const fileMap = {
-    "Durov's Cap": "Durov-Cap",
-    "Astral Shard": "Astral Shard",
-    "Kissed Frog": "Kissed Frog",
-    "Artisan Brick": "Artisan Brick"
-  };
-
-  const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
-
-  // ========== ПРЕДЗАГРУЗКА ВИДЕО ==========
-  const hiddenVideos = {};
-
-  function createHiddenVideo(giftName) {
-    const baseName = fileMap[giftName] || giftName;
-    const encodedName = encodeURIComponent(baseName);
-    const video = document.createElement('video');
-    video.className = 'gift-img hidden-video';
-    video.src = `videos/${encodedName}.mp4`;
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.setAttribute('webkit-playsinline', '');
-    video.preload = 'auto';
-    document.body.appendChild(video);
-    hiddenVideos[giftName] = video;
-  }
-
-  mediaGifts.forEach(giftName => createHiddenVideo(giftName));
-
-  function takePreloadedVideo(giftName) {
-    const video = hiddenVideos[giftName];
-    if (video) {
-      delete hiddenVideos[giftName];
-      video.classList.remove('hidden-video');
-      video.pause();
-      video.currentTime = 0;
-      createHiddenVideo(giftName);
-      return video;
+  if(stage==="drop"){
+    index++;
+    counter.textContent=4-index;
+    if(index<gifts.length){
+      showGift();
+    }else{
+      showRow();
+      stage="final";
     }
-    return null;
+    return;
   }
 
-  // Функция для создания одиночного предмета (для центра)
-  function createSingleGiftElement(gift) {
-    const container = document.createElement('div');
-    container.className = 'single-gift-display';
-    container.style.display = 'flex'; // будет переопределено при показе
-
-    if (mediaGifts.has(gift.name)) {
-      const baseName = fileMap[gift.name] || gift.name;
-      const encodedName = encodeURIComponent(baseName);
-      const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      container.appendChild(video);
-      video.play().catch(() => {});
-    } else {
-      container.textContent = gift.emoji;
-      container.style.fontSize = '50px';
-      container.style.display = 'flex';
-      container.style.alignItems = 'center';
-      container.style.justifyContent = 'center';
-    }
-    return container;
+  if(stage==="final"){
+    location.reload();
   }
+});
 
-  // Функция для создания элемента ряда
-  function createBlueGiftItem(gift) {
-    const item = document.createElement('div');
-    item.className = 'blue-gift-item';
+/* ===== ФУНКЦИИ ===== */
+function showGift(){
+  single.innerHTML="";
+  const v=document.createElement("video");
+  v.src="videos/"+gifts[index].file;
+  v.autoplay=true;
+  v.loop=true;
+  v.muted=true;
+  v.playsInline=true;
+  single.appendChild(v);
+  single.style.display="block";
+}
 
-    if (mediaGifts.has(gift.name)) {
-      const baseName = fileMap[gift.name] || gift.name;
-      const encodedName = encodeURIComponent(baseName);
-      const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      item.appendChild(video);
-      video.play().catch(() => {});
-    } else {
-      item.textContent = gift.emoji;
-      item.style.fontSize = '30px';
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'center';
-    }
-    return item;
-  }
-
-  // Функция для создания миниатюры в главном квадрате
-  function createTinyGiftElement(gift) {
-    const container = document.createElement('div');
-    container.className = 'obtained-gift-item';
-
-    if (mediaGifts.has(gift.name)) {
-      const baseName = fileMap[gift.name] || gift.name;
-      const encodedName = encodeURIComponent(baseName);
-      const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      container.appendChild(video);
-      video.play().catch(() => {});
-    } else {
-      container.textContent = gift.emoji;
-      container.style.fontSize = '20px';
-      container.style.display = 'flex';
-      container.style.alignItems = 'center';
-      container.style.justifyContent = 'center';
-    }
-    return container;
-  }
-
-  // Полный каталог подарков с редкостями
-  const rareGifts = [
-    { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
-    { name: "Top Hat", emoji: "🎩", rarity: "common" },
-    { name: "Astral Shard", emoji: "💎", rarity: "uncommon" },
-    { name: "Mini Oscar", emoji: "🏆", rarity: "common" },
-    { name: "Electric Skull", emoji: "💀", rarity: "common" },
-    { name: "Diamond Ring", emoji: "💍", rarity: "common" },
-    { name: "Stellar Rocket", emoji: "🚀", rarity: "common" },
-    { name: "Trapped Heart", emoji: "💖", rarity: "common" },
-    { name: "Gem Signet", emoji: "🔮", rarity: "common" },
-    { name: "Artisan Brick", emoji: "🧱", rarity: "epic" },
-    { name: "Sharp Tongue", emoji: "🗡", rarity: "common" },
-    { name: "Jack-in-the-Box", emoji: "🎁", rarity: "common" },
-    { name: "Witch Hat", emoji: "🎃", rarity: "common" },
-    { name: "Moon Pendant", emoji: "🌙", rarity: "common" },
-    { name: "Lunar Snake", emoji: "🐍", rarity: "common" },
-    { name: "Holiday Drink", emoji: "🥂", rarity: "common" },
-    { name: "Record Player", emoji: "🎵", rarity: "common" },
-    { name: "Joyful Bundle", emoji: "🎉", rarity: "common" },
-    { name: "Restless Jar", emoji: "🫙", rarity: "common" },
-    { name: "Big Year", emoji: "🎈", rarity: "common" },
-    { name: "Light Sword", emoji: "⚔️", rarity: "common" },
-    { name: "Jingle Bells", emoji: "🔔", rarity: "common" },
-    { name: "Eternal Candle", emoji: "🕯", rarity: "common" },
-    { name: "Skull Flower", emoji: "💀🌸", rarity: "common" },
-    { name: "Sakura Flower", emoji: "🌸", rarity: "common" },
-    { name: "Jelly Bunny", emoji: "🐰", rarity: "common" },
-    { name: "Cupid Charm", emoji: "💘", rarity: "common" },
-    { name: "Hanging Star", emoji: "⭐️", rarity: "common" },
-    { name: "Easter Egg", emoji: "🥚", rarity: "common" },
-    { name: "Spy Agaric", emoji: "🍄", rarity: "common" },
-    { name: "Homemade Cake", emoji: "🍰", rarity: "common" },
-    { name: "Snow Globe", emoji: "❄️", rarity: "common" },
-    { name: "Xmas Stocking", emoji: "🧦", rarity: "common" },
-    { name: "Scared Cat", emoji: "😿", rarity: "common" },
-    { name: "Spiced Wine", emoji: "🍷", rarity: "common" },
-    { name: "Evil Eye", emoji: "👁", rarity: "common" },
-    { name: "Ionic Dryer", emoji: "💨", rarity: "common" },
-    { name: "Ginger Cookie", emoji: "🍪", rarity: "common" },
-    { name: "Hex Pot", emoji: "🪣", rarity: "common" },
-    { name: "Snake Box", emoji: "🐍📦", rarity: "common" },
-    { name: "Loot Bag", emoji: "💰", rarity: "common" },
-    { name: "Love Candle", emoji: "❤️🕯", rarity: "common" },
-    { name: "Love Potion", emoji: "💕", rarity: "common" },
-    { name: "Kissed Frog", emoji: "🐸", rarity: "rare" },
-    { name: "Neko Helmet", emoji: "🐱⛑", rarity: "common" },
-    { name: "Pet Snake", emoji: "🐍", rarity: "common" },
-    { name: "Jester Hat", emoji: "🤡", rarity: "common" },
-    { name: "Flying Broom", emoji: "🧹", rarity: "common" },
-    { name: "Party Sparkler", emoji: "✨", rarity: "common" },
-    { name: "Star Notepad", emoji: "⭐️📝", rarity: "common" },
-    { name: "Voodoo Doll", emoji: "🎎", rarity: "common" },
-    { name: "Bonded Ring", emoji: "💞", rarity: "common" },
-    { name: "Snow Mittens", emoji: "🧤", rarity: "common" },
-    { name: "Crystal Ball", emoji: "🔮", rarity: "common" },
-    { name: "Berry Box", emoji: "🍓", rarity: "common" },
-    { name: "Tama Gadget", emoji: "📱", rarity: "common" },
-    { name: "Valentine Box", emoji: "💝", rarity: "common" },
-    { name: "Cookie Heart", emoji: "❤️🍪", rarity: "common" },
-    { name: "Precious Peach", emoji: "🍑", rarity: "common" },
-    { name: "Bow Tie", emoji: "🎀", rarity: "common" },
-    { name: "Signet Ring", emoji: "💎", rarity: "common" },
-    { name: "Lol Pop", emoji: "🍭", rarity: "common" },
-    { name: "Santa Hat", emoji: "🎅", rarity: "common" },
-    { name: "Hypno Lollipop", emoji: "🍬", rarity: "common" },
-    { name: "Winter Wreath", emoji: "🎄", rarity: "common" },
-    { name: "Vintage Cigar", emoji: "🚬", rarity: "common" },
-    { name: "Bunny Muffin", emoji: "🐰🧁", rarity: "common" },
-    { name: "Mad Pumpkin", emoji: "🎃", rarity: "common" },
-    { name: "Eternal Rose", emoji: "🌹", rarity: "common" },
-    { name: "Jolly Chimp", emoji: "🐵", rarity: "common" },
-    { name: "Toy Bear", emoji: "🧸", rarity: "common" },
-    { name: "Candy Cane", emoji: "🍭", rarity: "common" },
-    { name: "Sleigh Bell", emoji: "🔔", rarity: "common" },
-    { name: "Swiss Watch", emoji: "⌚️", rarity: "common" },
-    { name: "Genie Lamp", emoji: "🪔", rarity: "common" },
-    { name: "Plush Pepe", emoji: "🐸", rarity: "common" },
-    { name: "Perfume Bottle", emoji: "💨", rarity: "common" },
-    { name: "Magic Potion", emoji: "🧪", rarity: "common" },
-    { name: "Ion Gem", emoji: "💎", rarity: "common" },
-    { name: "Desk Calendar", emoji: "🗓", rarity: "common" },
-    { name: "B-Day Candle", emoji: "🕯", rarity: "common" }
-  ];
-
-  // Матрица
-  const canvas = document.getElementById("matrix");
-  const ctx = canvas.getContext("2d");
-  let drops = [];
-  const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
-  const fontSize = 14;
-
-  function initMatrix() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const columns = Math.floor(canvas.width / fontSize);
-    drops = Array.from({ length: columns }, () => ({
-      y: Math.random() * canvas.height,
-      speed: 0.5 + Math.random() * 1.5
-    }));
-  }
-
-  function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#00ff88";
-    ctx.font = fontSize + "px monospace";
-
-    drops.forEach((drop, i) => {
-      const text = chars[Math.floor(Math.random() * chars.length)];
-      ctx.fillText(text, i * fontSize, drop.y);
-      drop.y += fontSize * drop.speed;
-      if (drop.y > canvas.height + 50) {
-        drop.y = Math.random() * -100;
-        drop.speed = 0.5 + Math.random() * 1.5;
-      }
-    });
-  }
-
-  initMatrix();
-  window.addEventListener("resize", initMatrix);
-  setInterval(drawMatrix, 50);
-
-  function playVideoFromStart() {
-    if (centerVideo && !fourthGiftSelected) {
-      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
-      centerVideo.currentTime = 0;
-      centerVideo.play().catch(e => console.log('Ошибка воспроизведения видео'));
-      videoPlayTimeout = setTimeout(() => {
-        centerVideo.pause();
-        centerVideo.currentTime = 0;
-      }, 2000);
-    }
-  }
-
-  function updateCenterSquareHighlight() {
-    const centerSquare = document.getElementById('centerSquare');
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount > 0) {
-      centerSquare.classList.add('craftable');
-    } else {
-      centerSquare.classList.remove('craftable');
-    }
-  }
-
-  // Создание элемента для каталога
-  function createCatalogGiftElement(gift) {
-    const container = document.createElement('div');
-    container.className = 'gift-img';
-
-    const baseName = fileMap[gift.name] || gift.name;
-    const encodedName = encodeURIComponent(baseName);
-
-    const img = new Image();
-    img.src = `videos/${encodedName}.png`;
-    img.alt = gift.name;
-    img.onerror = () => {
-      container.innerHTML = '';
-      const emoji = document.createElement('div');
-      emoji.className = 'gift-emoji';
-      emoji.textContent = gift.emoji;
-      container.appendChild(emoji);
-    };
-    container.appendChild(img);
-    return container;
-  }
-
-  // Функция для создания контента слота
-  function createGiftContent(gift, forSlot = false) {
-    const container = document.createElement('div');
-    container.className = 'selected-gift active';
-    
-    if (mediaGifts.has(gift.name)) {
-      container.classList.add('has-media');
-    }
-
-    if (forSlot && mediaGifts.has(gift.name)) {
-      const readyVideo = takePreloadedVideo(gift.name);
-      if (readyVideo) {
-        container.appendChild(readyVideo);
-        readyVideo.play().catch(() => {});
-        return container;
-      }
-    }
-
-    const baseName = fileMap[gift.name] || gift.name;
-    const encodedName = encodeURIComponent(baseName);
-
-    const tryCreateVideo = () => {
-      const video = document.createElement('video');
-      video.className = 'gift-img';
-      video.src = `videos/${encodedName}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-
-      video.onerror = () => {
-        const img = new Image();
-        img.onload = () => {
-          container.innerHTML = '';
-          img.className = 'gift-img';
-          container.appendChild(img);
-        };
-        img.onerror = () => {
-          container.innerHTML = '';
-          const emoji = document.createElement('div');
-          emoji.className = 'gift-emoji';
-          emoji.textContent = gift.emoji;
-          container.appendChild(emoji);
-        };
-        img.src = `videos/${encodedName}.png`;
-      };
-
-      video.oncanplay = () => video.play().catch(() => {});
-      return video;
-    };
-
-    if (forSlot) {
-      container.appendChild(tryCreateVideo());
-    } else {
-      const img = new Image();
-      img.className = 'gift-img';
-      img.src = `videos/${encodedName}.png`;
-      img.alt = gift.name;
-      img.onerror = () => {
-        container.innerHTML = '';
-        const emoji = document.createElement('div');
-        emoji.className = 'gift-emoji';
-        emoji.textContent = gift.emoji;
-        container.appendChild(emoji);
-      };
-      container.appendChild(img);
-    }
-
-    return container;
-  }
-
-  // Удаление подарка из слота
-  function removeGiftFromSlot(slotIndex, event) {
-    event.stopPropagation();
-    const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
-    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-
-    selectedGifts[slotIndex] = null;
-    filledSlots[slotIndex] = false;
-    fourthGiftSelected = false;
-
-    slotGiftContainer.innerHTML = '';
-    slotGiftContainer.classList.remove('active', 'durov-cap', 'has-media');
-    slotElement.querySelector('.plus-sign').style.opacity = '1';
-    slotElement.classList.remove('filled');
-
-    const removeBtn = slotElement.querySelector('.remove-gift');
-    if (removeBtn) removeBtn.remove();
-
-    updateCenterSquareHighlight();
-
-    if (centerVideo) {
-      centerVideo.pause();
-      centerVideo.currentTime = 0;
-      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
-    }
-
-    updateModalSelection();
-  }
-
-  // Обновление выделения в модальном окне
-  function updateModalSelection() {
-    const giftItems = document.querySelectorAll('.gift-item');
-    giftItems.forEach(item => {
-      item.classList.remove('selected');
-      const removeBtn = item.querySelector('.remove-selected');
-      if (removeBtn) removeBtn.remove();
-    });
-
-    selectedGifts.forEach((gift, index) => {
-      if (gift) {
-        const giftItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
-        if (giftItem) {
-          giftItem.classList.add('selected');
-          if (!giftItem.querySelector('.remove-selected')) {
-            const removeBtn = document.createElement('div');
-            removeBtn.className = 'remove-selected';
-            removeBtn.innerHTML = '×';
-            removeBtn.onclick = (e) => {
-              e.stopPropagation();
-              removeGiftFromSlot(index, e);
-            };
-            giftItem.appendChild(removeBtn);
-          }
-        }
-      }
-    });
-  }
-
-  // Функция определения редкости куба
-  function getCubeRarity() {
-    const rarities = selectedGifts.map(g => g ? g.rarity : null).filter(Boolean);
-    if (rarities.includes('legendary')) return 'legendary';
-    if (rarities.includes('epic')) return 'epic';
-    if (rarities.includes('rare')) return 'rare';
-    return 'common';
-  }
-
-  // Функция для создания ящика
-  function createLootBox() {
-    const allGifts = [
-      rareGifts.find(g => g.name === "Astral Shard"),
-      rareGifts.find(g => g.name === "Kissed Frog"),
-      rareGifts.find(g => g.name === "Durov's Cap"),
-      rareGifts.find(g => g.name === "Artisan Brick")
-    ];
-    const shuffled = [...allGifts].sort(() => Math.random() - 0.5);
-    const rarity = getCubeRarity();
-    return {
-      rarity: rarity,
-      items: shuffled,
-      currentIndex: 0,
-      total: 4
-    };
-  }
-
-  // Настройка куба в синем оверлее
-  function setupBlueCube(rarity) {
-    const cubeContainer = document.getElementById('blueCubeContainer');
-    cubeContainer.classList.remove('rarity-common', 'rarity-rare', 'rarity-epic', 'rarity-legendary');
-    cubeContainer.classList.add(`rarity-${rarity}`);
-
-    const cubeFaces = [
-      document.getElementById('blue-face-0'),
-      document.getElementById('blue-face-1'),
-      document.getElementById('blue-face-2'),
-      document.getElementById('blue-face-3'),
-      document.querySelector('#blueCube .cube-face.top'),
-      document.querySelector('#blueCube .cube-face.bottom')
-    ];
-
-    cubeFaces.forEach(face => {
-      if (face) {
-        face.innerHTML = '';
-        const q = document.createElement('div');
-        q.className = 'cube-question';
-        q.textContent = '?';
-        face.appendChild(q);
-      }
-    });
-
-    const cube = document.getElementById('blueCube');
-    cube.classList.remove('opening');
-    document.getElementById('blueCubeGlow').classList.remove('active');
-  }
-
-  // Очистка ряда
-  function clearBlueRow() {
-    document.getElementById('blueGiftRow').innerHTML = '';
-  }
-
-  // Очистка одиночного предмета
-  function clearSingleDisplay() {
-    const single = document.getElementById('singleGiftDisplay');
-    single.innerHTML = '';
-    single.style.display = 'none';
-  }
-
-  // Показать одиночный предмет
-  function showSingleGift(gift) {
-    const single = document.getElementById('singleGiftDisplay');
-    single.innerHTML = '';
-    const element = createSingleGiftElement(gift);
-    single.appendChild(element);
-    single.style.display = 'flex';
-  }
-
-  // Добавить предмет в ряд
-  function addToBlueRow(gift) {
-    const row = document.getElementById('blueGiftRow');
-    const item = createBlueGiftItem(gift);
-    row.appendChild(item);
-  }
-
-  // Обновление счётчика
-  function updateBlueCounter() {
-    const counter = document.getElementById('blueCounter');
-    if (currentLootBox) {
-      const remaining = currentLootBox.total - currentLootBox.currentIndex;
-      counter.textContent = remaining;
-    }
-  }
-
-  // Функция открытия куба (первый клик)
-  function openBlueBox() {
-    if (!currentLootBox || isOpening) return;
-    if (currentLootBox.currentIndex >= currentLootBox.items.length) return;
-
-    isOpening = true;
-    const cube = document.getElementById('blueCube');
-    const glow = document.getElementById('blueCubeGlow');
-    cube.classList.add('opening');
-    glow.classList.add('active');
-
-    setTimeout(() => {
-      cube.style.display = 'none';
-      glow.style.display = 'none';
-      // Показываем первый предмет
-      const gift = currentLootBox.items[currentLootBox.currentIndex];
-      showSingleGift(gift);
-      addObtainedGift(gift);
-      currentLootBox.currentIndex++;
-      updateBlueCounter();
-      isOpening = false;
-    }, 800);
-  }
-
-  // Показать ряд со всеми предметами (финал)
-  function showFinalRow() {
-    const single = document.getElementById('singleGiftDisplay');
-    single.style.display = 'none';
-    const row = document.getElementById('blueGiftRow');
-    row.innerHTML = '';
-    // Добавляем все предметы из ящика
-    currentLootBox.items.forEach(gift => {
-      addToBlueRow(gift);
-    });
-    row.classList.add('active');
-    showingFinalRow = true;
-  }
-
-  // Возврат к крафту
-  function returnToCraft() {
-    document.getElementById('blueOverlay').classList.remove('active');
-    document.getElementById('mainSquare').style.opacity = '1';
-    document.getElementById('cornersContainer').classList.remove('merged');
-    document.getElementById('centerSquare').classList.remove('merged');
-    clearSingleDisplay();
-    clearBlueRow();
-    document.getElementById('blueGiftRow').classList.remove('active');
-    const cube = document.getElementById('blueCube');
-    cube.style.display = 'block';
-    cube.classList.remove('opening');
-    document.getElementById('blueCubeGlow').style.display = 'block';
-    document.getElementById('blueCubeGlow').classList.remove('active');
-    showingFinalRow = false;
-  }
-
-  // Добавление подарка в панель главного квадрата
-  function addObtainedGift(gift) {
-    const container = document.getElementById('obtainedGifts');
-    const item = createTinyGiftElement(gift);
-    container.appendChild(item);
-    container.scrollLeft = container.scrollWidth;
-  }
-
-  // Старт синего режима
-  function startBlueMode() {
-    document.getElementById('mainSquare').style.opacity = '0';
-    document.getElementById('blueOverlay').classList.add('active');
-    currentLootBox = createLootBox();
-    setupBlueCube(currentLootBox.rarity);
-    clearSingleDisplay();
-    clearBlueRow();
-    document.getElementById('blueGiftRow').classList.remove('active');
-    const cube = document.getElementById('blueCube');
-    cube.style.display = 'block';
-    document.getElementById('blueCubeGlow').style.display = 'block';
-    const counter = document.getElementById('blueCounter');
-    counter.textContent = currentLootBox.total;
-    counter.classList.add('active');
-    isOpening = false;
-    showingFinalRow = false;
-  }
-
-  // Обработчик клика по синему оверлею (работает по любой области)
-  document.getElementById('blueOverlay').addEventListener('click', (e) => {
-    // Если клик по кубу и куб ещё виден и это первый шаг
-    if (e.target.closest('.gift-cube-container') && currentLootBox && currentLootBox.currentIndex === 0 && !isOpening) {
-      openBlueBox();
-      return;
-    }
-
-    // Если показывается финальный ряд
-    if (showingFinalRow) {
-      returnToCraft();
-      return;
-    }
-
-    // Если идёт процесс открытия (куб ещё не исчез) — игнорируем
-    if (isOpening) return;
-
-    // Если есть активный ящик и ещё есть предметы
-    if (currentLootBox && currentLootBox.currentIndex > 0 && currentLootBox.currentIndex < currentLootBox.total) {
-      // Показываем следующий предмет
-      const gift = currentLootBox.items[currentLootBox.currentIndex];
-      showSingleGift(gift);
-      addObtainedGift(gift);
-      currentLootBox.currentIndex++;
-      updateBlueCounter();
-
-      // Если после этого все предметы открыты, показываем ряд
-      if (currentLootBox.currentIndex >= currentLootBox.total) {
-        showFinalRow();
-      }
-    }
+function showRow(){
+  single.style.display="none";
+  gifts.forEach(g=>{
+    const v=document.createElement("video");
+    v.src="videos/"+g.file;
+    v.autoplay=true;
+    v.loop=true;
+    v.muted=true;
+    row.appendChild(v);
   });
-
-  // Обработчик клика по центру (крафт)
-  document.getElementById('centerSquare').addEventListener('click', () => {
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount > 0) {
-      document.getElementById('cornersContainer').classList.add('merged');
-      document.getElementById('centerSquare').classList.add('merged');
-      startBlueMode();
-    }
-  });
-
-  // Интеллектуальный поиск
-  function sortGiftsByRelevance(gifts, searchTerm) {
-    if (!searchTerm) return gifts;
-    searchTerm = searchTerm.toLowerCase();
-    return gifts.sort((a, b) => {
-      const scoreA = getSearchScore(a.name, searchTerm);
-      const scoreB = getSearchScore(b.name, searchTerm);
-      if (scoreA !== scoreB) return scoreB - scoreA;
-      return a.name.localeCompare(b.name);
-    });
-  }
-
-  function getSearchScore(name, searchTerm) {
-    const lowerName = name.toLowerCase();
-    if (lowerName.startsWith(searchTerm)) return 1000;
-    if (lowerName.includes(` ${searchTerm}`)) return 800;
-    if (lowerName[0] === searchTerm[0]) return 500;
-    if (lowerName.includes(searchTerm)) return 100;
-    return 0;
-  }
-
-  function filterAndSortGifts(searchTerm) {
-    const filteredGifts = rareGifts.filter(gift =>
-      gift.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const sortedGifts = sortGiftsByRelevance(filteredGifts, searchTerm);
-
-    const grid = document.getElementById('giftsGrid');
-    grid.innerHTML = '';
-
-    sortedGifts.forEach(gift => {
-      const item = document.createElement('div');
-      item.className = 'gift-item';
-      item.dataset.name = gift.name;
-
-      const imgDiv = createCatalogGiftElement(gift);
-      const nameDiv = document.createElement('div');
-      nameDiv.className = 'gift-name';
-      nameDiv.textContent = gift.name;
-
-      item.appendChild(imgDiv);
-      item.appendChild(nameDiv);
-      item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
-      grid.appendChild(item);
-    });
-
-    updateModalSelection();
-  }
-
-  function showGifts(slotElement) {
-    currentSelectedSlot = slotElement.dataset.slot;
-    currentSlotElement = slotElement;
-    filterAndSortGifts('');
-    document.getElementById('giftModal').classList.add('active');
-  }
-
-  function selectGiftForSlot(gift, slotElement) {
-    const slotIndex = parseInt(currentSelectedSlot);
-    if (filledSlots[slotIndex]) return;
-
-    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-    selectedGifts[slotIndex] = gift;
-    filledSlots[slotIndex] = true;
-
-    slotGiftContainer.innerHTML = '';
-    const content = createGiftContent(gift, true);
-    slotGiftContainer.appendChild(content);
-
-    slotGiftContainer.classList.add('active');
-    if (gift.name === "Durov's Cap") {
-      slotGiftContainer.classList.add('durov-cap');
-    }
-
-    slotElement.querySelector('.plus-sign').style.opacity = '0';
-    slotElement.classList.add('filled');
-
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount === 4) {
-      fourthGiftSelected = true;
-      if (centerVideo) {
-        centerVideo.pause();
-        centerVideo.currentTime = 0;
-        if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
-      }
-      updateCenterSquareHighlight();
-    } else {
-      playVideoFromStart();
-      updateCenterSquareHighlight();
-    }
-
-    updateModalSelection();
-    document.getElementById('giftModal').classList.remove('active');
-  }
-
-  // Инициализация
-  const user = tg.initDataUnsafe?.user;
-  if (user && user.photo_url) {
-    const avatar = document.getElementById("avatar");
-    const img = document.createElement("img");
-    img.src = user.photo_url;
-    avatar.appendChild(img);
-
-    setTimeout(() => {
-      document.getElementById("matrix").style.opacity = "0";
-      document.getElementById("videoWrapper").style.opacity = "0";
-      document.getElementById("blackScreen").style.opacity = "1";
-    }, 3000);
-
-    setTimeout(() => {
-      avatar.style.opacity = "1";
-      document.getElementById("mainSquare").style.opacity = "1";
-
-      document.querySelectorAll('.mini-square').forEach(square => {
-        square.onclick = (e) => {
-          if (e.target.classList.contains('remove-gift')) return;
-          showGifts(square);
-        };
-      });
-    }, 3500);
-  }
-
-  // Обработчики модального окна
-  document.getElementById('searchInput')?.addEventListener('input', (e) => {
-    filterAndSortGifts(e.target.value);
-  });
-
-  document.getElementById('closeModal').onclick = () => {
-    document.getElementById('giftModal').classList.remove('active');
-  };
-
-  document.getElementById('giftModal').onclick = (e) => {
-    if (e.target === document.getElementById('giftModal')) {
-      document.getElementById('giftModal').classList.remove('active');
-    }
-  };
+  row.classList.add("active");
+}
 </script>
-
-<!-- Предзагрузка изображений для четырёх подарков -->
-<script>
-  (function preloadImages() {
-    var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
-    var fileMap = {
-      "Durov's Cap": "Durov-Cap",
-      "Astral Shard": "Astral Shard",
-      "Kissed Frog": "Kissed Frog",
-      "Artisan Brick": "Artisan Brick"
-    };
-    gifts.forEach(function(name) {
-      var baseName = fileMap[name] || name;
-      var img = new Image();
-      img.src = 'videos/' + encodeURIComponent(baseName) + '.png';
-    });
-  })();
-</script>
-
 </body>
 </html>
