@@ -254,24 +254,24 @@
     }
     /* Цветовые варианты куба */
     .gift-cube.legendary .cube-face {
-      background: rgba(255, 215, 0, 0.2);
-      border-color: rgba(255, 215, 0, 0.5);
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+      background: rgba(255, 215, 0, 0.25);
+      border-color: rgba(255, 215, 0, 0.6);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
     }
     .gift-cube.epic .cube-face {
-      background: rgba(160, 32, 240, 0.2);
-      border-color: rgba(160, 32, 240, 0.5);
-      box-shadow: 0 0 20px rgba(160, 32, 240, 0.3);
+      background: rgba(160, 32, 240, 0.25);
+      border-color: rgba(160, 32, 240, 0.6);
+      box-shadow: 0 0 20px rgba(160, 32, 240, 0.4);
     }
     .gift-cube.rare .cube-face {
-      background: rgba(0, 100, 255, 0.2);
-      border-color: rgba(0, 100, 255, 0.5);
-      box-shadow: 0 0 20px rgba(0, 100, 255, 0.3);
+      background: rgba(0, 100, 255, 0.25);
+      border-color: rgba(0, 100, 255, 0.6);
+      box-shadow: 0 0 20px rgba(0, 100, 255, 0.4);
     }
     .gift-cube.uncommon .cube-face {
-      background: rgba(0, 255, 136, 0.2);
-      border-color: rgba(0, 255, 136, 0.5);
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+      background: rgba(0, 255, 136, 0.25);
+      border-color: rgba(0, 255, 136, 0.6);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
     }
 
     .cube-face {
@@ -287,30 +287,23 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-    }
-    .cube-face .selected-gift {
-      position: relative;
-      opacity: 1;
-      transform: scale(1);
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      backdrop-filter: none;
-      border: none;
-    }
-    .cube-face .selected-gift .gift-img,
-    .cube-face .selected-gift video.gift-img {
-      width: 45px;
-      height: 45px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .cube-face .selected-gift .gift-emoji {
       font-size: 32px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px currentColor;
     }
-    .cube-face .selected-gift .gift-name {
-      display: none;
+    .cube-face .question-mark {
+      font-size: 40px;
+      font-weight: bold;
+      color: inherit;
+      text-shadow: 0 0 15px currentColor;
+      animation: pulse 2s infinite ease-in-out;
     }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.9; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
     .cube-face.front  { transform: translateZ(35px); }
     .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
     .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
@@ -593,17 +586,17 @@
 
     <div class="gift-cube-container" id="giftCubeContainer">
       <div class="gift-cube uncommon" id="giftCube"> <!-- начальный класс uncommon (зелёный) -->
-        <div class="cube-face front" id="cube-face-0"></div>
-        <div class="cube-face back" id="cube-face-1"></div>
-        <div class="cube-face right" id="cube-face-2"></div>
-        <div class="cube-face left" id="cube-face-3"></div>
+        <div class="cube-face front"></div>
+        <div class="cube-face back"></div>
+        <div class="cube-face right"></div>
+        <div class="cube-face left"></div>
         <div class="cube-face top"></div>
         <div class="cube-face bottom"></div>
       </div>
     </div>
 
     <div class="winning-gift" id="winningGift">
-      <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video> <!-- временно, потом заменится -->
+      <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video> <!-- временно -->
     </div>
   </div>
 </div>
@@ -987,24 +980,27 @@
     });
   }
 
-  function createGiftCube() {
-    const cubeFaces = [
-      document.getElementById('cube-face-0'),
-      document.getElementById('cube-face-1'),
-      document.getElementById('cube-face-2'),
-      document.getElementById('cube-face-3')
-    ];
-
-    cubeFaces.forEach((face, index) => {
-      if (selectedGifts[index]) {
-        const gift = selectedGifts[index];
-        const content = createGiftContent(gift, true);
-        face.innerHTML = '';
-        face.appendChild(content);
-      } else {
-        face.innerHTML = '';
-      }
+  // Функция для заполнения граней куба вопросительными знаками
+  function fillCubeWithQuestionMarks() {
+    const cubeFaces = document.querySelectorAll('.cube-face');
+    cubeFaces.forEach(face => {
+      // Очищаем содержимое и добавляем знак вопроса
+      face.innerHTML = '<div class="question-mark">?</div>';
     });
+  }
+
+  // Установка цвета куба в зависимости от редкости
+  function setCubeRarity(rarity) {
+    const giftCube = document.getElementById('giftCube');
+    giftCube.classList.remove('legendary', 'epic', 'rare', 'uncommon');
+    giftCube.classList.add(rarity);
+  }
+
+  // Выбор случайного подарка из четырёх особых
+  function getRandomSpecialGift() {
+    const specials = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
+    const randomIndex = Math.floor(Math.random() * specials.length);
+    return specials[randomIndex];
   }
 
   // ========== АНИМАЦИЯ ВЫИГРЫША ==========
@@ -1019,21 +1015,6 @@
     }
   }
 
-  // Выбор случайного подарка из четырёх особых
-  function getRandomSpecialGift() {
-    const specials = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
-    const randomIndex = Math.floor(Math.random() * specials.length);
-    return specials[randomIndex];
-  }
-
-  // Установка цвета куба в зависимости от редкости
-  function setCubeRarity(rarity) {
-    const giftCube = document.getElementById('giftCube');
-    // Удаляем все классы rarity
-    giftCube.classList.remove('legendary', 'epic', 'rare', 'uncommon');
-    giftCube.classList.add(rarity);
-  }
-
   function startWinAnimation(winningGiftName) {
     const giftCube = document.getElementById('giftCube');
     const giftCubeContainer = document.getElementById('giftCubeContainer');
@@ -1044,12 +1025,10 @@
     const baseName = fileMap[winningGiftName] || winningGiftName;
     const encodedName = encodeURIComponent(baseName);
     winningVideo.src = `videos/${encodedName}.mp4`;
-    winningVideo.load(); // перезагружаем, чтобы применить новый src
+    winningVideo.load();
 
-    // Устанавливаем цвет куба
-    const rarity = rarityMap[winningGiftName] || 'uncommon';
-    setCubeRarity(rarity);
-
+    // Устанавливаем цвет куба (редкость уже должна быть установлена до вызова)
+    
     giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
     
     let angleX = 0;
@@ -1101,14 +1080,23 @@
     const centerSquare = document.getElementById('centerSquare');
     const giftCubeContainer = document.getElementById('giftCubeContainer');
 
+    // Сначала выбираем случайный подарок
+    const winningGiftName = getRandomSpecialGift();
+    // Устанавливаем редкость куба
+    const rarity = rarityMap[winningGiftName] || 'uncommon';
+    setCubeRarity(rarity);
+
+    // Заполняем грани вопросительными знаками
+    fillCubeWithQuestionMarks();
+
+    // Скрываем углы и центр
     cornersContainer.classList.add('merged');
     centerSquare.classList.add('merged');
 
-    createGiftCube();
+    // Показываем куб
     giftCubeContainer.classList.add('active');
 
-    // Выбираем случайный особый подарок
-    const winningGiftName = getRandomSpecialGift();
+    // Запускаем анимацию с выигрышным подарком
     startWinAnimation(winningGiftName);
   }
 
