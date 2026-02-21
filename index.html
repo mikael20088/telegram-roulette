@@ -252,26 +252,26 @@
       position: relative;
       transform-style: preserve-3d;
     }
-    /* Цветовые варианты куба */
+    /* Цветовые варианты куба — яркие, сочные */
     .gift-cube.legendary .cube-face {
-      background: rgba(255, 215, 0, 0.25);
-      border-color: rgba(255, 215, 0, 0.6);
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+      background: rgba(255, 215, 0, 0.35);
+      border: 3px solid #ffd700;
+      box-shadow: 0 0 30px #ffd700, inset 0 0 15px #ffaa00;
     }
     .gift-cube.epic .cube-face {
-      background: rgba(160, 32, 240, 0.25);
-      border-color: rgba(160, 32, 240, 0.6);
-      box-shadow: 0 0 20px rgba(160, 32, 240, 0.4);
+      background: rgba(180, 0, 255, 0.35);
+      border: 3px solid #b300ff;
+      box-shadow: 0 0 30px #b300ff, inset 0 0 15px #8a2be2;
     }
     .gift-cube.rare .cube-face {
-      background: rgba(0, 100, 255, 0.25);
-      border-color: rgba(0, 100, 255, 0.6);
-      box-shadow: 0 0 20px rgba(0, 100, 255, 0.4);
+      background: rgba(0, 150, 255, 0.35);
+      border: 3px solid #0099ff;
+      box-shadow: 0 0 30px #0099ff, inset 0 0 15px #0066cc;
     }
     .gift-cube.uncommon .cube-face {
-      background: rgba(0, 255, 136, 0.25);
-      border-color: rgba(0, 255, 136, 0.6);
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+      background: rgba(0, 255, 136, 0.35);
+      border: 3px solid #00ff88;
+      box-shadow: 0 0 30px #00ff88, inset 0 0 15px #00cc66;
     }
 
     .cube-face {
@@ -296,12 +296,12 @@
       font-size: 40px;
       font-weight: bold;
       color: inherit;
-      text-shadow: 0 0 15px currentColor;
+      text-shadow: 0 0 20px currentColor;
       animation: pulse 2s infinite ease-in-out;
     }
     @keyframes pulse {
       0%, 100% { opacity: 0.9; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.1); }
+      50% { opacity: 1; transform: scale(1.15); }
     }
 
     .cube-face.front  { transform: translateZ(35px); }
@@ -984,7 +984,6 @@
   function fillCubeWithQuestionMarks() {
     const cubeFaces = document.querySelectorAll('.cube-face');
     cubeFaces.forEach(face => {
-      // Очищаем содержимое и добавляем знак вопроса
       face.innerHTML = '<div class="question-mark">?</div>';
     });
   }
@@ -1080,7 +1079,7 @@
     const centerSquare = document.getElementById('centerSquare');
     const giftCubeContainer = document.getElementById('giftCubeContainer');
 
-    // Сначала выбираем случайный подарок
+    // Выбираем случайный подарок
     const winningGiftName = getRandomSpecialGift();
     // Устанавливаем редкость куба
     const rarity = rarityMap[winningGiftName] || 'uncommon';
@@ -1210,7 +1209,8 @@
 
       document.getElementById('centerSquare').onclick = () => {
         const filledCount = filledSlots.filter(filled => filled).length;
-        if (filledCount === 4) {
+        // Разрешаем крафт при любом количестве выбранных подарков > 0
+        if (filledCount > 0) {
           mergeToCube();
         }
       };
