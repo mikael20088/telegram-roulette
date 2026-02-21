@@ -178,13 +178,7 @@
       cursor: pointer;
       pointer-events: none;
     }
-    .center-mini-square.active-video {
-      background: rgba(255, 215, 0, 0.3);
-      border: 2px solid rgba(255, 215, 0, 0.8);
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
-      pointer-events: auto;
-    }
-    .center-mini-square.completed {
+    .center-mini-square.craftable {
       background: rgba(255, 215, 0, 0.3);
       border: 2px solid rgba(255, 215, 0, 0.8);
       box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
@@ -232,56 +226,66 @@
       position: absolute;
       width: 70px;
       height: 70px;
-      background: rgba(0, 255, 136, 0.2);
-      border: 2px solid rgba(0, 255, 136, 0.5);
       border-radius: 10px;
       backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      font-size: 32px;
-      color: rgba(255, 255, 255, 0.8);
-      text-shadow: 0 0 10px currentColor;
+      font-size: 36px;
+      font-weight: bold;
+      transition: all 0.3s ease;
     }
-    /* Классы для разных редкостей куба */
+    /* Классы для разных редкостей куба – яркие, сочные */
     .gift-cube-container.rarity-common .cube-face {
-      background: rgba(0, 255, 136, 0.2);
-      border-color: rgba(0, 255, 136, 0.5);
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-      color: #00ff88;
+      background: rgba(0, 255, 136, 0.25);
+      border: 2px solid rgba(0, 255, 136, 0.8);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.8), inset 0 0 15px rgba(0, 255, 136, 0.5);
+      color: #aaffaa;
+      text-shadow: 0 0 15px #00ff88, 0 0 30px #00ff88;
     }
     .gift-cube-container.rarity-rare .cube-face {
-      background: rgba(0, 100, 255, 0.2);
-      border-color: rgba(0, 100, 255, 0.5);
-      box-shadow: 0 0 20px rgba(0, 100, 255, 0.3);
-      color: #3a7bff;
+      background: rgba(0, 100, 255, 0.25);
+      border: 2px solid rgba(0, 100, 255, 0.8);
+      box-shadow: 0 0 30px rgba(0, 100, 255, 0.8), inset 0 0 15px rgba(0, 100, 255, 0.5);
+      color: #aaccff;
+      text-shadow: 0 0 15px #3a7bff, 0 0 30px #3a7bff;
     }
     .gift-cube-container.rarity-epic .cube-face {
-      background: rgba(155, 48, 255, 0.2);
-      border-color: rgba(155, 48, 255, 0.5);
-      box-shadow: 0 0 20px rgba(155, 48, 255, 0.3);
-      color: #b883ff;
+      background: rgba(155, 48, 255, 0.25);
+      border: 2px solid rgba(155, 48, 255, 0.8);
+      box-shadow: 0 0 30px rgba(155, 48, 255, 0.8), inset 0 0 15px rgba(155, 48, 255, 0.5);
+      color: #d9b0ff;
+      text-shadow: 0 0 15px #b883ff, 0 0 30px #b883ff;
     }
     .gift-cube-container.rarity-legendary .cube-face {
-      background: rgba(255, 215, 0, 0.2);
-      border-color: rgba(255, 215, 0, 0.5);
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-      color: #ffd700;
+      background: rgba(255, 215, 0, 0.25);
+      border: 2px solid rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(255, 215, 0, 0.5);
+      color: #fff0aa;
+      text-shadow: 0 0 15px #ffd700, 0 0 30px #ffd700;
     }
 
     .cube-face .selected-gift {
-      display: none; /* Больше не используем */
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
     }
-    /* Стиль для вопросительного знака */
-    .cube-question {
-      font-size: 36px;
-      font-weight: bold;
-      opacity: 0.7;
-      filter: drop-shadow(0 0 8px currentColor);
+    .cube-face .selected-gift .gift-img,
+    .cube-face .selected-gift video.gift-img {
+      width: 45px;
+      height: 45px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .cube-face .selected-gift .gift-emoji {
+      font-size: 32px;
     }
 
     .cube-face.front  { transform: translateZ(35px); }
@@ -786,13 +790,10 @@
   function updateCenterSquareHighlight() {
     const centerSquare = document.getElementById('centerSquare');
     const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount > 0 && filledCount < 4 && !fourthGiftSelected) {
-      centerSquare.classList.add('active-video');
-    } else if (filledCount === 4) {
-      centerSquare.classList.remove('active-video');
-      centerSquare.classList.add('completed');
+    if (filledCount > 0) {
+      centerSquare.classList.add('craftable');
     } else {
-      centerSquare.classList.remove('active-video', 'completed');
+      centerSquare.classList.remove('craftable');
     }
   }
 
@@ -961,7 +962,7 @@
     return 'common'; // включая uncommon
   }
 
-  // Создание 3D куба (теперь с вопросительными знаками)
+  // Создание 3D куба (теперь с выборочным заполнением граней)
   function createGiftCube() {
     const cubeContainer = document.getElementById('giftCubeContainer');
     const rarity = getCubeRarity();
@@ -969,7 +970,36 @@
     cubeContainer.classList.remove('rarity-common', 'rarity-rare', 'rarity-epic', 'rarity-legendary');
     // Добавляем соответствующий класс
     cubeContainer.classList.add(`rarity-${rarity}`);
-    // Грани уже содержат вопросительные знаки в HTML, ничего менять не нужно
+
+    const cubeFaces = [
+      document.getElementById('cube-face-0'),
+      document.getElementById('cube-face-1'),
+      document.getElementById('cube-face-2'),
+      document.getElementById('cube-face-3')
+    ];
+
+    // Для каждой из четырёх основных граней
+    cubeFaces.forEach((face, index) => {
+      face.innerHTML = ''; // очищаем
+      if (selectedGifts[index]) {
+        // Если есть подарок, вставляем его
+        const gift = selectedGifts[index];
+        const content = createGiftContent(gift, true);
+        face.appendChild(content);
+      } else {
+        // Если нет, ставим вопросительный знак
+        const q = document.createElement('div');
+        q.className = 'cube-question';
+        q.textContent = '?';
+        face.appendChild(q);
+      }
+    });
+
+    // Верх и низ можно оставить с вопросительными знаками (они уже есть в HTML, но мы их перезапишем)
+    const topFace = document.querySelector('.cube-face.top');
+    const bottomFace = document.querySelector('.cube-face.bottom');
+    topFace.innerHTML = '<div class="cube-question">?</div>';
+    bottomFace.innerHTML = '<div class="cube-question">?</div>';
   }
 
   function mergeToCube() {
@@ -1106,7 +1136,8 @@
       });
 
       document.getElementById('centerSquare').onclick = () => {
-        if (filledSlots.filter(filled => filled).length === 4) {
+        const filledCount = filledSlots.filter(filled => filled).length;
+        if (filledCount > 0) {
           mergeToCube();
         }
       };
