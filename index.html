@@ -11,7 +11,6 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все предыдущие стили остаются без изменений */
     html, body {
       margin: 0;
       padding: 0;
@@ -82,7 +81,7 @@
       left: -4px;
       right: -4px;
       bottom: -4px;
-      border-radius: 30px; /* Чуть больше, чем у видео, чтобы скрыть острые углы */
+      border-radius: 30px;
       border: 2px solid rgba(0, 255, 136, 0.8);
       box-shadow: 0 0 20px #00ff88, inset 0 0 20px #00ff88;
       background: repeating-linear-gradient(
@@ -102,7 +101,6 @@
       100% { background-position: 40px 40px; }
     }
 
-    /* Остальные стили без изменений */
     .main-square {
       position: absolute;
       top: 50%;
@@ -254,21 +252,41 @@
       position: relative;
       transform-style: preserve-3d;
     }
+    /* Цветовые варианты куба */
+    .gift-cube.legendary .cube-face {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+    .gift-cube.epic .cube-face {
+      background: rgba(160, 32, 240, 0.2);
+      border-color: rgba(160, 32, 240, 0.5);
+      box-shadow: 0 0 20px rgba(160, 32, 240, 0.3);
+    }
+    .gift-cube.rare .cube-face {
+      background: rgba(0, 100, 255, 0.2);
+      border-color: rgba(0, 100, 255, 0.5);
+      box-shadow: 0 0 20px rgba(0, 100, 255, 0.3);
+    }
+    .gift-cube.uncommon .cube-face {
+      background: rgba(0, 255, 136, 0.2);
+      border-color: rgba(0, 255, 136, 0.5);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+
     .cube-face {
       position: absolute;
       width: 70px;
       height: 70px;
-      background: rgba(0, 255, 136, 0.2);
-      border: 2px solid rgba(0, 255, 136, 0.5);
       border-radius: 10px;
       backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+      transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
     }
     .cube-face .selected-gift {
       position: relative;
@@ -544,7 +562,6 @@
 
   <div class="video-wrapper" id="videoWrapper">
     <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
-    <!-- Матричная рамка поверх видео -->
     <div class="matrix-frame"></div>
   </div>
 
@@ -575,7 +592,7 @@
     </div>
 
     <div class="gift-cube-container" id="giftCubeContainer">
-      <div class="gift-cube" id="giftCube">
+      <div class="gift-cube uncommon" id="giftCube"> <!-- начальный класс uncommon (зелёный) -->
         <div class="cube-face front" id="cube-face-0"></div>
         <div class="cube-face back" id="cube-face-1"></div>
         <div class="cube-face right" id="cube-face-2"></div>
@@ -586,7 +603,7 @@
     </div>
 
     <div class="winning-gift" id="winningGift">
-      <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video>
+      <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video> <!-- временно, потом заменится -->
     </div>
   </div>
 </div>
@@ -633,6 +650,14 @@
   };
 
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
+
+  // Редкости для особых подарков
+  const rarityMap = {
+    "Durov's Cap": "legendary",
+    "Astral Shard": "epic",
+    "Kissed Frog": "rare",
+    "Artisan Brick": "uncommon"
+  };
 
   // ========== ПРЕДЗАГРУЗКА ВИДЕО ==========
   const hiddenVideos = {};
@@ -994,12 +1019,37 @@
     }
   }
 
-  function startWinAnimation() {
+  // Выбор случайного подарка из четырёх особых
+  function getRandomSpecialGift() {
+    const specials = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
+    const randomIndex = Math.floor(Math.random() * specials.length);
+    return specials[randomIndex];
+  }
+
+  // Установка цвета куба в зависимости от редкости
+  function setCubeRarity(rarity) {
+    const giftCube = document.getElementById('giftCube');
+    // Удаляем все классы rarity
+    giftCube.classList.remove('legendary', 'epic', 'rare', 'uncommon');
+    giftCube.classList.add(rarity);
+  }
+
+  function startWinAnimation(winningGiftName) {
     const giftCube = document.getElementById('giftCube');
     const giftCubeContainer = document.getElementById('giftCubeContainer');
     const winningGift = document.getElementById('winningGift');
     const winningVideo = winningGift.querySelector('video');
     
+    // Устанавливаем видео для выигрышного подарка
+    const baseName = fileMap[winningGiftName] || winningGiftName;
+    const encodedName = encodeURIComponent(baseName);
+    winningVideo.src = `videos/${encodedName}.mp4`;
+    winningVideo.load(); // перезагружаем, чтобы применить новый src
+
+    // Устанавливаем цвет куба
+    const rarity = rarityMap[winningGiftName] || 'uncommon';
+    setCubeRarity(rarity);
+
     giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
     
     let angleX = 0;
@@ -1057,7 +1107,9 @@
     createGiftCube();
     giftCubeContainer.classList.add('active');
 
-    startWinAnimation();
+    // Выбираем случайный особый подарок
+    const winningGiftName = getRandomSpecialGift();
+    startWinAnimation(winningGiftName);
   }
 
   // Поиск
@@ -1170,7 +1222,7 @@
 
       document.getElementById('centerSquare').onclick = () => {
         const filledCount = filledSlots.filter(filled => filled).length;
-        if (filledCount > 0) {
+        if (filledCount === 4) {
           mergeToCube();
         }
       };
