@@ -206,6 +206,8 @@
       opacity: 0;
       transition: opacity 0.5s ease;
       pointer-events: none;
+      filter: drop-shadow(0 0 15px currentColor); /* дополнительное внешнее свечение */
+      will-change: transform, opacity; /* оптимизация */
     }
     .gift-cube-container.active {
       opacity: 1;
@@ -217,6 +219,7 @@
       position: relative;
       transform-style: preserve-3d;
       animation: rotate3d 8s infinite linear;
+      will-change: transform; /* аппаратное ускорение */
     }
     @keyframes rotate3d {
       0% { transform: rotateX(0deg) rotateY(0deg); }
@@ -236,36 +239,38 @@
       -webkit-backface-visibility: hidden;
       font-size: 36px;
       font-weight: bold;
-      transition: all 0.3s ease;
+      transition: none; /* убираем возможные переходы, которые могут вызвать мерцание */
+      border-width: 3px; /* увеличиваем для яркости */
+      border-style: solid;
     }
-    /* Классы для разных редкостей куба – яркие, сочные */
+    /* Классы для разных редкостей куба – максимально яркие, без мерцания */
     .gift-cube-container.rarity-common .cube-face {
-      background: rgba(0, 255, 136, 0.3);
-      border: 2px solid rgba(0, 255, 136, 0.9);
-      box-shadow: 0 0 40px rgba(0, 255, 136, 1), inset 0 0 20px rgba(0, 255, 136, 0.6);
-      color: #ccffcc;
-      text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88;
+      background: rgba(0, 255, 136, 0.45);
+      border-color: rgba(0, 255, 136, 1);
+      box-shadow: 0 0 50px rgba(0, 255, 136, 1), inset 0 0 25px rgba(0, 255, 136, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #00ff88, 0 0 60px #00ff88;
     }
     .gift-cube-container.rarity-rare .cube-face {
-      background: rgba(0, 100, 255, 0.3);
-      border: 2px solid rgba(0, 100, 255, 0.9);
-      box-shadow: 0 0 40px rgba(0, 100, 255, 1), inset 0 0 20px rgba(0, 100, 255, 0.6);
-      color: #cce0ff;
-      text-shadow: 0 0 20px #3a7bff, 0 0 40px #3a7bff;
+      background: rgba(0, 100, 255, 0.45);
+      border-color: rgba(0, 100, 255, 1);
+      box-shadow: 0 0 50px rgba(0, 100, 255, 1), inset 0 0 25px rgba(0, 100, 255, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #3a7bff, 0 0 60px #3a7bff;
     }
     .gift-cube-container.rarity-epic .cube-face {
-      background: rgba(155, 48, 255, 0.3);
-      border: 2px solid rgba(155, 48, 255, 0.9);
-      box-shadow: 0 0 40px rgba(155, 48, 255, 1), inset 0 0 20px rgba(155, 48, 255, 0.6);
-      color: #e6ccff;
-      text-shadow: 0 0 20px #b883ff, 0 0 40px #b883ff;
+      background: rgba(155, 48, 255, 0.45);
+      border-color: rgba(155, 48, 255, 1);
+      box-shadow: 0 0 50px rgba(155, 48, 255, 1), inset 0 0 25px rgba(155, 48, 255, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #b883ff, 0 0 60px #b883ff;
     }
     .gift-cube-container.rarity-legendary .cube-face {
-      background: rgba(255, 215, 0, 0.3);
-      border: 2px solid rgba(255, 215, 0, 0.9);
-      box-shadow: 0 0 40px rgba(255, 215, 0, 1), inset 0 0 20px rgba(255, 215, 0, 0.6);
-      color: #fff5cc;
-      text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700;
+      background: rgba(255, 215, 0, 0.45);
+      border-color: rgba(255, 215, 0, 1);
+      box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(255, 215, 0, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
     }
 
     .cube-face .selected-gift {
@@ -274,7 +279,7 @@
     .cube-question {
       font-size: 36px;
       font-weight: bold;
-      opacity: 0.9;
+      opacity: 0.95;
       filter: drop-shadow(0 0 8px currentColor);
     }
 
