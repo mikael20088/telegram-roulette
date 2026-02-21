@@ -218,7 +218,7 @@
       pointer-events: auto;
     }
 
-    /* Контейнер для куба (позиционирование) */
+    /* Контейнер для куба */
     .blue-overlay .gift-cube-container {
       position: relative;
       width: 70px;
@@ -227,7 +227,7 @@
       will-change: transform, opacity;
       perspective: 400px;
       transition: opacity 0.3s ease;
-      margin: 0 auto; /* центрирование */
+      margin: 0 auto;
     }
     .gift-cube {
       width: 100%;
@@ -336,30 +336,27 @@
     .single-gift-display {
       width: 70px;
       height: 70px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(10px);
-      border: 3px solid white;
-      box-shadow: 0 0 50px rgba(255,255,255,0.5);
-      animation: popIn 0.3s ease-out;
       margin: 0 auto;
+      animation: popIn 0.3s ease-out;
     }
     .single-gift-display video,
     .single-gift-display img,
     .single-gift-display .gift-emoji {
-      width: 90%;
-      height: 90%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: 10px;
+      border-radius: 0; /* без фона */
     }
     .single-gift-display .gift-emoji {
       font-size: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: white;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
     @keyframes popIn {
       0% { opacity: 0; transform: scale(0.5); }
@@ -384,14 +381,9 @@
     .blue-gift-item {
       width: 50px;
       height: 50px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(8px);
-      border: 2px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 0 20px rgba(255,255,255,0.3);
       overflow: hidden;
     }
     .blue-gift-item video,
@@ -406,6 +398,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      color: white;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
 
     /* Счётчик предметов (красный) */
@@ -791,7 +785,7 @@
   // Переменные для системы ящиков
   let currentLootBox = null; // { rarity, items: [{ name, emoji, rarity }], currentIndex }
   let isOpening = false;
-  let showingFinalRow = false; // показывается ли ряд после всех открытий
+  let showingFinalRow = false;
 
   // Карта соответствия имён файлов
   const fileMap = {
@@ -1296,7 +1290,7 @@
   // Показать одиночный предмет
   function showSingleGift(gift) {
     const single = document.getElementById('singleGiftDisplay');
-    single.innerHTML = ''; // очищаем
+    single.innerHTML = '';
     const element = createSingleGiftElement(gift);
     single.appendChild(element);
     single.style.display = 'flex';
@@ -1330,48 +1324,24 @@
     glow.classList.add('active');
 
     setTimeout(() => {
-      // Скрываем куб и свечение
       cube.style.display = 'none';
       glow.style.display = 'none';
       // Показываем первый предмет
       const gift = currentLootBox.items[currentLootBox.currentIndex];
       showSingleGift(gift);
-      // Добавляем в панель главного квадрата
       addObtainedGift(gift);
       currentLootBox.currentIndex++;
       updateBlueCounter();
-
       isOpening = false;
     }, 800);
   }
 
-  // Функция для показа следующего предмета (клик по оверлею, когда виден одиночный)
-  function nextSingleItem() {
-    if (!currentLootBox || isOpening) return;
-    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
-      // Уже все показаны? Показываем ряд
-      showFinalRow();
-      return;
-    }
-
-    const gift = currentLootBox.items[currentLootBox.currentIndex];
-    showSingleGift(gift);
-    addObtainedGift(gift);
-    currentLootBox.currentIndex++;
-    updateBlueCounter();
-
-    // Если после этого все предметы открыты, запоминаем состояние, но ряд ещё не показываем
-    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
-      // Следующий клик покажет ряд
-    }
-  }
-
-  // Показать ряд со всеми предметами
+  // Показать ряд со всеми предметами (финал)
   function showFinalRow() {
     const single = document.getElementById('singleGiftDisplay');
     single.style.display = 'none';
     const row = document.getElementById('blueGiftRow');
-    row.innerHTML = ''; // очищаем
+    row.innerHTML = '';
     // Добавляем все предметы из ящика
     currentLootBox.items.forEach(gift => {
       addToBlueRow(gift);
@@ -1382,14 +1352,10 @@
 
   // Возврат к крафту
   function returnToCraft() {
-    // Скрываем оверлей
     document.getElementById('blueOverlay').classList.remove('active');
-    // Показываем главный квадрат
     document.getElementById('mainSquare').style.opacity = '1';
-    // Восстанавливаем угловые квадраты и центр
     document.getElementById('cornersContainer').classList.remove('merged');
     document.getElementById('centerSquare').classList.remove('merged');
-    // Сбрасываем визуальные элементы
     clearSingleDisplay();
     clearBlueRow();
     document.getElementById('blueGiftRow').classList.remove('active');
@@ -1398,9 +1364,7 @@
     cube.classList.remove('opening');
     document.getElementById('blueCubeGlow').style.display = 'block';
     document.getElementById('blueCubeGlow').classList.remove('active');
-    // Сбрасываем флаги
     showingFinalRow = false;
-    // Счётчик не показываем (он активен, но не виден без оверлея)
   }
 
   // Добавление подарка в панель главного квадрата
@@ -1430,27 +1394,36 @@
     showingFinalRow = false;
   }
 
-  // Обработчик клика по синему оверлею
+  // Обработчик клика по синему оверлею (работает по любой области)
   document.getElementById('blueOverlay').addEventListener('click', (e) => {
-    // Игнорируем клики по кубу и по элементам (чтобы не мешать анимациям)
-    if (e.target.closest('.gift-cube-container') && !isOpening && currentLootBox && currentLootBox.currentIndex === 0) {
-      // Клик по кубу при первом открытии
+    // Если клик по кубу и куб ещё виден и это первый шаг
+    if (e.target.closest('.gift-cube-container') && currentLootBox && currentLootBox.currentIndex === 0 && !isOpening) {
       openBlueBox();
       return;
     }
-    if (e.target.closest('.single-gift-display') || e.target.closest('.blue-gift-item')) {
-      // Клик по самому предмету или по ряду — ничего не делаем, чтобы не перехватывать
-      return;
-    }
-    // Если сейчас показывается одиночный предмет
-    if (!showingFinalRow && currentLootBox && currentLootBox.currentIndex > 0 && currentLootBox.currentIndex < currentLootBox.total) {
-      nextSingleItem();
-    } else if (showingFinalRow) {
-      // Если показывается ряд, клик в любую область (кроме ряда) возвращает к крафту
+
+    // Если показывается финальный ряд
+    if (showingFinalRow) {
       returnToCraft();
-    } else if (currentLootBox && currentLootBox.currentIndex === 0 && !isOpening) {
-      // Клик по пустой области при первом открытии (когда куб ещё виден) — тоже открываем куб
-      openBlueBox();
+      return;
+    }
+
+    // Если идёт процесс открытия (куб ещё не исчез) — игнорируем
+    if (isOpening) return;
+
+    // Если есть активный ящик и ещё есть предметы
+    if (currentLootBox && currentLootBox.currentIndex > 0 && currentLootBox.currentIndex < currentLootBox.total) {
+      // Показываем следующий предмет
+      const gift = currentLootBox.items[currentLootBox.currentIndex];
+      showSingleGift(gift);
+      addObtainedGift(gift);
+      currentLootBox.currentIndex++;
+      updateBlueCounter();
+
+      // Если после этого все предметы открыты, показываем ряд
+      if (currentLootBox.currentIndex >= currentLootBox.total) {
+        showFinalRow();
+      }
     }
   });
 
@@ -1464,7 +1437,6 @@
     }
   });
 
-  // Остальные функции (поиск, выбор подарков, инициализация) остаются без изменений
   // Интеллектуальный поиск
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
