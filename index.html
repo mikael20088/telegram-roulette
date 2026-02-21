@@ -206,8 +206,9 @@
       opacity: 0;
       transition: opacity 0.5s ease;
       pointer-events: none;
-      filter: drop-shadow(0 0 15px currentColor); /* дополнительное внешнее свечение */
-      will-change: transform, opacity; /* оптимизация */
+      filter: drop-shadow(0 0 15px currentColor);
+      will-change: transform, opacity;
+      perspective: 400px; /* добавляем перспективу для усиления 3D-эффекта */
     }
     .gift-cube-container.active {
       opacity: 1;
@@ -218,19 +219,16 @@
       height: 100%;
       position: relative;
       transform-style: preserve-3d;
-      /* animation: rotate3d 8s infinite linear; Убрали вращение, добавим прыжок */
       animation: bounce 1s infinite ease-in-out;
-      will-change: transform; /* аппаратное ускорение */
+      /* Поворачиваем куб, чтобы он смотрелся под углом (влево и вниз) */
+      transform: rotateX(15deg) rotateY(-20deg);
+      will-change: transform;
     }
     @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+      0%, 100% { transform: rotateX(15deg) rotateY(-20deg) translateY(0); }
+      50% { transform: rotateX(15deg) rotateY(-20deg) translateY(-10px); }
     }
-    /* Убрали ключевые кадры вращения, если не нужны */
-    /* @keyframes rotate3d {
-      0% { transform: rotateX(0deg) rotateY(0deg); }
-      100% { transform: rotateX(360deg) rotateY(360deg); }
-    } */
+    /* Убрали вращение, оставили только прыжок */
     .cube-face {
       position: absolute;
       width: 70px;
@@ -245,8 +243,8 @@
       -webkit-backface-visibility: hidden;
       font-size: 36px;
       font-weight: bold;
-      transition: none; /* убираем возможные переходы, которые могут вызвать мерцание */
-      border-width: 3px; /* увеличиваем для яркости */
+      transition: none;
+      border-width: 3px;
       border-style: solid;
     }
     /* Классы для разных редкостей куба – максимально яркие, без мерцания */
