@@ -219,14 +219,25 @@
       height: 100%;
       position: relative;
       transform-style: preserve-3d;
-      animation: bounce 1s infinite ease-in-out;
-      /* Наклон: передняя левая часть опущена вниз */
+      animation: idleBounce 1s infinite ease-in-out;
       transform: rotateX(-15deg) rotateY(20deg);
       will-change: transform;
     }
-    @keyframes bounce {
-      0%, 100% { transform: rotateX(-15deg) rotateY(20deg) translateY(0); }
-      50% { transform: rotateX(-15deg) rotateY(20deg) translateY(-10px); }
+    /* idle-анимация: лёгкое покачивание и пульсация */
+    @keyframes idleBounce {
+      0%, 100% { transform: rotateX(-15deg) rotateY(20deg) scale(1); }
+      50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.03) translateY(-3px); }
+    }
+    /* анимация тряски перед вылетом */
+    .gift-cube.shake {
+      animation: shake 0.3s ease-in-out;
+    }
+    @keyframes shake {
+      0% { transform: rotateX(-15deg) rotateY(20deg) translateX(0); }
+      25% { transform: rotateX(-15deg) rotateY(20deg) translateX(-5px); }
+      50% { transform: rotateX(-15deg) rotateY(20deg) translateX(5px); }
+      75% { transform: rotateX(-15deg) rotateY(20deg) translateX(-3px); }
+      100% { transform: rotateX(-15deg) rotateY(20deg) translateX(0); }
     }
     .cube-face {
       position: absolute;
@@ -412,12 +423,57 @@
       backdrop-filter: blur(4px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      animation: giftAppear 0.3s ease-out;
+      animation: giftAppear 0.2s ease-out;
       flex-shrink: 0;
     }
     @keyframes giftAppear {
-      0% { opacity: 0; transform: scale(0.5) translateY(-10px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
+      0% { opacity: 0; transform: scale(0.5); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Летающий элемент (временный) */
+    .flying-gift {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      z-index: 50;
+      pointer-events: none;
+      animation: flyToBar 0.6s ease-in-out forwards;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .flying-gift video,
+    .flying-gift img,
+    .flying-gift .gift-emoji {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .flying-gift .gift-emoji {
+      font-size: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      border-radius: 6px;
+    }
+    @keyframes flyToBar {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+      30% {
+        transform: translate(calc(50px - 50%), calc(-20px - 50%)) scale(1.2) rotate(10deg);
+      }
+      70% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--target-x), var(--target-y)) scale(0.5) rotate(30deg);
+      }
     }
 
     /* Модальное окно */
@@ -1063,6 +1119,71 @@
     container.scrollLeft = container.scrollWidth;
   }
 
+  // Функция для создания летающего элемента (анимация выпадения)
+  function createFlyingGift(gift, targetIndex) {
+    const mainSquare = document.getElementById('mainSquare');
+    const cubeContainer = document.getElementById('giftCubeContainer');
+    const cubeRect = cubeContainer.getBoundingClientRect();
+    const mainRect = mainSquare.getBoundingClientRect();
+
+    // Координаты центра куба относительно mainSquare
+    const startX = cubeRect.left + cubeRect.width/2 - mainRect.left;
+    const startY = cubeRect.top + cubeRect.height/2 - mainRect.top;
+
+    // Координаты цели (новая иконка в панели). Приблизительно.
+    const panel = document.getElementById('obtainedGifts');
+    // Мы не знаем точную позицию будущего элемента, но можно использовать приближение:
+    // пусть цель будет примерно в правой части панели, сдвиг зависит от количества уже полученных.
+    const panelRect = panel.getBoundingClientRect();
+    // Цель: позиция последнего элемента + небольшой отступ
+    const targetX = panelRect.left + panel.scrollLeft + (targetIndex * 36) + 18 - mainRect.left; // 36 = ширина + gap
+    const targetY = panelRect.top + panelRect.height/2 - mainRect.top;
+
+    // Создаём летающий элемент
+    const flying = document.createElement('div');
+    flying.className = 'flying-gift';
+    flying.style.left = startX + 'px';
+    flying.style.top = startY + 'px';
+    // Устанавливаем CSS-переменные для целевой позиции
+    flying.style.setProperty('--target-x', (targetX - startX) + 'px');
+    flying.style.setProperty('--target-y', (targetY - startY) + 'px');
+
+    // Наполнение
+    if (mediaGifts.has(gift.name)) {
+      const video = takePreloadedVideo(gift.name);
+      if (video) {
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.play().catch(() => {});
+        flying.appendChild(video);
+      } else {
+        // fallback
+        flying.textContent = gift.emoji;
+        flying.style.fontSize = '30px';
+        flying.style.display = 'flex';
+        flying.style.alignItems = 'center';
+        flying.style.justifyContent = 'center';
+        flying.style.background = '#000';
+      }
+    } else {
+      flying.textContent = gift.emoji;
+      flying.style.fontSize = '30px';
+      flying.style.display = 'flex';
+      flying.style.alignItems = 'center';
+      flying.style.justifyContent = 'center';
+      flying.style.background = '#000';
+      flying.style.borderRadius = '6px';
+    }
+
+    mainSquare.appendChild(flying);
+
+    // Удаляем после окончания анимации
+    setTimeout(() => {
+      if (flying.parentNode) flying.remove();
+    }, 600);
+  }
+
   // Функция для открытия следующего предмета
   function openNextItem() {
     if (!currentLootBox || isOpening) return;
@@ -1075,27 +1196,43 @@
     }
 
     isOpening = true;
-    const gift = currentLootBox.items[currentLootBox.currentIndex];
-    currentLootBox.currentIndex++;
 
-    // Обновляем счётчик
-    const counter = document.getElementById('itemCounter');
-    counter.textContent = `${currentLootBox.currentIndex}/${currentLootBox.items.length}`;
+    // Анимация тряски куба
+    const cube = document.getElementById('giftCube');
+    cube.classList.add('shake');
+    setTimeout(() => {
+      cube.classList.remove('shake');
+    }, 300);
 
-    // Добавляем полученный подарок в верхний контейнер
-    addObtainedGift(gift);
+    // Небольшая задержка перед вылетом, чтобы тряска успела начаться
+    setTimeout(() => {
+      const gift = currentLootBox.items[currentLootBox.currentIndex];
+      const targetIndex = currentLootBox.currentIndex; // индекс, который будет в панели (0,1,2,3)
+      createFlyingGift(gift, targetIndex);
 
-    // Если это был последний предмет, через небольшую задержку скрываем куб
-    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
+      currentLootBox.currentIndex++;
+
+      // Обновляем счётчик
+      const counter = document.getElementById('itemCounter');
+      counter.textContent = `${currentLootBox.currentIndex}/${currentLootBox.items.length}`;
+
+      // Добавляем полученный подарок в верхний контейнер с небольшой задержкой, чтобы анимация полёта не перекрывалась
       setTimeout(() => {
-        document.getElementById('giftCubeContainer').classList.remove('active');
-        document.getElementById('itemCounter').classList.remove('active');
-        currentLootBox = null;
+        addObtainedGift(gift);
+      }, 400);
+
+      // Если это был последний предмет, через некоторое время скрываем куб
+      if (currentLootBox.currentIndex >= currentLootBox.items.length) {
+        setTimeout(() => {
+          document.getElementById('giftCubeContainer').classList.remove('active');
+          document.getElementById('itemCounter').classList.remove('active');
+          currentLootBox = null;
+          isOpening = false;
+        }, 600);
+      } else {
         isOpening = false;
-      }, 600);
-    } else {
-      isOpening = false;
-    }
+      }
+    }, 150); // небольшая задержка после начала тряски
   }
 
   // Создание 3D куба (только вопросительные знаки, цвет зависит от редкости)
