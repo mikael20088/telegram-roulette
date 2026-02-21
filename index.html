@@ -240,52 +240,42 @@
     }
     /* Классы для разных редкостей куба – яркие, сочные */
     .gift-cube-container.rarity-common .cube-face {
-      background: rgba(0, 255, 136, 0.25);
-      border: 2px solid rgba(0, 255, 136, 0.8);
-      box-shadow: 0 0 30px rgba(0, 255, 136, 0.8), inset 0 0 15px rgba(0, 255, 136, 0.5);
-      color: #aaffaa;
-      text-shadow: 0 0 15px #00ff88, 0 0 30px #00ff88;
+      background: rgba(0, 255, 136, 0.3);
+      border: 2px solid rgba(0, 255, 136, 0.9);
+      box-shadow: 0 0 40px rgba(0, 255, 136, 1), inset 0 0 20px rgba(0, 255, 136, 0.6);
+      color: #ccffcc;
+      text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88;
     }
     .gift-cube-container.rarity-rare .cube-face {
-      background: rgba(0, 100, 255, 0.25);
-      border: 2px solid rgba(0, 100, 255, 0.8);
-      box-shadow: 0 0 30px rgba(0, 100, 255, 0.8), inset 0 0 15px rgba(0, 100, 255, 0.5);
-      color: #aaccff;
-      text-shadow: 0 0 15px #3a7bff, 0 0 30px #3a7bff;
+      background: rgba(0, 100, 255, 0.3);
+      border: 2px solid rgba(0, 100, 255, 0.9);
+      box-shadow: 0 0 40px rgba(0, 100, 255, 1), inset 0 0 20px rgba(0, 100, 255, 0.6);
+      color: #cce0ff;
+      text-shadow: 0 0 20px #3a7bff, 0 0 40px #3a7bff;
     }
     .gift-cube-container.rarity-epic .cube-face {
-      background: rgba(155, 48, 255, 0.25);
-      border: 2px solid rgba(155, 48, 255, 0.8);
-      box-shadow: 0 0 30px rgba(155, 48, 255, 0.8), inset 0 0 15px rgba(155, 48, 255, 0.5);
-      color: #d9b0ff;
-      text-shadow: 0 0 15px #b883ff, 0 0 30px #b883ff;
+      background: rgba(155, 48, 255, 0.3);
+      border: 2px solid rgba(155, 48, 255, 0.9);
+      box-shadow: 0 0 40px rgba(155, 48, 255, 1), inset 0 0 20px rgba(155, 48, 255, 0.6);
+      color: #e6ccff;
+      text-shadow: 0 0 20px #b883ff, 0 0 40px #b883ff;
     }
     .gift-cube-container.rarity-legendary .cube-face {
-      background: rgba(255, 215, 0, 0.25);
-      border: 2px solid rgba(255, 215, 0, 0.8);
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(255, 215, 0, 0.5);
-      color: #fff0aa;
-      text-shadow: 0 0 15px #ffd700, 0 0 30px #ffd700;
+      background: rgba(255, 215, 0, 0.3);
+      border: 2px solid rgba(255, 215, 0, 0.9);
+      box-shadow: 0 0 40px rgba(255, 215, 0, 1), inset 0 0 20px rgba(255, 215, 0, 0.6);
+      color: #fff5cc;
+      text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700;
     }
 
     .cube-face .selected-gift {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
+      display: none; /* не используем */
     }
-    .cube-face .selected-gift .gift-img,
-    .cube-face .selected-gift video.gift-img {
-      width: 45px;
-      height: 45px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .cube-face .selected-gift .gift-emoji {
-      font-size: 32px;
+    .cube-question {
+      font-size: 36px;
+      font-weight: bold;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 8px currentColor);
     }
 
     .cube-face.front  { transform: translateZ(35px); }
@@ -555,12 +545,12 @@
 
     <div class="gift-cube-container" id="giftCubeContainer">
       <div class="gift-cube" id="giftCube">
-        <div class="cube-face front" id="cube-face-0"><div class="cube-question">?</div></div>
-        <div class="cube-face back" id="cube-face-1"><div class="cube-question">?</div></div>
-        <div class="cube-face right" id="cube-face-2"><div class="cube-question">?</div></div>
-        <div class="cube-face left" id="cube-face-3"><div class="cube-question">?</div></div>
-        <div class="cube-face top"><div class="cube-question">?</div></div>
-        <div class="cube-face bottom"><div class="cube-question">?</div></div>
+        <div class="cube-face front" id="cube-face-0"></div>
+        <div class="cube-face back" id="cube-face-1"></div>
+        <div class="cube-face right" id="cube-face-2"></div>
+        <div class="cube-face left" id="cube-face-3"></div>
+        <div class="cube-face top"></div>
+        <div class="cube-face bottom"></div>
       </div>
     </div>
   </div>
@@ -652,7 +642,7 @@
     return null;
   }
 
-  // Полный каталог подарков (80+) с добавлением редкостей для четырёх ключевых
+  // Полный каталог подарков с редкостями
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
     { name: "Top Hat", emoji: "🎩", rarity: "common" },
@@ -797,7 +787,7 @@
     }
   }
 
-  // Создание элемента для каталога (без изменений)
+  // Создание элемента для каталога
   function createCatalogGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'gift-img';
@@ -962,7 +952,7 @@
     return 'common'; // включая uncommon
   }
 
-  // Создание 3D куба (теперь с выборочным заполнением граней)
+  // Создание 3D куба (только вопросительные знаки, цвет зависит от редкости)
   function createGiftCube() {
     const cubeContainer = document.getElementById('giftCubeContainer');
     const rarity = getCubeRarity();
@@ -975,31 +965,18 @@
       document.getElementById('cube-face-0'),
       document.getElementById('cube-face-1'),
       document.getElementById('cube-face-2'),
-      document.getElementById('cube-face-3')
+      document.getElementById('cube-face-3'),
+      document.querySelector('.cube-face.top'),
+      document.querySelector('.cube-face.bottom')
     ];
 
-    // Для каждой из четырёх основных граней
-    cubeFaces.forEach((face, index) => {
+    cubeFaces.forEach(face => {
       face.innerHTML = ''; // очищаем
-      if (selectedGifts[index]) {
-        // Если есть подарок, вставляем его
-        const gift = selectedGifts[index];
-        const content = createGiftContent(gift, true);
-        face.appendChild(content);
-      } else {
-        // Если нет, ставим вопросительный знак
-        const q = document.createElement('div');
-        q.className = 'cube-question';
-        q.textContent = '?';
-        face.appendChild(q);
-      }
+      const q = document.createElement('div');
+      q.className = 'cube-question';
+      q.textContent = '?';
+      face.appendChild(q);
     });
-
-    // Верх и низ можно оставить с вопросительными знаками (они уже есть в HTML, но мы их перезапишем)
-    const topFace = document.querySelector('.cube-face.top');
-    const bottomFace = document.querySelector('.cube-face.bottom');
-    topFace.innerHTML = '<div class="cube-question">?</div>';
-    bottomFace.innerHTML = '<div class="cube-question">?</div>';
   }
 
   function mergeToCube() {
@@ -1071,7 +1048,7 @@
     document.getElementById('giftModal').classList.add('active');
   }
 
-  // Выбор подарка для слота (использует предзагруженные видео)
+  // Выбор подарка для слота
   function selectGiftForSlot(gift, slotElement) {
     const slotIndex = parseInt(currentSelectedSlot);
     if (filledSlots[slotIndex]) return;
@@ -1160,7 +1137,7 @@
   };
 </script>
 
-<!-- Предзагрузка изображений для четырёх подарков (оставляем на всякий случай) -->
+<!-- Предзагрузка изображений для четырёх подарков -->
 <script>
   (function preloadImages() {
     var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
