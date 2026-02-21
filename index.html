@@ -208,7 +208,7 @@
       pointer-events: none;
       filter: drop-shadow(0 0 15px currentColor);
       will-change: transform, opacity;
-      perspective: 400px; /* добавляем перспективу для усиления 3D-эффекта */
+      perspective: 400px;
     }
     .gift-cube-container.active {
       opacity: 1;
@@ -220,15 +220,14 @@
       position: relative;
       transform-style: preserve-3d;
       animation: bounce 1s infinite ease-in-out;
-      /* Поворачиваем куб, чтобы он смотрелся под углом (влево и вниз) */
-      transform: rotateX(15deg) rotateY(-20deg);
+      /* Наклон: передняя левая часть опущена вниз */
+      transform: rotateX(-15deg) rotateY(20deg);
       will-change: transform;
     }
     @keyframes bounce {
-      0%, 100% { transform: rotateX(15deg) rotateY(-20deg) translateY(0); }
-      50% { transform: rotateX(15deg) rotateY(-20deg) translateY(-10px); }
+      0%, 100% { transform: rotateX(-15deg) rotateY(20deg) translateY(0); }
+      50% { transform: rotateX(-15deg) rotateY(20deg) translateY(-10px); }
     }
-    /* Убрали вращение, оставили только прыжок */
     .cube-face {
       position: absolute;
       width: 70px;
@@ -278,7 +277,7 @@
     }
 
     .cube-face .selected-gift {
-      display: none; /* не используем */
+      display: none;
     }
     .cube-question {
       font-size: 36px;
@@ -377,6 +376,48 @@
       opacity: 0;
       pointer-events: none;
       z-index: -1;
+    }
+
+    /* Контейнер для полученных подарков (вверху главного квадрата) */
+    .obtained-gifts {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      height: 34px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 6px;
+      padding: 0 4px;
+      z-index: 15;
+      pointer-events: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .obtained-gifts::-webkit-scrollbar {
+      display: none;
+    }
+    .obtained-gift-item {
+      width: 30px;
+      height: 30px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      animation: giftAppear 0.3s ease-out;
+      flex-shrink: 0;
+    }
+    @keyframes giftAppear {
+      0% { opacity: 0; transform: scale(0.5) translateY(-10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     /* Модальное окно */
@@ -536,24 +577,6 @@
     .item-counter.active {
       display: block;
     }
-
-    /* Временное отображение выпавшего предмета */
-    .drop-item {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 60px;
-      height: 60px;
-      z-index: 30;
-      pointer-events: none;
-      animation: dropPop 0.5s ease-out forwards;
-    }
-    @keyframes dropPop {
-      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
-    }
   </style>
 </head>
 <body>
@@ -568,6 +591,9 @@
   <div class="avatar-top" id="avatar"></div>
 
   <div class="main-square" id="mainSquare">
+    <!-- Контейнер для полученных подарков (вверху) -->
+    <div class="obtained-gifts" id="obtainedGifts"></div>
+
     <div class="corners-container" id="cornersContainer">
       <div class="mini-square" data-slot="0">
         <div class="plus-sign">+</div>
@@ -605,9 +631,6 @@
 
   <!-- Счётчик предметов (как в Brawl Stars) -->
   <div class="item-counter" id="itemCounter">0/4</div>
-
-  <!-- Временный элемент для анимации выпадения -->
-  <div id="dropItem" class="drop-item" style="display: none;"></div>
 </div>
 
 <div class="modal" id="giftModal">
@@ -1029,42 +1052,15 @@
     };
   }
 
-  // Функция для показа анимации выпавшего предмета
-  function showDropItem(gift) {
-    const dropDiv = document.getElementById('dropItem');
-    dropDiv.style.display = 'block';
-    dropDiv.innerHTML = ''; // очищаем
-
-    if (mediaGifts.has(gift.name)) {
-      // Используем предзагруженное видео
-      const video = takePreloadedVideo(gift.name);
-      if (video) {
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        video.play().catch(() => {});
-        dropDiv.appendChild(video);
-      } else {
-        // fallback на эмодзи
-        dropDiv.textContent = gift.emoji;
-        dropDiv.style.fontSize = '40px';
-        dropDiv.style.display = 'flex';
-        dropDiv.style.alignItems = 'center';
-        dropDiv.style.justifyContent = 'center';
-      }
-    } else {
-      dropDiv.textContent = gift.emoji;
-      dropDiv.style.fontSize = '40px';
-      dropDiv.style.display = 'flex';
-      dropDiv.style.alignItems = 'center';
-      dropDiv.style.justifyContent = 'center';
-    }
-
-    // Убираем через время
-    setTimeout(() => {
-      dropDiv.style.display = 'none';
-      dropDiv.innerHTML = '';
-    }, 500);
+  // Функция добавления полученного подарка в верхний контейнер
+  function addObtainedGift(gift) {
+    const container = document.getElementById('obtainedGifts');
+    const item = document.createElement('div');
+    item.className = 'obtained-gift-item';
+    item.textContent = gift.emoji; // используем эмодзи для простоты
+    container.appendChild(item);
+    // Автоматически скроллим вправо, чтобы последний добавленный был виден
+    container.scrollLeft = container.scrollWidth;
   }
 
   // Функция для открытия следующего предмета
@@ -1075,7 +1071,6 @@
       document.getElementById('giftCubeContainer').classList.remove('active');
       document.getElementById('itemCounter').classList.remove('active');
       currentLootBox = null;
-      // Можно также показать сообщение, что всё открыто
       return;
     }
 
@@ -1087,10 +1082,8 @@
     const counter = document.getElementById('itemCounter');
     counter.textContent = `${currentLootBox.currentIndex}/${currentLootBox.items.length}`;
 
-    // Показываем анимацию выпадения
-    showDropItem(gift);
-
-    // Здесь можно также добавить предмет в коллекцию пользователя (если нужно)
+    // Добавляем полученный подарок в верхний контейнер
+    addObtainedGift(gift);
 
     // Если это был последний предмет, через небольшую задержку скрываем куб
     if (currentLootBox.currentIndex >= currentLootBox.items.length) {
@@ -1140,6 +1133,9 @@
 
     cornersContainer.classList.add('merged');
     centerSquare.classList.add('merged');
+
+    // Очищаем контейнер полученных подарков перед новым открытием
+    document.getElementById('obtainedGifts').innerHTML = '';
 
     // Создаём ящик с предметами
     currentLootBox = createLootBox();
