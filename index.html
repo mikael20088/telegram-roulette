@@ -74,31 +74,18 @@
       object-fit: contain;
       background: transparent;
     }
-    /* Матричная рамка вокруг видео */
-    .matrix-frame {
+    /* Канвас для эффекта матрицы поверх видео */
+    .matrix-overlay {
       position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border-radius: 30px;
-      border: 2px solid rgba(0, 255, 136, 0.8);
-      box-shadow: 0 0 20px #00ff88, inset 0 0 20px #00ff88;
-      background: repeating-linear-gradient(
-        45deg,
-        rgba(0, 255, 136, 0.2) 0px,
-        rgba(0, 255, 136, 0.2) 2px,
-        transparent 2px,
-        transparent 8px
-      );
-      background-size: 20px 20px;
-      animation: matrixFrameMove 5s linear infinite;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
       pointer-events: none;
-      z-index: 4;
-    }
-    @keyframes matrixFrameMove {
-      0% { background-position: 0 0; }
-      100% { background-position: 40px 40px; }
+      border-radius: 24px; /* чтобы края были скруглены как у видео */
+      overflow: hidden;
+      opacity: 0.8; /* полупрозрачность для эффекта */
     }
 
     .main-square {
@@ -555,7 +542,8 @@
 
   <div class="video-wrapper" id="videoWrapper">
     <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
-    <div class="matrix-frame"></div>
+    <!-- Канвас для эффекта матрицы поверх видео -->
+    <canvas id="matrixOverlay" class="matrix-overlay"></canvas>
   </div>
 
   <div class="avatar-top" id="avatar"></div>
@@ -585,7 +573,7 @@
     </div>
 
     <div class="gift-cube-container" id="giftCubeContainer">
-      <div class="gift-cube uncommon" id="giftCube"> <!-- начальный класс uncommon (зелёный) -->
+      <div class="gift-cube uncommon" id="giftCube">
         <div class="cube-face front"></div>
         <div class="cube-face back"></div>
         <div class="cube-face right"></div>
@@ -596,7 +584,7 @@
     </div>
 
     <div class="winning-gift" id="winningGift">
-      <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video> <!-- временно -->
+      <video src="videos/Astral%20Shard.mp4" muted loop playsinline webkit-playsinline></video>
     </div>
   </div>
 </div>
@@ -644,7 +632,6 @@
 
   const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
-  // Редкости для особых подарков
   const rarityMap = {
     "Durov's Cap": "legendary",
     "Astral Shard": "epic",
@@ -769,7 +756,7 @@
     { name: "B-Day Candle", emoji: "🕯" }
   ];
 
-  // Матрица
+  // ========== МАТРИЦА (основная) ==========
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
   let drops = [];
@@ -807,6 +794,47 @@
   window.addEventListener("resize", initMatrix);
   setInterval(drawMatrix, 50);
 
+  // ========== МАТРИЦА ПОВЕРХ ВИДЕО ==========
+  const overlayCanvas = document.getElementById('matrixOverlay');
+  const overlayCtx = overlayCanvas.getContext('2d');
+  let overlayDrops = [];
+
+  function initOverlayMatrix() {
+    overlayCanvas.width = overlayCanvas.clientWidth;
+    overlayCanvas.height = overlayCanvas.clientHeight;
+    const columns = Math.floor(overlayCanvas.width / 12); // меньший шрифт для компактности
+    overlayDrops = Array.from({ length: columns }, () => ({
+      y: Math.random() * overlayCanvas.height,
+      speed: 0.3 + Math.random() * 1.2
+    }));
+  }
+
+  function drawOverlayMatrix() {
+    // Очищаем канвас с прозрачностью, чтобы создать эффект затухания
+    overlayCtx.fillStyle = "rgba(0, 0, 0, 0.03)";
+    overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    overlayCtx.fillStyle = "#00ff88";
+    overlayCtx.shadowColor = "#00ff88";
+    overlayCtx.shadowBlur = 8;
+    overlayCtx.font = "12px monospace";
+
+    overlayDrops.forEach((drop, i) => {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      overlayCtx.fillText(text, i * 12, drop.y);
+      drop.y += 12 * drop.speed;
+      if (drop.y > overlayCanvas.height + 50) {
+        drop.y = Math.random() * -100;
+        drop.speed = 0.3 + Math.random() * 1.2;
+      }
+    });
+  }
+
+  // Инициализация и запуск анимации для оверлея
+  initOverlayMatrix();
+  window.addEventListener('resize', initOverlayMatrix);
+  setInterval(drawOverlayMatrix, 60);
+
+  // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
   function playVideoFromStart() {
     if (centerVideo) {
       if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
@@ -980,7 +1008,6 @@
     });
   }
 
-  // Функция для заполнения граней куба вопросительными знаками
   function fillCubeWithQuestionMarks() {
     const cubeFaces = document.querySelectorAll('.cube-face');
     cubeFaces.forEach(face => {
@@ -988,14 +1015,12 @@
     });
   }
 
-  // Установка цвета куба в зависимости от редкости
   function setCubeRarity(rarity) {
     const giftCube = document.getElementById('giftCube');
     giftCube.classList.remove('legendary', 'epic', 'rare', 'uncommon');
     giftCube.classList.add(rarity);
   }
 
-  // Выбор случайного подарка из четырёх особых
   function getRandomSpecialGift() {
     const specials = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
     const randomIndex = Math.floor(Math.random() * specials.length);
@@ -1020,14 +1045,11 @@
     const winningGift = document.getElementById('winningGift');
     const winningVideo = winningGift.querySelector('video');
     
-    // Устанавливаем видео для выигрышного подарка
     const baseName = fileMap[winningGiftName] || winningGiftName;
     const encodedName = encodeURIComponent(baseName);
     winningVideo.src = `videos/${encodedName}.mp4`;
     winningVideo.load();
 
-    // Устанавливаем цвет куба (редкость уже должна быть установлена до вызова)
-    
     giftCube.style.transform = 'rotateX(0deg) rotateY(0deg)';
     
     let angleX = 0;
@@ -1079,23 +1101,17 @@
     const centerSquare = document.getElementById('centerSquare');
     const giftCubeContainer = document.getElementById('giftCubeContainer');
 
-    // Выбираем случайный подарок
     const winningGiftName = getRandomSpecialGift();
-    // Устанавливаем редкость куба
     const rarity = rarityMap[winningGiftName] || 'uncommon';
     setCubeRarity(rarity);
 
-    // Заполняем грани вопросительными знаками
     fillCubeWithQuestionMarks();
 
-    // Скрываем углы и центр
     cornersContainer.classList.add('merged');
     centerSquare.classList.add('merged');
 
-    // Показываем куб
     giftCubeContainer.classList.add('active');
 
-    // Запускаем анимацию с выигрышным подарком
     startWinAnimation(winningGiftName);
   }
 
@@ -1209,7 +1225,6 @@
 
       document.getElementById('centerSquare').onclick = () => {
         const filledCount = filledSlots.filter(filled => filled).length;
-        // Разрешаем крафт при любом количестве выбранных подарков > 0
         if (filledCount > 0) {
           mergeToCube();
         }
