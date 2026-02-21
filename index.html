@@ -228,16 +228,32 @@
       0%, 100% { transform: rotateX(-15deg) rotateY(20deg) scale(1); }
       50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.03) translateY(-3px); }
     }
-    /* анимация тряски перед вылетом */
-    .gift-cube.shake {
-      animation: shake 0.3s ease-in-out;
+    /* анимация открытия коробки */
+    .gift-cube.opening {
+      animation: openBox 0.8s ease-out forwards;
     }
-    @keyframes shake {
-      0% { transform: rotateX(-15deg) rotateY(20deg) translateX(0); }
-      25% { transform: rotateX(-15deg) rotateY(20deg) translateX(-5px); }
-      50% { transform: rotateX(-15deg) rotateY(20deg) translateX(5px); }
-      75% { transform: rotateX(-15deg) rotateY(20deg) translateX(-3px); }
-      100% { transform: rotateX(-15deg) rotateY(20deg) translateX(0); }
+    @keyframes openBox {
+      0% { transform: rotateX(-15deg) rotateY(20deg) scale(1); opacity: 1; }
+      50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.1); opacity: 1; }
+      100% { transform: rotateX(-15deg) rotateY(20deg) scale(0); opacity: 0; }
+    }
+    /* свет изнутри */
+    .cube-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+      transform: translate(-50%, -50%);
+      z-index: 11;
+      pointer-events: none;
+      transition: width 0.5s ease, height 0.5s ease;
+    }
+    .cube-glow.active {
+      width: 200px;
+      height: 200px;
     }
     .cube-face {
       position: absolute;
@@ -437,76 +453,61 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    /* Летающий элемент (временный) */
-    .flying-gift {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      z-index: 50;
-      pointer-events: none;
-      animation: flyToBar 0.6s ease-in-out forwards;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .flying-gift video,
-    .flying-gift img,
-    .flying-gift .gift-emoji {
+    /* Летающий элемент (временный) - устарело, заменяем на новый эффект */
+    /* Оставим для совместимости, но не используем */
+
+    /* Синий фон на весь экран */
+    .blue-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      border-radius: 6px;
-    }
-    .flying-gift .gift-emoji {
-      font-size: 30px;
+      background: radial-gradient(circle at center, #4facfe 0%, #00f2fe 100%);
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #000;
-      border-radius: 6px;
     }
-    @keyframes flyToBar {
-      0% {
-        opacity: 1;
-        transform: translate(0, 0) scale(1) rotate(0deg);
-      }
-      30% {
-        transform: translate(calc(50px - 50%), calc(-20px - 50%)) scale(1.2) rotate(10deg);
-      }
-      70% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        transform: translate(var(--target-x), var(--target-y)) scale(0.5) rotate(30deg);
-      }
+    .blue-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
     }
 
-    /* Искры (sparks) */
-    .spark {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      background: gold;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 51;
-      animation: sparkFly 0.6s ease-out forwards;
-      box-shadow: 0 0 10px currentColor;
+    /* Центральный элемент для показа предмета */
+    .center-gift-display {
+      width: 80px;
+      height: 80px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      border: 3px solid white;
+      box-shadow: 0 0 50px rgba(255,255,255,0.5);
+      animation: popIn 0.3s ease-out;
     }
-    .spark:nth-child(2) { background: #ffaa00; width: 8px; height: 8px; }
-    .spark:nth-child(3) { background: #ffdd44; width: 4px; height: 4px; }
-    .spark:nth-child(4) { background: #ff8888; width: 5px; height: 5px; }
-    .spark:nth-child(5) { background: #aaffaa; width: 7px; height: 7px; }
-    @keyframes sparkFly {
-      0% {
-        opacity: 1;
-        transform: translate(0, 0) scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * 1px)) scale(0.2);
-      }
+    .center-gift-display video,
+    .center-gift-display img,
+    .center-gift-display .gift-emoji {
+      width: 90%;
+      height: 90%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .center-gift-display .gift-emoji {
+      font-size: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.5); }
+      100% { opacity: 1; transform: scale(1); }
     }
 
     /* Модальное окно */
@@ -715,11 +716,17 @@
         <div class="cube-face top"></div>
         <div class="cube-face bottom"></div>
       </div>
+      <div class="cube-glow" id="cubeGlow"></div>
     </div>
   </div>
 
   <!-- Счётчик предметов (как в Brawl Stars) -->
   <div class="item-counter" id="itemCounter">0/4</div>
+</div>
+
+<!-- Синий оверлей -->
+<div class="blue-overlay" id="blueOverlay">
+  <div class="center-gift-display" id="centerGiftDisplay"></div>
 </div>
 
 <div class="modal" id="giftModal">
@@ -1182,36 +1189,12 @@
     container.scrollLeft = container.scrollWidth;
   }
 
-  // Функция для создания летающего элемента (анимация выпадения)
-  function createFlyingGift(gift, targetIndex) {
-    const mainSquare = document.getElementById('mainSquare');
-    const cubeContainer = document.getElementById('giftCubeContainer');
-    const cubeRect = cubeContainer.getBoundingClientRect();
-    const mainRect = mainSquare.getBoundingClientRect();
+  // Функция для показа предмета на синем фоне
+  function showGiftOnBlue(gift) {
+    const display = document.getElementById('centerGiftDisplay');
+    display.innerHTML = ''; // очищаем
 
-    // Координаты центра куба относительно mainSquare
-    const startX = cubeRect.left + cubeRect.width/2 - mainRect.left;
-    const startY = cubeRect.top + cubeRect.height/2 - mainRect.top;
-
-    // Координаты цели (новая иконка в панели). Приблизительно.
-    const panel = document.getElementById('obtainedGifts');
-    const panelRect = panel.getBoundingClientRect();
-    // Цель: позиция последнего элемента + небольшой отступ
-    const targetX = panelRect.left + panel.scrollLeft + (targetIndex * 36) + 18 - mainRect.left; // 36 = ширина + gap
-    const targetY = panelRect.top + panelRect.height/2 - mainRect.top;
-
-    // Создаём летающий элемент
-    const flying = document.createElement('div');
-    flying.className = 'flying-gift';
-    flying.style.left = startX + 'px';
-    flying.style.top = startY + 'px';
-    // Устанавливаем CSS-переменные для целевой позиции
-    flying.style.setProperty('--target-x', (targetX - startX) + 'px');
-    flying.style.setProperty('--target-y', (targetY - startY) + 'px');
-
-    // Наполнение
     if (mediaGifts.has(gift.name)) {
-      // Создаём новое видео для летящего элемента (не из хранилища)
       const baseName = fileMap[gift.name] || gift.name;
       const encodedName = encodeURIComponent(baseName);
       const video = document.createElement('video');
@@ -1224,94 +1207,91 @@
       video.style.width = '100%';
       video.style.height = '100%';
       video.style.objectFit = 'cover';
-      flying.appendChild(video);
+      display.appendChild(video);
       video.play().catch(() => {});
     } else {
-      // fallback
-      flying.textContent = gift.emoji;
-      flying.style.fontSize = '30px';
-      flying.style.display = 'flex';
-      flying.style.alignItems = 'center';
-      flying.style.justifyContent = 'center';
-      flying.style.background = '#000';
-      flying.style.borderRadius = '6px';
+      display.textContent = gift.emoji;
+      display.style.fontSize = '50px';
+      display.style.display = 'flex';
+      display.style.alignItems = 'center';
+      display.style.justifyContent = 'center';
     }
-
-    mainSquare.appendChild(flying);
-
-    // Создаём искры вокруг стартовой позиции
-    for (let i = 0; i < 8; i++) {
-      const spark = document.createElement('div');
-      spark.className = 'spark';
-      spark.style.left = startX + 'px';
-      spark.style.top = startY + 'px';
-      // Случайное направление
-      const dx = (Math.random() - 0.5) * 60;
-      const dy = (Math.random() - 0.5) * 60 - 20; // немного вверх
-      spark.style.setProperty('--dx', dx);
-      spark.style.setProperty('--dy', dy);
-      mainSquare.appendChild(spark);
-
-      setTimeout(() => {
-        if (spark.parentNode) spark.remove();
-      }, 600);
-    }
-
-    // Удаляем летящий элемент после окончания анимации
-    setTimeout(() => {
-      if (flying.parentNode) flying.remove();
-    }, 600);
   }
 
-  // Функция для открытия следующего предмета
-  function openNextItem() {
+  // Новая логика открытия коробки
+  function openBox() {
     if (!currentLootBox || isOpening) return;
     if (currentLootBox.currentIndex >= currentLootBox.items.length) {
-      // Ящик пуст, можно скрыть куб и вернуть исходное состояние
-      document.getElementById('giftCubeContainer').classList.remove('active');
-      document.getElementById('itemCounter').classList.remove('active');
-      currentLootBox = null;
+      // Все предметы уже открыты, можно скрыть оверлей
+      document.getElementById('blueOverlay').classList.remove('active');
+      // Возвращаем исходное состояние? Пока просто скрываем
       return;
     }
 
     isOpening = true;
 
-    // Анимация тряски куба
     const cube = document.getElementById('giftCube');
-    cube.classList.add('shake');
-    setTimeout(() => {
-      cube.classList.remove('shake');
-    }, 300);
+    const glow = document.getElementById('cubeGlow');
 
-    // Небольшая задержка перед вылетом, чтобы тряска успела начаться
+    // Анимация открытия
+    cube.classList.add('opening');
+    glow.classList.add('active');
+
+    // Через 0.8 секунд куб исчезает, появляется синий фон и предмет
     setTimeout(() => {
+      // Скрываем куб и главный квадрат
+      document.getElementById('giftCubeContainer').style.opacity = '0';
+      document.getElementById('mainSquare').style.opacity = '0'; // скрываем весь квадрат
+
+      // Показываем синий оверлей
+      const overlay = document.getElementById('blueOverlay');
+      overlay.classList.add('active');
+
+      // Показываем текущий предмет
       const gift = currentLootBox.items[currentLootBox.currentIndex];
-      const targetIndex = currentLootBox.currentIndex; // индекс, который будет в панели (0,1,2,3)
-      createFlyingGift(gift, targetIndex);
+      showGiftOnBlue(gift);
 
-      currentLootBox.currentIndex++;
+      // Добавляем предмет в верхнюю панель (полученные)
+      addObtainedGift(gift);
 
       // Обновляем счётчик
+      currentLootBox.currentIndex++;
       const counter = document.getElementById('itemCounter');
       counter.textContent = `${currentLootBox.currentIndex}/${currentLootBox.items.length}`;
 
-      // Добавляем полученный подарок в верхний контейнер с небольшой задержкой, чтобы анимация полёта не перекрывалась
-      setTimeout(() => {
-        addObtainedGift(gift);
-      }, 400);
+      // Сбрасываем флаг, чтобы можно было кликнуть дальше
+      isOpening = false;
 
-      // Если это был последний предмет, через некоторое время скрываем куб
+      // Если все предметы открыты, можно скрыть оверлей или оставить для последнего
       if (currentLootBox.currentIndex >= currentLootBox.items.length) {
-        setTimeout(() => {
-          document.getElementById('giftCubeContainer').classList.remove('active');
-          document.getElementById('itemCounter').classList.remove('active');
-          currentLootBox = null;
-          isOpening = false;
-        }, 600);
-      } else {
-        isOpening = false;
+        // После последнего можно автоматически скрыть через пару секунд или по клику
+        // Пока оставляем, клик по оверлею больше ничего не делает
       }
-    }, 150); // небольшая задержка после начала тряски
+    }, 800);
+  }
+
+  // Обработчик клика по синему оверлею для следующего предмета
+  function onBlueOverlayClick() {
+    if (!currentLootBox) return;
+    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
+      document.getElementById('blueOverlay').classList.remove('active');
+      // Возвращаем главный квадрат? Пока нет, но можно вернуть
+      // document.getElementById('mainSquare').style.opacity = '1';
+      return;
+    }
+
+    // Показываем следующий предмет
+    const gift = currentLootBox.items[currentLootBox.currentIndex];
+    showGiftOnBlue(gift);
+    addObtainedGift(gift);
+
+    currentLootBox.currentIndex++;
+    const counter = document.getElementById('itemCounter');
+    counter.textContent = `${currentLootBox.currentIndex}/${currentLootBox.items.length}`;
+
+    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
+      // Можно оставить оверлей активным, последний предмет висит
+    }
   }
 
   // Создание 3D куба (только вопросительные знаки, цвет зависит от редкости)
@@ -1339,6 +1319,11 @@
       q.textContent = '?';
       face.appendChild(q);
     });
+
+    // Сбрасываем анимацию и видимость
+    const cube = document.getElementById('giftCube');
+    cube.classList.remove('opening');
+    document.getElementById('cubeGlow').classList.remove('active');
   }
 
   function mergeToCube() {
@@ -1359,6 +1344,8 @@
     createGiftCube(); // это установит класс редкости на giftCubeContainer
 
     giftCubeContainer.classList.add('active');
+    giftCubeContainer.style.opacity = '1'; // убедимся, что видим
+    document.getElementById('mainSquare').style.opacity = '1'; // квадрат видим
     counter.textContent = `0/${currentLootBox.items.length}`;
     counter.classList.add('active');
   }
@@ -1508,11 +1495,16 @@
     }
   };
 
-  // Обработчик клика по кубу для открытия предметов
+  // Обработчик клика по кубу для открытия коробки
   document.getElementById('giftCubeContainer').addEventListener('click', () => {
-    if (currentLootBox && !isOpening) {
-      openNextItem();
+    if (currentLootBox && !isOpening && currentLootBox.currentIndex < currentLootBox.items.length) {
+      openBox();
     }
+  });
+
+  // Обработчик клика по синему оверлею для следующего предмета
+  document.getElementById('blueOverlay').addEventListener('click', () => {
+    onBlueOverlayClick();
   });
 </script>
 
