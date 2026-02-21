@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Telegram Craft</title>
+<title>Brawl Style Craft</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
@@ -16,92 +16,108 @@ html,body{
   overflow:hidden;
   font-family:system-ui;
 }
-#app{position:relative;width:100%;height:100%;}
+#app{width:100%;height:100%}
 
-/* ===== СИНИЙ ЭКРАН ===== */
-.blue-overlay{
+/* ===== СИНИЙ ФОН ===== */
+.blue{
   position:fixed;
   inset:0;
-  background:radial-gradient(circle at center,#0a5cff,#002c88);
+  background:radial-gradient(circle,#2f7bff,#001a55);
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   opacity:0;
   pointer-events:none;
-  transition:opacity .4s ease;
-  z-index:50;
+  transition:.4s;
 }
-.blue-overlay.active{
+.blue.active{
   opacity:1;
   pointer-events:auto;
 }
 
+/* ===== ВСПЫШКА ===== */
+.flash{
+  position:fixed;
+  inset:0;
+  background:white;
+  opacity:0;
+  z-index:100;
+}
+
+/* ===== ЛУЧИ ===== */
+.rays{
+  position:absolute;
+  width:400px;
+  height:400px;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(255,255,255,.35) 0deg 10deg,
+      transparent 10deg 20deg
+    );
+  border-radius:50%;
+  opacity:0;
+  animation:spin 1.2s linear infinite;
+}
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
 /* ===== КУБ ===== */
 .cube-wrap{
-  width:90px;
-  height:90px;
-  perspective:600px;
+  width:110px;
+  height:110px;
+  perspective:700px;
+  position:relative;
 }
 .cube{
   width:100%;
   height:100%;
   position:relative;
   transform-style:preserve-3d;
-  animation:idle 1.4s infinite ease-in-out;
+  transition:.15s;
 }
-@keyframes idle{
-  0%,100%{transform:rotateX(-15deg) rotateY(20deg)}
-  50%{transform:rotateX(-15deg) rotateY(20deg) translateY(-6px)}
+.cube.shake{
+  animation:shake .12s infinite;
 }
-.cube.open{
-  animation:open .7s forwards ease-out;
+@keyframes shake{
+  0%{transform:rotateX(-15deg) rotateY(20deg) translate(0,0)}
+  25%{transform:rotateX(-15deg) rotateY(20deg) translate(3px,-3px)}
+  50%{transform:rotateX(-15deg) rotateY(20deg) translate(-3px,3px)}
+  75%{transform:rotateX(-15deg) rotateY(20deg) translate(3px,3px)}
 }
-@keyframes open{
-  to{transform:scale(0);opacity:0}
-}
+
 .face{
   position:absolute;
-  width:90px;
-  height:90px;
-  background:rgba(255,255,255,.15);
-  border-radius:14px;
+  width:110px;
+  height:110px;
+  background:#1d7cff;
+  border-radius:18px;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:40px;
-  color:#fff;
-  border:2px solid rgba(255,255,255,.6);
+  font-size:48px;
+  color:white;
+  border:3px solid white;
+  box-shadow:0 0 25px rgba(255,255,255,.6);
 }
-.face.f{transform:translateZ(45px)}
-.face.b{transform:rotateY(180deg) translateZ(45px)}
-.face.r{transform:rotateY(90deg) translateZ(45px)}
-.face.l{transform:rotateY(-90deg) translateZ(45px)}
-.face.t{transform:rotateX(90deg) translateZ(45px)}
-.face.d{transform:rotateX(-90deg) translateZ(45px)}
+.f{transform:translateZ(55px)}
+.b{transform:rotateY(180deg) translateZ(55px)}
+.r{transform:rotateY(90deg) translateZ(55px)}
+.l{transform:rotateY(-90deg) translateZ(55px)}
+.t{transform:rotateX(90deg) translateZ(55px)}
+.d{transform:rotateX(-90deg) translateZ(55px)}
 
-/* ===== СВЕЧЕНИЕ ===== */
-.glow{
-  position:absolute;
-  width:0;height:0;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.8),transparent 70%);
-  transition:.4s;
-}
-.glow.active{
-  width:260px;
-  height:260px;
-}
-
-/* ===== ВЫПАВШИЙ ПРЕДМЕТ ===== */
+/* ===== ПРЕДМЕТ ===== */
 .single{
-  width:90px;
-  height:90px;
+  width:120px;
+  height:120px;
   display:none;
-  animation:pop .3s ease;
+  animation:pop .35s ease;
 }
 @keyframes pop{
-  from{transform:scale(.5);opacity:0}
+  from{transform:scale(.3);opacity:0}
   to{transform:scale(1);opacity:1}
 }
 .single video{
@@ -113,14 +129,14 @@ html,body{
 /* ===== РЯД ===== */
 .row{
   display:flex;
-  gap:12px;
-  margin-top:24px;
+  gap:14px;
+  margin-top:30px;
   opacity:0;
 }
 .row.active{opacity:1}
 .row video{
-  width:60px;
-  height:60px;
+  width:64px;
+  height:64px;
 }
 
 /* ===== СЧЁТЧИК ===== */
@@ -129,10 +145,11 @@ html,body{
   bottom:20px;
   right:20px;
   background:#ff0033;
-  padding:10px 18px;
-  border-radius:30px;
+  padding:10px 20px;
+  border-radius:40px;
+  font-size:22px;
   font-weight:bold;
-  color:#fff;
+  color:white;
 }
 </style>
 </head>
@@ -140,7 +157,9 @@ html,body{
 <body>
 <div id="app">
 
-<div class="blue-overlay" id="overlay">
+<div class="blue" id="blue">
+
+  <div class="rays" id="rays"></div>
 
   <div class="cube-wrap" id="cubeWrap">
     <div class="cube" id="cube">
@@ -151,7 +170,6 @@ html,body{
       <div class="face t">?</div>
       <div class="face d">?</div>
     </div>
-    <div class="glow" id="glow"></div>
   </div>
 
   <div class="single" id="single"></div>
@@ -159,6 +177,8 @@ html,body{
   <div class="counter" id="counter">4</div>
 
 </div>
+
+<div class="flash" id="flash"></div>
 
 </div>
 
@@ -168,51 +188,73 @@ Telegram.WebApp.expand();
 
 /* ===== ДАННЫЕ ===== */
 const gifts=[
- {name:"Astral Shard",file:"Astral%20Shard.mp4"},
- {name:"Kissed Frog",file:"Kissed%20Frog.mp4"},
- {name:"Durov's Cap",file:"Durov-Cap.mp4"},
- {name:"Artisan Brick",file:"Artisan%20Brick.mp4"}
+ {file:"Astral%20Shard.mp4"},
+ {file:"Kissed%20Frog.mp4"},
+ {file:"Durov-Cap.mp4"},
+ {file:"Artisan%20Brick.mp4"}
 ];
 
+let step=0;
 let index=0;
-let stage="cube";
 
-/* ===== СТАРТ (ИМИТАЦИЯ CRAFT) ===== */
-setTimeout(()=>document.getElementById("overlay").classList.add("active"),1000);
+setTimeout(()=>blue.classList.add("active"),800);
 
-/* ===== КЛИК ПО ЭКРАНУ ===== */
-overlay.addEventListener("click",()=>{
+/* ===== КЛИК ===== */
+blue.onclick=()=>{
 
-  if(stage==="cube"){
-    cube.classList.add("open");
-    glow.classList.add("active");
-    stage="drop";
-    setTimeout(()=>{
-      cubeWrap.style.display="none";
-      glow.style.display="none";
-      showGift();
-    },700);
+  /* 1 — начало тряски */
+  if(step===0){
+    cube.classList.add("shake");
+    rays.style.opacity=.4;
+    step=1;
     return;
   }
 
-  if(stage==="drop"){
+  /* 2 — усиление */
+  if(step===1){
+    cube.style.transform="scale(1.08)";
+    rays.style.opacity=.7;
+    step=2;
+    return;
+  }
+
+  /* 3 — ВЗРЫВ */
+  if(step===2){
+    explode();
+    step=3;
+    return;
+  }
+
+  /* ПОКАЗ СЛЕДУЮЩЕГО */
+  if(step===3){
     index++;
     counter.textContent=4-index;
     if(index<gifts.length){
       showGift();
     }else{
       showRow();
-      stage="final";
+      step=4;
     }
     return;
   }
 
-  if(stage==="final"){
+  /* ВЫХОД */
+  if(step===4){
     location.reload();
   }
-});
+};
 
-/* ===== ФУНКЦИИ ===== */
+/* ===== ЭФФЕКТ ВЗРЫВА ===== */
+function explode(){
+  cube.classList.remove("shake");
+  cubeWrap.style.display="none";
+  rays.style.opacity=1;
+  flash.style.opacity=1;
+  setTimeout(()=>flash.style.opacity=0,120);
+  showGift();
+}
+
+/* ===== ПОКАЗ ===== */
 function showGift(){
   single.innerHTML="";
   const v=document.createElement("video");
