@@ -196,7 +196,7 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
-    /* Синий оверлей с эффектом стекла (светлее) */
+    /* Синий оверлей с эффектом стекла (очень светлый, небесный) */
     .blue-overlay {
       position: fixed;
       top: 0;
@@ -218,9 +218,9 @@
       position: absolute;
       inset: 0;
       background: 
-        linear-gradient(45deg, rgba(140, 220, 255, 0.3) 0%, rgba(100, 180, 255, 0.2) 25%, rgba(160, 240, 255, 0.25) 50%, rgba(80, 160, 255, 0.15) 75%, rgba(140, 220, 255, 0.3) 100%),
-        radial-gradient(circle at 25% 25%, rgba(200, 240, 255, 0.4) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(140, 220, 255, 0.3) 0%, transparent 50%);
+        linear-gradient(45deg, rgba(200, 235, 255, 0.3) 0%, rgba(170, 220, 255, 0.25) 25%, rgba(220, 245, 255, 0.3) 50%, rgba(150, 210, 255, 0.2) 75%, rgba(200, 235, 255, 0.3) 100%),
+        radial-gradient(circle at 25% 25%, rgba(230, 250, 255, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(200, 235, 255, 0.3) 0%, transparent 50%);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       z-index: -1;
@@ -344,7 +344,7 @@
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
-    /* Одиночный предмет (появляется после исчезновения куба) */
+    /* Одиночный предмет (появляется на месте куба) */
     .single-gift-display {
       width: 70px;
       height: 70px;
@@ -795,10 +795,11 @@
   let fourthGiftSelected = false;
 
   // Переменные для системы ящиков
-  let currentLootBox = null; // { rarity, items: [{ name, emoji, rarity }], currentIndex }
+  let currentLootBox = null; // { rarity, items: [{ name, emoji, rarity }], currentIndex, total }
   let isOpening = false;
   let showingFinalRow = false;
   let boxOpened = false; // стал ли куб уже открыт (исчез)
+  let itemsRevealed = 0; // сколько предметов уже показано (1,2,3,4)
 
   // Карта соответствия имён файлов
   const fileMap = {
@@ -1316,11 +1317,15 @@
     row.appendChild(item);
   }
 
-  // Обновление счётчика
-  function updateBlueCounter() {
+  // Обновление счётчика (по количеству уже показанных)
+  function updateBlueCounter(revealed) {
     const counter = document.getElementById('blueCounter');
     if (currentLootBox) {
-      const remaining = currentLootBox.total - currentLootBox.currentIndex;
+      // Счётчик показывает количество оставшихся предметов:
+      // после показа первого должно быть 4? Нет, после первого оставшихся 3.
+      // Но по описанию: после первого счётчик 4, после второго 3...
+      // Значит, счётчик = total - (revealed - 1)
+      const remaining = currentLootBox.total - (revealed - 1);
       counter.textContent = remaining;
     }
   }
@@ -1332,9 +1337,9 @@
 
     isOpening = true;
     
-    // Сразу показываем счётчик с полным числом (4)
+    // Активируем счётчик с начальным значением 4
     const counter = document.getElementById('blueCounter');
-    counter.textContent = currentLootBox.total;
+    counter.textContent = currentLootBox.total; // 4
     counter.classList.add('active');
     
     const cube = document.getElementById('blueCube');
@@ -1345,18 +1350,24 @@
     setTimeout(() => {
       cube.style.display = 'none';
       glow.style.display = 'none';
-      // Устанавливаем флаг, что куб открыт, но предмет ещё не показан
+      // Показываем первый предмет
+      const gift = currentLootBox.items[0];
+      showSingleGift(gift);
+      addObtainedGift(gift);
+      // Устанавливаем состояние: первый предмет показан, следующий индекс 1
+      currentLootBox.currentIndex = 1;
+      itemsRevealed = 1;
       boxOpened = true;
       isOpening = false;
+      // Счётчик оставляем 4 (не меняем)
     }, 800);
   }
 
   // Функция для показа следующего предмета (вызывается при клике, когда куб уже исчез)
   function showNextGift() {
     if (!currentLootBox || isOpening) return;
-    if (currentLootBox.currentIndex >= currentLootBox.items.length) {
+    if (itemsRevealed >= currentLootBox.total) {
       // Все предметы уже показаны, но ряд ещё не активирован? 
-      // Такого не должно быть, но на всякий случай
       if (!showingFinalRow) showFinalRow();
       return;
     }
@@ -1365,12 +1376,11 @@
     showSingleGift(gift);
     addObtainedGift(gift);
     currentLootBox.currentIndex++;
-    updateBlueCounter();
+    itemsRevealed++;
+    // Обновляем счётчик: после второго показа должно быть 3, после третьего 2, после четвёртого 1
+    updateBlueCounter(itemsRevealed);
 
-    // Если после этого все предметы открыты, показываем ряд
-    if (currentLootBox.currentIndex >= currentLootBox.total) {
-      showFinalRow();
-    }
+    // Если после этого все предметы открыты, не показываем ряд сразу – он появится по следующему клику
   }
 
   // Показать ряд со всеми предметами (финал)
@@ -1426,6 +1436,8 @@
     document.getElementById('blueCubeGlow').classList.remove('active');
     showingFinalRow = false;
     boxOpened = false;
+    itemsRevealed = 0;
+    currentLootBox = null;
     
     // Сбрасываем все слоты и полученные подарки на главной
     resetAllSlots();
@@ -1456,6 +1468,8 @@
     isOpening = false;
     showingFinalRow = false;
     boxOpened = false;
+    itemsRevealed = 0;
+    currentLootBox.currentIndex = 0;
   }
 
   // Обработчик клика по синему оверлею (работает по любой области)
@@ -1475,15 +1489,15 @@
     // Если идёт процесс открытия (куб ещё не исчез) — игнорируем
     if (isOpening) return;
 
-    // Если куб уже открыт и мы в режиме ожидания первого предмета
-    if (boxOpened && currentLootBox && currentLootBox.currentIndex === 0) {
-      showNextGift();
-      return;
-    }
-
-    // Если есть активный ящик и ещё есть предметы (после первого)
-    if (currentLootBox && currentLootBox.currentIndex > 0 && currentLootBox.currentIndex < currentLootBox.total) {
-      showNextGift();
+    // Если куб уже открыт и мы в режиме ожидания следующих предметов
+    if (boxOpened) {
+      // Если все предметы уже показаны (itemsRevealed == total), то показываем ряд
+      if (itemsRevealed >= currentLootBox.total) {
+        showFinalRow();
+      } else {
+        // Иначе показываем следующий предмет
+        showNextGift();
+      }
     }
   });
 
