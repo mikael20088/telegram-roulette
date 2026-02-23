@@ -196,16 +196,16 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
-    /* Синий фон с эффектом размытого стекла */
+    /* Синий оверлей с эффектом стекла (светлый, как главный квадрат) */
     .blue-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 100, 255, 0.25);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(100, 180, 255, 0.25);
+      backdrop-filter: blur(16px) brightness(1.2) contrast(1.1);
+      -webkit-backdrop-filter: blur(16px) brightness(1.2) contrast(1.1);
       z-index: 30;
       opacity: 0;
       pointer-events: none;
@@ -1320,6 +1320,12 @@
     if (currentLootBox.currentIndex >= currentLootBox.items.length) return;
 
     isOpening = true;
+    
+    // Сразу показываем счётчик с полным числом (4)
+    const counter = document.getElementById('blueCounter');
+    counter.textContent = currentLootBox.total;
+    counter.classList.add('active');
+    
     const cube = document.getElementById('blueCube');
     const glow = document.getElementById('blueCubeGlow');
     cube.classList.add('opening');
@@ -1329,17 +1335,12 @@
       cube.style.display = 'none';
       glow.style.display = 'none';
       
-      // Активируем счётчик и устанавливаем начальное значение (4)
-      const counter = document.getElementById('blueCounter');
-      counter.textContent = currentLootBox.total;
-      counter.classList.add('active');
-      
       // Показываем первый предмет
       const gift = currentLootBox.items[currentLootBox.currentIndex];
       showSingleGift(gift);
       addObtainedGift(gift);
       currentLootBox.currentIndex++;
-      updateBlueCounter(); // обновим после увеличения индекса (станет 3)
+      updateBlueCounter(); // теперь станет 3
       isOpening = false;
     }, 800);
   }
@@ -1445,7 +1446,7 @@
     // Если идёт процесс открытия (куб ещё не исчез) — игнорируем
     if (isOpening) return;
 
-    // Если есть активный ящик и ещё есть предметы
+    // Если есть активный ящик и ещё есть предметы (после первого)
     if (currentLootBox && currentLootBox.currentIndex > 0 && currentLootBox.currentIndex < currentLootBox.total) {
       // Показываем следующий предмет
       const gift = currentLootBox.items[currentLootBox.currentIndex];
