@@ -348,7 +348,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 0; /* без фона */
+      border-radius: 0;
     }
     .single-gift-display .gift-emoji {
       font-size: 50px;
@@ -1350,6 +1350,30 @@
     showingFinalRow = true;
   }
 
+  // Функция для сброса всех слотов (после возврата из кейса)
+  function resetAllSlots() {
+    for (let i = 0; i < 4; i++) {
+      const slotElement = document.querySelector(`.mini-square[data-slot="${i}"]`);
+      const slotGiftContainer = document.getElementById(`gift-slot-${i}`);
+      if (selectedGifts[i] !== null) {
+        selectedGifts[i] = null;
+        filledSlots[i] = false;
+        slotGiftContainer.innerHTML = '';
+        slotGiftContainer.classList.remove('active', 'durov-cap', 'has-media');
+        slotElement.querySelector('.plus-sign').style.opacity = '1';
+        slotElement.classList.remove('filled');
+        const removeBtn = slotElement.querySelector('.remove-gift');
+        if (removeBtn) removeBtn.remove();
+      }
+    }
+    // Очищаем панель полученных подарков в главном квадрате
+    document.getElementById('obtainedGifts').innerHTML = '';
+    // Сбрасываем флаги
+    fourthGiftSelected = false;
+    updateCenterSquareHighlight();
+    updateModalSelection();
+  }
+
   // Возврат к крафту
   function returnToCraft() {
     document.getElementById('blueOverlay').classList.remove('active');
@@ -1365,6 +1389,9 @@
     document.getElementById('blueCubeGlow').style.display = 'block';
     document.getElementById('blueCubeGlow').classList.remove('active');
     showingFinalRow = false;
+    
+    // Сбрасываем все слоты и полученные подарки на главной
+    resetAllSlots();
   }
 
   // Добавление подарка в панель главного квадрата
