@@ -11,7 +11,7 @@
   <title>Telegram Roulette</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Все стили (без изменений, кроме добавленных анимаций) */
+    /* Все стили */
     html, body {
       margin: 0;
       padding: 0;
@@ -242,18 +242,14 @@
       0%, 100% { transform: rotateX(-15deg) rotateY(20deg) scale(1); }
       50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.03) translateY(-3px); }
     }
-
-    /* Новая анимация открытия в стиле Brawl Stars */
-    .gift-cube.brawl-open {
-      animation: brawlOpen 1.2s ease-out forwards;
+    .gift-cube.opening {
+      animation: openBox 0.8s ease-out forwards;
     }
-    @keyframes brawlOpen {
+    @keyframes openBox {
       0% { transform: rotateX(-15deg) rotateY(20deg) scale(1); opacity: 1; }
-      30% { transform: rotateX(-15deg) rotateY(20deg) scale(1.3) rotateZ(180deg); opacity: 1; }
-      60% { transform: rotateX(-15deg) rotateY(20deg) scale(1.6) rotateZ(360deg); opacity: 0.8; }
-      100% { transform: rotateX(-15deg) rotateY(20deg) scale(0) rotateZ(720deg); opacity: 0; }
+      50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.1); opacity: 1; }
+      100% { transform: rotateX(-15deg) rotateY(20deg) scale(0); opacity: 0; }
     }
-
     .cube-glow {
       position: absolute;
       top: 50%;
@@ -336,7 +332,7 @@
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
-    /* Одиночный предмет (больше не используется, но оставим для совместимости) */
+    /* Одиночный предмет (появляется на месте куба) */
     .single-gift-display {
       width: 70px;
       height: 70px;
@@ -345,7 +341,6 @@
       justify-content: center;
       margin: 0 auto;
       animation: popIn 0.3s ease-out;
-      display: none;
     }
     .single-gift-display video,
     .single-gift-display img,
@@ -353,7 +348,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 0;
+      border-radius: 0; /* без фона */
     }
     .single-gift-display .gift-emoji {
       font-size: 50px;
@@ -368,7 +363,7 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    /* Ряд полученных подарков (анимированное появление) */
+    /* Ряд полученных подарков */
     .blue-gift-row {
       display: flex;
       gap: 12px;
@@ -390,21 +385,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      transform: scale(0);
-      animation: giftDrop 0.4s ease-out forwards;
     }
-    /* Задержки для появления предметов по очереди */
-    .blue-gift-item:nth-child(1) { animation-delay: 0.1s; }
-    .blue-gift-item:nth-child(2) { animation-delay: 0.2s; }
-    .blue-gift-item:nth-child(3) { animation-delay: 0.3s; }
-    .blue-gift-item:nth-child(4) { animation-delay: 0.4s; }
-
-    @keyframes giftDrop {
-      0% { transform: scale(0) translateY(-100px); opacity: 0; }
-      70% { transform: scale(1.1) translateY(0); opacity: 1; }
-      100% { transform: scale(1) translateY(0); opacity: 1; }
-    }
-
     .blue-gift-item video,
     .blue-gift-item img,
     .blue-gift-item .gift-emoji {
@@ -421,7 +402,7 @@
       text-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
 
-    /* Счётчик предметов (больше не нужен, скроем) */
+    /* Счётчик предметов (красный) */
     .blue-counter {
       position: absolute;
       bottom: 20px;
@@ -757,7 +738,7 @@
       <div class="cube-glow" id="blueCubeGlow"></div>
     </div>
 
-    <!-- Одиночный предмет (больше не используется) -->
+    <!-- Одиночный предмет (появляется после исчезновения куба) -->
     <div class="single-gift-display" id="singleGiftDisplay" style="display: none;"></div>
 
     <!-- Ряд полученных подарков -->
@@ -849,11 +830,11 @@
     return null;
   }
 
-  // Функция для создания одиночного предмета (не используется, но оставлена)
+  // Функция для создания одиночного предмета (для центра)
   function createSingleGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'single-gift-display';
-    container.style.display = 'flex';
+    container.style.display = 'flex'; // будет переопределено при показе
 
     if (mediaGifts.has(gift.name)) {
       const baseName = fileMap[gift.name] || gift.name;
@@ -880,7 +861,7 @@
     return container;
   }
 
-  // Функция для создания элемента ряда (с видео или эмодзи)
+  // Функция для создания элемента ряда
   function createBlueGiftItem(gift) {
     const item = document.createElement('div');
     item.className = 'blue-gift-item';
@@ -1290,7 +1271,7 @@
     });
 
     const cube = document.getElementById('blueCube');
-    cube.classList.remove('brawl-open');
+    cube.classList.remove('opening');
     document.getElementById('blueCubeGlow').classList.remove('active');
   }
 
@@ -1306,6 +1287,15 @@
     single.style.display = 'none';
   }
 
+  // Показать одиночный предмет
+  function showSingleGift(gift) {
+    const single = document.getElementById('singleGiftDisplay');
+    single.innerHTML = '';
+    const element = createSingleGiftElement(gift);
+    single.appendChild(element);
+    single.style.display = 'flex';
+  }
+
   // Добавить предмет в ряд
   function addToBlueRow(gift) {
     const row = document.getElementById('blueGiftRow');
@@ -1313,7 +1303,7 @@
     row.appendChild(item);
   }
 
-  // Обновление счётчика (больше не нужно, но оставим)
+  // Обновление счётчика
   function updateBlueCounter() {
     const counter = document.getElementById('blueCounter');
     if (currentLootBox) {
@@ -1322,46 +1312,42 @@
     }
   }
 
-  // Новая функция открытия ящика (одно нажатие)
-  function openLootBox() {
+  // Функция открытия куба (первый клик)
+  function openBlueBox() {
     if (!currentLootBox || isOpening) return;
-    isOpening = true;
+    if (currentLootBox.currentIndex >= currentLootBox.items.length) return;
 
+    isOpening = true;
     const cube = document.getElementById('blueCube');
     const glow = document.getElementById('blueCubeGlow');
-    const container = document.getElementById('blueCubeContainer');
-    const row = document.getElementById('blueGiftRow');
-
-    // Запускаем анимацию куба
-    cube.classList.add('brawl-open');
+    cube.classList.add('opening');
     glow.classList.add('active');
 
-    // После окончания анимации (1.2 сек) показываем предметы
     setTimeout(() => {
-      // Скрываем куб и свечение
       cube.style.display = 'none';
       glow.style.display = 'none';
-
-      // Очищаем ряд и добавляем все предметы
-      row.innerHTML = '';
-      currentLootBox.items.forEach(gift => {
-        addToBlueRow(gift);
-        addObtainedGift(gift); // добавляем в главный квадрат
-      });
-
-      // Активируем ряд (появляется с анимацией)
-      row.classList.add('active');
-
-      // Скрываем счётчик (он больше не нужен)
-      document.getElementById('blueCounter').classList.remove('active');
-
-      // Устанавливаем флаг, что показываем финальный ряд
-      showingFinalRow = true;
+      // Показываем первый предмет
+      const gift = currentLootBox.items[currentLootBox.currentIndex];
+      showSingleGift(gift);
+      addObtainedGift(gift);
+      currentLootBox.currentIndex++;
+      updateBlueCounter();
       isOpening = false;
+    }, 800);
+  }
 
-      // Обновляем currentIndex, чтобы считать все предметы открытыми
-      currentLootBox.currentIndex = currentLootBox.total;
-    }, 1200); // длительность анимации brawl-open
+  // Показать ряд со всеми предметами (финал)
+  function showFinalRow() {
+    const single = document.getElementById('singleGiftDisplay');
+    single.style.display = 'none';
+    const row = document.getElementById('blueGiftRow');
+    row.innerHTML = '';
+    // Добавляем все предметы из ящика
+    currentLootBox.items.forEach(gift => {
+      addToBlueRow(gift);
+    });
+    row.classList.add('active');
+    showingFinalRow = true;
   }
 
   // Возврат к крафту
@@ -1375,12 +1361,10 @@
     document.getElementById('blueGiftRow').classList.remove('active');
     const cube = document.getElementById('blueCube');
     cube.style.display = 'block';
-    cube.classList.remove('brawl-open');
+    cube.classList.remove('opening');
     document.getElementById('blueCubeGlow').style.display = 'block';
     document.getElementById('blueCubeGlow').classList.remove('active');
     showingFinalRow = false;
-    // Сброс счётчика (на всякий случай)
-    document.getElementById('blueCounter').classList.remove('active');
   }
 
   // Добавление подарка в панель главного квадрата
@@ -1403,7 +1387,6 @@
     const cube = document.getElementById('blueCube');
     cube.style.display = 'block';
     document.getElementById('blueCubeGlow').style.display = 'block';
-    // Показываем счётчик (на случай если он ещё нужен)
     const counter = document.getElementById('blueCounter');
     counter.textContent = currentLootBox.total;
     counter.classList.add('active');
@@ -1411,21 +1394,37 @@
     showingFinalRow = false;
   }
 
-  // Обработчик клика по синему оверлею (новая логика)
+  // Обработчик клика по синему оверлею (работает по любой области)
   document.getElementById('blueOverlay').addEventListener('click', (e) => {
-    // Если клик по кубу и ящик ещё не открыт и не идёт анимация
-    if (e.target.closest('.gift-cube-container') && currentLootBox && !isOpening && !showingFinalRow) {
-      openLootBox();
+    // Если клик по кубу и куб ещё виден и это первый шаг
+    if (e.target.closest('.gift-cube-container') && currentLootBox && currentLootBox.currentIndex === 0 && !isOpening) {
+      openBlueBox();
       return;
     }
 
-    // Если показывается финальный ряд, клик возвращает к крафту
+    // Если показывается финальный ряд
     if (showingFinalRow) {
       returnToCraft();
       return;
     }
 
-    // В остальных случаях (например, во время анимации) ничего не делаем
+    // Если идёт процесс открытия (куб ещё не исчез) — игнорируем
+    if (isOpening) return;
+
+    // Если есть активный ящик и ещё есть предметы
+    if (currentLootBox && currentLootBox.currentIndex > 0 && currentLootBox.currentIndex < currentLootBox.total) {
+      // Показываем следующий предмет
+      const gift = currentLootBox.items[currentLootBox.currentIndex];
+      showSingleGift(gift);
+      addObtainedGift(gift);
+      currentLootBox.currentIndex++;
+      updateBlueCounter();
+
+      // Если после этого все предметы открыты, показываем ряд
+      if (currentLootBox.currentIndex >= currentLootBox.total) {
+        showFinalRow();
+      }
+    }
   });
 
   // Обработчик клика по центру (крафт)
