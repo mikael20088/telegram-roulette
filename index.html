@@ -256,10 +256,6 @@
       0%, 100% { transform: rotateX(-15deg) rotateY(20deg) scale(1); }
       50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.03) translateY(-3px); }
     }
-    /* Анимация открытия будет управляться через Tween, но оставим класс для синхронизации */
-    .gift-cube.opening {
-      /* этот класс больше не используется для анимации, только для состояния */
-    }
     .cube-glow {
       position: absolute;
       top: 50%;
@@ -359,7 +355,6 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto;
-      /* Анимация появления теперь через Tween */
     }
     .single-gift-display video,
     .single-gift-display img,
@@ -878,7 +873,7 @@
   function createSingleGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'single-gift-display';
-    container.style.display = 'flex'; // будет переопределено при показе
+    container.style.display = 'flex';
 
     if (mediaGifts.has(gift.name)) {
       const baseName = fileMap[gift.name] || gift.name;
@@ -1331,7 +1326,7 @@
     single.style.display = 'none';
   }
 
-  // Показать одиночный предмет (используется как конечная цель анимации)
+  // Установить финальный предмет (в центре)
   function setFinalGift(gift) {
     const single = document.getElementById('singleGiftDisplay');
     single.innerHTML = '';
@@ -1341,21 +1336,19 @@
   }
 
   // Анимированный вылет предмета из центра куба
-  function animateGiftDrop(gift) {
-    const mainSquare = document.getElementById('mainSquare'); // не используется, но для контекста
+  function animateGiftDrop(gift, onComplete) {
+    const overlay = document.getElementById('blueOverlay');
     const cubeContainer = document.getElementById('blueCubeContainer');
-    const targetContainer = document.getElementById('singleGiftDisplay');
     
-    // Получаем координаты центра куба
+    // Получаем координаты центра куба (даже если куб скрыт, его контейнер видим)
     const cubeRect = cubeContainer.getBoundingClientRect();
     const startX = cubeRect.left + cubeRect.width / 2;
     const startY = cubeRect.top + cubeRect.height / 2;
 
-    // Целевые координаты (центр экрана, где будет находиться singleGiftDisplay)
-    const overlay = document.getElementById('blueOverlay');
+    // Целевые координаты (центр оверлея)
     const overlayRect = overlay.getBoundingClientRect();
     const targetX = overlayRect.left + overlayRect.width / 2;
-    const targetY = overlayRect.top + overlayRect.height / 2; // чуть выше, но оставим так
+    const targetY = overlayRect.top + overlayRect.height / 2 - 20; // чуть выше центра для эффекта
 
     // Создаём летящий элемент
     const flying = document.createElement('div');
@@ -1415,7 +1408,7 @@
     new TWEEN.Tween(coords)
       .to({ 
         x: targetX, 
-        y: targetY - 20, // чуть выше центра, затем опустится
+        y: targetY, 
         scale: 0.8, 
         rotate: 360 
       }, 800)
@@ -1427,15 +1420,9 @@
       })
       .onComplete(() => {
         flying.remove();
-        setFinalGift(gift);
+        if (onComplete) onComplete();
       })
       .start();
-
-    // Запускаем анимацию Tween
-    requestAnimationFrame(function animate(time) {
-      requestAnimationFrame(animate);
-      TWEEN.update(time);
-    });
   }
 
   // Добавить предмет в ряд
@@ -1454,27 +1441,28 @@
     }
   }
 
-  // Функция открытия куба (первый клик) – используем Tween для анимации открытия
+  // Функция открытия куба (первый клик)
   function openBlueBox() {
     if (!currentLootBox || isOpening) return;
     if (currentLootBox.currentIndex >= currentLootBox.items.length) return;
 
     isOpening = true;
     
-    // Активируем счётчик с начальным значением 4
+    // Активируем счётчик с полным числом (4)
     const counter = document.getElementById('blueCounter');
     counter.textContent = currentLootBox.total;
     counter.classList.add('active');
     
     const cube = document.getElementById('blueCube');
     const glow = document.getElementById('blueCubeGlow');
-    
-    // Добавляем свечение
     glow.classList.add('active');
     
-    // Анимация покачивания перед открытием
-    const originalTransform = cube.style.transform;
-    const coords = { rotateX: -15, rotateY: 20, scale: 1 };
+    // Сохраняем начальный поворот
+    const startRotateX = -15;
+    const startRotateY = 20;
+    const coords = { rotateX: startRotateX, rotateY: startRotateY, scale: 1 };
+
+    // Покачивание
     new TWEEN.Tween(coords)
       .to({ rotateX: -20, rotateY: 25, scale: 1.1 }, 150)
       .easing(TWEEN.Easing.Quadratic.InOut)
@@ -1484,7 +1472,7 @@
         cube.style.transform = `rotateX(${coords.rotateX}deg) rotateY(${coords.rotateY}deg) scale(${coords.scale})`;
       })
       .onComplete(() => {
-        // Затем исчезновение
+        // Исчезновение
         new TWEEN.Tween(coords)
           .to({ scale: 0 }, 600)
           .easing(TWEEN.Easing.Back.In)
@@ -1494,22 +1482,24 @@
           .onComplete(() => {
             cube.style.display = 'none';
             glow.style.display = 'none';
-            // Показываем первый предмет с анимацией
+            // Показываем первый предмет
             const gift = currentLootBox.items[0];
-            animateGiftDrop(gift);
-            addObtainedGift(gift);
-            // Устанавливаем состояние: первый предмет показан, следующий индекс 1
-            currentLootBox.currentIndex = 1;
-            itemsRevealed = 1;
-            boxOpened = true;
-            isOpening = false;
+            animateGiftDrop(gift, () => {
+              setFinalGift(gift);
+              addObtainedGift(gift);
+              currentLootBox.currentIndex = 1;
+              itemsRevealed = 1;
+              // Счётчик уже 4, не меняем
+              boxOpened = true;
+              isOpening = false;
+            });
           })
           .start();
       })
       .start();
   }
 
-  // Функция для показа следующего предмета (вызывается при клике, когда куб уже исчез)
+  // Функция для показа следующего предмета (клик после открытия)
   function showNextGift() {
     if (!currentLootBox || isOpening) return;
     if (itemsRevealed >= currentLootBox.total) {
@@ -1518,11 +1508,14 @@
     }
 
     const gift = currentLootBox.items[currentLootBox.currentIndex];
-    animateGiftDrop(gift);
-    addObtainedGift(gift);
-    currentLootBox.currentIndex++;
-    itemsRevealed++;
-    updateBlueCounter(itemsRevealed);
+    animateGiftDrop(gift, () => {
+      setFinalGift(gift);
+      addObtainedGift(gift);
+      currentLootBox.currentIndex++;
+      itemsRevealed++;
+      updateBlueCounter(itemsRevealed);
+      // Если после этого все предметы открыты, показываем ряд не сразу – по следующему клику
+    });
   }
 
   // Показать ряд со всеми предметами (финал)
@@ -1572,7 +1565,7 @@
     const cube = document.getElementById('blueCube');
     cube.style.display = 'block';
     cube.classList.remove('opening');
-    cube.style.transform = 'rotateX(-15deg) rotateY(20deg) scale(1)'; // сброс
+    cube.style.transform = 'rotateX(-15deg) rotateY(20deg) scale(1)';
     document.getElementById('blueCubeGlow').style.display = 'block';
     document.getElementById('blueCubeGlow').classList.remove('active');
     showingFinalRow = false;
