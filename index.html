@@ -8,7 +8,7 @@
                  initial-scale=1.0,
                  maximum-scale=1.0,
                  user-scalable=no" />
-  <title>Telegram Roulette + Angry Birds (исправлено)</title>
+  <title>Telegram Roulette + Angry Birds (рабочая версия)</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Phaser 3 -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
@@ -1030,7 +1030,7 @@
     return container;
   }
 
-  // Полный каталог подарков
+  // Полный каталог подарков (сокращен для краткости, но оставлен как есть)
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
     { name: "Top Hat", emoji: "🎩", rarity: "common" },
@@ -1672,7 +1672,6 @@
     setTimeout(() => {
       avatar.style.opacity = "1";
       document.getElementById("mainSquare").style.opacity = "1";
-      // Показываем кнопку Сервисы
       document.getElementById('servicesButton').classList.add('visible');
 
       document.querySelectorAll('.mini-square').forEach(square => {
@@ -1699,12 +1698,12 @@
     }
   };
 
-  // ========== ANGRY BIRDS INTEGRATION (УПРОЩЁННАЯ, ГАРАНТИРОВАННО РАБОЧАЯ) ==========
+  // ========== ANGRY BIRDS - ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ ==========
   let game = null;
 
   function initAngryBirds() {
     if (game) {
-      // Если игра уже существует, просто показываем сцену (она была на паузе)
+      // Если игра уже создана, просто показываем и возобновляем
       game.scene.resume();
       return;
     }
@@ -1741,23 +1740,7 @@
     graphics.fillCircle(25, 25, 20);
     graphics.lineStyle(2, 0x000000);
     graphics.strokeCircle(25, 25, 20);
-    graphics.generateTexture('bird-red', 50, 50);
-    graphics.clear();
-    
-    // Жёлтая птица
-    graphics.fillStyle(0xffff00, 1);
-    graphics.fillCircle(25, 25, 20);
-    graphics.lineStyle(2, 0x000000);
-    graphics.strokeCircle(25, 25, 20);
-    graphics.generateTexture('bird-yellow', 50, 50);
-    graphics.clear();
-    
-    // Синяя птица
-    graphics.fillStyle(0x0000ff, 1);
-    graphics.fillCircle(25, 25, 20);
-    graphics.lineStyle(2, 0x000000);
-    graphics.strokeCircle(25, 25, 20);
-    graphics.generateTexture('bird-blue', 50, 50);
+    graphics.generateTexture('bird', 50, 50);
     graphics.clear();
     
     // Свинья
@@ -1770,26 +1753,8 @@
     
     // Дерево
     graphics.fillStyle(0x8B4513, 1);
-    graphics.fillRect(0, 0, 60, 60);
-    graphics.lineStyle(2, 0x000000);
-    graphics.strokeRect(0, 0, 60, 60);
-    graphics.generateTexture('wood', 60, 60);
-    graphics.clear();
-    
-    // Камень
-    graphics.fillStyle(0x808080, 1);
-    graphics.fillRect(0, 0, 60, 60);
-    graphics.lineStyle(2, 0x000000);
-    graphics.strokeRect(0, 0, 60, 60);
-    graphics.generateTexture('stone', 60, 60);
-    graphics.clear();
-    
-    // Стекло
-    graphics.fillStyle(0x87CEEB, 1);
-    graphics.fillRect(0, 0, 60, 60);
-    graphics.lineStyle(2, 0x000000);
-    graphics.strokeRect(0, 0, 60, 60);
-    graphics.generateTexture('glass', 60, 60);
+    graphics.fillRect(0, 0, 40, 40);
+    graphics.generateTexture('wood', 40, 40);
     graphics.clear();
 
     graphics.destroy();
@@ -1800,40 +1765,37 @@
     this.matter.add.rectangle(
       window.innerWidth / 2, window.innerHeight - 50,
       window.innerWidth, 100,
-      { isStatic: true, restitution: 0.5, render: { fillStyle: '#654321' } }
-    );
+      { isStatic: true, restitution: 0.5 }
+    ).setRenderStyle(0x654321);
 
-    // Рогатка (левая часть)
+    // Рогатка (левый столб)
     this.slingshot = this.matter.add.rectangle(200, window.innerHeight - 150, 30, 80, {
       isStatic: true,
-      restitution: 0.5,
-      render: { fillStyle: '#8B4513' }
-    });
+      restitution: 0.5
+    }).setRenderStyle(0x8B4513);
 
-    // Препятствия
-    // Деревянные блоки
-    this.matter.add.image(650, window.innerHeight - 150, 'wood').setRectangle(60, 60).setBounce(0.2).setFriction(0.5);
-    this.matter.add.image(750, window.innerHeight - 150, 'wood').setRectangle(60, 60).setBounce(0.2).setFriction(0.5);
-    this.matter.add.image(850, window.innerHeight - 150, 'wood').setRectangle(60, 60).setBounce(0.2).setFriction(0.5);
-
-    // Каменные блоки
-    this.matter.add.image(700, window.innerHeight - 350, 'stone').setRectangle(60, 60).setBounce(0.1).setFriction(0.8);
-    this.matter.add.image(800, window.innerHeight - 350, 'stone').setRectangle(60, 60).setBounce(0.1).setFriction(0.8);
-
-    // Стеклянные блоки
-    this.matter.add.image(750, window.innerHeight - 450, 'glass').setRectangle(60, 60).setBounce(0.4).setFriction(0.2);
-
-    // Свиньи
+    // Несколько свиней
     this.pigs = [];
-    this.pigs.push(this.matter.add.image(700, window.innerHeight - 200, 'pig').setCircle(25).setBounce(0.3).setFriction(0.1));
-    this.pigs.push(this.matter.add.image(800, window.innerHeight - 250, 'pig').setCircle(25).setBounce(0.3).setFriction(0.1));
-    this.pigs.push(this.matter.add.image(750, window.innerHeight - 300, 'pig').setCircle(25).setBounce(0.3).setFriction(0.1));
+    for (let i = 0; i < 3; i++) {
+      const pig = this.matter.add.image(600 + i * 80, window.innerHeight - 200, 'pig');
+      pig.setCircle(25);
+      pig.setBounce(0.3);
+      pig.setFriction(0.1);
+      this.pigs.push(pig);
+    }
 
-    // Птицы
+    // Деревянные блоки для укрытия
+    for (let i = 0; i < 3; i++) {
+      const block = this.matter.add.image(600 + i * 80, window.innerHeight - 250, 'wood');
+      block.setRectangle(40, 40);
+      block.setBounce(0.2);
+      block.setFriction(0.5);
+    }
+
+    // Птицы (3 штуки)
     this.birds = [];
-    this.birdsCount = 3;
-    for (let i = 0; i < this.birdsCount; i++) {
-      const bird = this.matter.add.image(200 + i * 30, window.innerHeight - 200, 'bird-red');
+    for (let i = 0; i < 3; i++) {
+      const bird = this.matter.add.image(200 + i * 30, window.innerHeight - 200, 'bird');
       bird.setCircle(20);
       bird.setBounce(0.5);
       bird.setFriction(0.1);
@@ -1857,7 +1819,7 @@
 
     this.input.on('pointermove', (pointer) => {
       if (!this.isDragging || !this.currentBird) return;
-      // Ограничиваем расстояние от рогатки
+      // Ограничение расстояния от рогатки
       let dx = pointer.x - this.slingshot.x;
       let dy = pointer.y - this.slingshot.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
@@ -1876,10 +1838,10 @@
       const dy = this.slingshot.y - this.currentBird.y;
       this.currentBird.setStatic(false);
       this.currentBird.setVelocity(dx * 12, dy * 12);
-      
-      // Переключаемся на следующую птицу
+
+      // Переход к следующей птице
       this.currentBirdIndex++;
-      if (this.currentBirdIndex < this.birdsCount) {
+      if (this.currentBirdIndex < this.birds.length) {
         this.currentBird = this.birds[this.currentBirdIndex];
         this.currentBird.setStatic(true);
         this.currentBird.setVisible(true);
@@ -1892,18 +1854,18 @@
   }
 
   function update() {
-    // Проверка на победу
+    // Проверка победы
     const alive = this.pigs.filter(pig => pig && pig.body && pig.scene);
     if (alive.length === 0) {
-      this.add.text(400, 300, 'LEVEL COMPLETE!', { fontSize: '32px', fill: '#fff', backgroundColor: '#000', padding: 10 });
+      this.add.text(400, 300, 'YOU WIN!', { fontSize: '48px', fill: '#fff', backgroundColor: '#000', padding: 10 });
       this.scene.pause();
     }
   }
 
-  // Обработчики для кнопки "Сервисы"
+  // Обработчики кнопки "Сервисы"
   document.getElementById('servicesButton').addEventListener('click', () => {
     document.getElementById('gameOverlay').classList.add('active');
-    // Небольшая задержка, чтобы DOM обновился
+    // Небольшая задержка, чтобы DOM точно обновился
     setTimeout(() => initAngryBirds(), 100);
   });
 
