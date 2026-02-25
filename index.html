@@ -1700,12 +1700,20 @@
     }
   };
 
-  // ========== ANGRY BIRDS INTEGRATION ==========
-  // На основе проекта "Angry Birds: New Era" [citation:1]
+  // ========== ANGRY BIRDS INTEGRATION (ИСПРАВЛЕНО) ==========
   let game = null;
+  let gameInitialized = false;
 
   function initAngryBirds() {
-    if (game) return;
+    if (game) {
+      // Если игра уже создана, просто убеждаемся, что размеры корректны
+      game.scale.resize(window.innerWidth, window.innerHeight);
+      // Возобновляем сцену, если была остановлена
+      if (game.scene.isPaused()) {
+        game.scene.resume();
+      }
+      return;
+    }
 
     const config = {
       type: Phaser.AUTO,
@@ -1727,10 +1735,11 @@
     };
 
     game = new Phaser.Game(config);
+    gameInitialized = true;
   }
 
   function preload() {
-    // Создаем простые текстуры вместо загрузки изображений [citation:1]
+    // Создаем простые текстуры вместо загрузки изображений 
     const graphics = this.add.graphics();
     
     // Красная птица
@@ -1804,7 +1813,7 @@
       this.pigs.push(pig);
     });
 
-    // Создаем препятствия [citation:3]
+    // Создаем препятствия 
     // Деревянные блоки
     const woodBlocks = [
       { x: 650, y: window.innerHeight - 150 },
@@ -1847,7 +1856,7 @@
       block.setMass(1.5);
     });
 
-    // Создаем птиц (3 красных для первого уровня) [citation:1]
+    // Создаем птиц (3 красных для первого уровня) 
     this.birds = [];
     this.birdsCount = 3;
     
@@ -1874,7 +1883,7 @@
 
   function update() {
     // Проверяем, уничтожены ли все свиньи
-    const alivePigs = this.pigs.filter(pig => pig && pig.body && !pig.scene);
+    const alivePigs = this.pigs.filter(pig => pig && pig.body && pig.scene);
     if (alivePigs.length === 0) {
       // Уровень пройден, можно добавить сообщение
       this.add.text(400, 300, 'LEVEL COMPLETE!', { 
@@ -1922,7 +1931,7 @@
     
     this.isDragging = false;
     
-    // Рассчитываем скорость для запуска [citation:10]
+    // Рассчитываем скорость для запуска 
     const dx = this.slingshot.x - this.currentBird.x;
     const dy = (window.innerHeight - 150) - this.currentBird.y;
     
@@ -1946,15 +1955,14 @@
   document.getElementById('servicesButton').addEventListener('click', () => {
     document.getElementById('gameOverlay').classList.add('active');
     // Инициализируем игру при первом открытии
-    setTimeout(() => initAngryBirds(), 100);
+    initAngryBirds();
   });
 
   document.getElementById('gameCloseBtn').addEventListener('click', () => {
     document.getElementById('gameOverlay').classList.remove('active');
-    // Уничтожаем игру, чтобы освободить ресурсы
+    // Приостанавливаем игру, чтобы не расходовать ресурсы
     if (game) {
-      game.destroy(true);
-      game = null;
+      game.scene.pause();
     }
   });
 
@@ -1962,9 +1970,15 @@
     if (e.target === document.getElementById('gameOverlay')) {
       document.getElementById('gameOverlay').classList.remove('active');
       if (game) {
-        game.destroy(true);
-        game = null;
+        game.scene.pause();
       }
+    }
+  });
+
+  // При изменении размера окна подстраиваем игру
+  window.addEventListener('resize', () => {
+    if (game && game.scene) {
+      game.scale.resize(window.innerWidth, window.innerHeight);
     }
   });
 </script>
