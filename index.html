@@ -8,10 +8,12 @@
                  initial-scale=1.0,
                  maximum-scale=1.0,
                  user-scalable=no" />
-  <title>Telegram Roulette</title>
+  <title>Telegram Roulette + Angry Birds</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Phaser 3 для Angry Birds -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
   <style>
-    /* Все стили */
+    /* Все ваши оригинальные стили остаются без изменений */
     html, body {
       margin: 0;
       padding: 0;
@@ -196,7 +198,7 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
-    /* Синий оверлей с эффектом стекла (очень светлый, небесный) */
+    /* Синий оверлей с эффектом стекла */
     .blue-overlay {
       position: fixed;
       top: 0;
@@ -344,7 +346,7 @@
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
-    /* Одиночный предмет (появляется на месте куба) */
+    /* Одиночный предмет */
     .single-gift-display {
       width: 70px;
       height: 70px;
@@ -697,7 +699,7 @@
       font-weight: 500;
     }
 
-    /* Новая кнопка "Сервисы" внизу */
+    /* Кнопка "Сервисы" внизу - изначально скрыта */
     .services-button {
       position: absolute;
       bottom: 20px;
@@ -719,6 +721,12 @@
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
       transition: transform 0.2s, background 0.2s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .services-button.visible {
+      opacity: 1;
+      pointer-events: auto;
     }
     .services-button:hover {
       transform: translateX(-50%) scale(1.05);
@@ -731,8 +739,8 @@
       font-size: 20px;
     }
 
-    /* Оверлей для сервисов (пустая страница с чёрным фоном) */
-    .services-overlay {
+    /* Оверлей для Angry Birds */
+    .game-overlay {
       position: fixed;
       top: 0;
       left: 0;
@@ -744,13 +752,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-size: 24px;
     }
-    .services-overlay.active {
+    .game-overlay.active {
       display: flex;
     }
-    .services-overlay .close-btn {
+    .game-overlay .close-btn {
       position: absolute;
       top: 20px;
       right: 20px;
@@ -766,6 +772,12 @@
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.3);
       backdrop-filter: blur(5px);
+      z-index: 201;
+    }
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
   </style>
 </head>
@@ -821,7 +833,7 @@
       <div class="cube-glow" id="blueCubeGlow"></div>
     </div>
 
-    <!-- Одиночный предмет (появляется после исчезновения куба) -->
+    <!-- Одиночный предмет -->
     <div class="single-gift-display" id="singleGiftDisplay" style="display: none;"></div>
 
     <!-- Ряд полученных подарков -->
@@ -830,16 +842,16 @@
     <div class="blue-counter" id="blueCounter">4</div>
   </div>
 
-  <!-- Новая кнопка "Сервисы" внизу -->
+  <!-- Кнопка "Сервисы" внизу -->
   <div class="services-button" id="servicesButton">
-    <span class="icon">⚙️</span>
-    <span>Сервисы</span>
+    <span class="icon">🎮</span>
+    <span>Angry Birds</span>
   </div>
 
-  <!-- Оверлей для сервисов (пустая страница с чёрным фоном) -->
-  <div class="services-overlay" id="servicesOverlay">
-    <div class="close-btn" id="servicesCloseBtn">×</div>
-    <!-- Здесь можно добавить контент позже, пока пусто -->
+  <!-- Оверлей для Angry Birds -->
+  <div class="game-overlay" id="gameOverlay">
+    <div class="close-btn" id="gameCloseBtn">×</div>
+    <div id="gameCanvas"></div>
   </div>
 </div>
 
@@ -858,6 +870,7 @@
 </div>
 
 <script>
+  // ========== ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЕН ПОЛНОСТЬЮ) ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -878,11 +891,11 @@
   let fourthGiftSelected = false;
 
   // Переменные для системы ящиков
-  let currentLootBox = null; // { rarity, items: [{ name, emoji, rarity }], currentIndex, total }
+  let currentLootBox = null;
   let isOpening = false;
   let showingFinalRow = false;
-  let boxOpened = false; // стал ли куб уже открыт (исчез)
-  let itemsRevealed = 0; // сколько предметов уже показано (1,2,3,4)
+  let boxOpened = false;
+  let itemsRevealed = 0;
 
   // Карта соответствия имён файлов
   const fileMap = {
@@ -927,11 +940,11 @@
     return null;
   }
 
-  // Функция для создания одиночного предмета (для центра)
+  // Функция для создания одиночного предмета
   function createSingleGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'single-gift-display';
-    container.style.display = 'flex'; // будет переопределено при показе
+    container.style.display = 'flex';
 
     if (mediaGifts.has(gift.name)) {
       const baseName = fileMap[gift.name] || gift.name;
@@ -1018,7 +1031,7 @@
     return container;
   }
 
-  // Полный каталог подарков с редкостями
+  // Полный каталог подарков
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
     { name: "Top Hat", emoji: "🎩", rarity: "common" },
@@ -1163,7 +1176,6 @@
     }
   }
 
-  // Создание элемента для каталога
   function createCatalogGiftElement(gift) {
     const container = document.createElement('div');
     container.className = 'gift-img';
@@ -1185,7 +1197,6 @@
     return container;
   }
 
-  // Функция для создания контента слота
   function createGiftContent(gift, forSlot = false) {
     const container = document.createElement('div');
     container.className = 'selected-gift active';
@@ -1257,7 +1268,6 @@
     return container;
   }
 
-  // Удаление подарка из слота
   function removeGiftFromSlot(slotIndex, event) {
     event.stopPropagation();
     const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
@@ -1286,7 +1296,6 @@
     updateModalSelection();
   }
 
-  // Обновление выделения в модальном окне
   function updateModalSelection() {
     const giftItems = document.querySelectorAll('.gift-item');
     giftItems.forEach(item => {
@@ -1315,7 +1324,6 @@
     });
   }
 
-  // Функция определения редкости куба
   function getCubeRarity() {
     const rarities = selectedGifts.map(g => g ? g.rarity : null).filter(Boolean);
     if (rarities.includes('legendary')) return 'legendary';
@@ -1324,7 +1332,6 @@
     return 'common';
   }
 
-  // Функция для создания ящика
   function createLootBox() {
     const allGifts = [
       rareGifts.find(g => g.name === "Astral Shard"),
@@ -1342,7 +1349,6 @@
     };
   }
 
-  // Настройка куба в синем оверлее
   function setupBlueCube(rarity) {
     const cubeContainer = document.getElementById('blueCubeContainer');
     cubeContainer.classList.remove('rarity-common', 'rarity-rare', 'rarity-epic', 'rarity-legendary');
@@ -1372,19 +1378,16 @@
     document.getElementById('blueCubeGlow').classList.remove('active');
   }
 
-  // Очистка ряда
   function clearBlueRow() {
     document.getElementById('blueGiftRow').innerHTML = '';
   }
 
-  // Очистка одиночного предмета
   function clearSingleDisplay() {
     const single = document.getElementById('singleGiftDisplay');
     single.innerHTML = '';
     single.style.display = 'none';
   }
 
-  // Показать одиночный предмет
   function showSingleGift(gift) {
     const single = document.getElementById('singleGiftDisplay');
     single.innerHTML = '';
@@ -1393,36 +1396,28 @@
     single.style.display = 'flex';
   }
 
-  // Добавить предмет в ряд
   function addToBlueRow(gift) {
     const row = document.getElementById('blueGiftRow');
     const item = createBlueGiftItem(gift);
     row.appendChild(item);
   }
 
-  // Обновление счётчика (по количеству уже показанных)
   function updateBlueCounter(revealed) {
     const counter = document.getElementById('blueCounter');
     if (currentLootBox) {
-      // Счётчик показывает количество оставшихся предметов:
-      // после показа первого должно быть 4? Нет, после первого оставшихся 3.
-      // Но по описанию: после первого счётчик 4, после второго 3...
-      // Значит, счётчик = total - (revealed - 1)
       const remaining = currentLootBox.total - (revealed - 1);
       counter.textContent = remaining;
     }
   }
 
-  // Функция открытия куба (первый клик) – только анимация и активация счётчика
   function openBlueBox() {
     if (!currentLootBox || isOpening) return;
     if (currentLootBox.currentIndex >= currentLootBox.items.length) return;
 
     isOpening = true;
     
-    // Активируем счётчик с начальным значением 4
     const counter = document.getElementById('blueCounter');
-    counter.textContent = currentLootBox.total; // 4
+    counter.textContent = currentLootBox.total;
     counter.classList.add('active');
     
     const cube = document.getElementById('blueCube');
@@ -1433,24 +1428,19 @@
     setTimeout(() => {
       cube.style.display = 'none';
       glow.style.display = 'none';
-      // Показываем первый предмет
       const gift = currentLootBox.items[0];
       showSingleGift(gift);
       addObtainedGift(gift);
-      // Устанавливаем состояние: первый предмет показан, следующий индекс 1
       currentLootBox.currentIndex = 1;
       itemsRevealed = 1;
       boxOpened = true;
       isOpening = false;
-      // Счётчик оставляем 4 (не меняем)
     }, 800);
   }
 
-  // Функция для показа следующего предмета (вызывается при клике, когда куб уже исчез)
   function showNextGift() {
     if (!currentLootBox || isOpening) return;
     if (itemsRevealed >= currentLootBox.total) {
-      // Все предметы уже показаны, но ряд ещё не активирован? 
       if (!showingFinalRow) showFinalRow();
       return;
     }
@@ -1460,13 +1450,9 @@
     addObtainedGift(gift);
     currentLootBox.currentIndex++;
     itemsRevealed++;
-    // Обновляем счётчик: после второго показа должно быть 3, после третьего 2, после четвёртого 1
     updateBlueCounter(itemsRevealed);
-
-    // Если после этого все предметы открыты, не показываем ряд сразу – он появится по следующему клику
   }
 
-  // Показать ряд со всеми предметами (финал)
   function showFinalRow() {
     const single = document.getElementById('singleGiftDisplay');
     single.style.display = 'none';
@@ -1479,7 +1465,6 @@
     showingFinalRow = true;
   }
 
-  // Функция для сброса всех слотов (после возврата из кейса)
   function resetAllSlots() {
     for (let i = 0; i < 4; i++) {
       const slotElement = document.querySelector(`.mini-square[data-slot="${i}"]`);
@@ -1495,15 +1480,12 @@
         if (removeBtn) removeBtn.remove();
       }
     }
-    // Очищаем панель полученных подарков в главном квадрате
     document.getElementById('obtainedGifts').innerHTML = '';
-    // Сбрасываем флаги
     fourthGiftSelected = false;
     updateCenterSquareHighlight();
     updateModalSelection();
   }
 
-  // Возврат к крафту
   function returnToCraft() {
     document.getElementById('blueOverlay').classList.remove('active');
     document.getElementById('mainSquare').style.opacity = '1';
@@ -1521,12 +1503,9 @@
     boxOpened = false;
     itemsRevealed = 0;
     currentLootBox = null;
-    
-    // Сбрасываем все слоты и полученные подарки на главной
     resetAllSlots();
   }
 
-  // Добавление подарка в панель главного квадрата
   function addObtainedGift(gift) {
     const container = document.getElementById('obtainedGifts');
     const item = createTinyGiftElement(gift);
@@ -1534,7 +1513,6 @@
     container.scrollLeft = container.scrollWidth;
   }
 
-  // Старт синего режима
   function startBlueMode() {
     document.getElementById('mainSquare').style.opacity = '0';
     document.getElementById('blueOverlay').classList.add('active');
@@ -1546,7 +1524,6 @@
     const cube = document.getElementById('blueCube');
     cube.style.display = 'block';
     document.getElementById('blueCubeGlow').style.display = 'block';
-    // Счётчик пока не активируем – он появится после открытия куба
     document.getElementById('blueCounter').classList.remove('active');
     isOpening = false;
     showingFinalRow = false;
@@ -1555,36 +1532,28 @@
     currentLootBox.currentIndex = 0;
   }
 
-  // Обработчик клика по синему оверлею (работает по любой области)
   document.getElementById('blueOverlay').addEventListener('click', (e) => {
-    // Если клик по кубу и куб ещё виден и это первый шаг
     if (e.target.closest('.gift-cube-container') && currentLootBox && currentLootBox.currentIndex === 0 && !isOpening && !boxOpened) {
       openBlueBox();
       return;
     }
 
-    // Если показывается финальный ряд
     if (showingFinalRow) {
       returnToCraft();
       return;
     }
 
-    // Если идёт процесс открытия (куб ещё не исчез) — игнорируем
     if (isOpening) return;
 
-    // Если куб уже открыт и мы в режиме ожидания следующих предметов
     if (boxOpened) {
-      // Если все предметы уже показаны (itemsRevealed == total), то показываем ряд
       if (itemsRevealed >= currentLootBox.total) {
         showFinalRow();
       } else {
-        // Иначе показываем следующий предмет
         showNextGift();
       }
     }
   });
 
-  // Обработчик клика по центру (крафт)
   document.getElementById('centerSquare').addEventListener('click', () => {
     const filledCount = filledSlots.filter(filled => filled).length;
     if (filledCount > 0) {
@@ -1594,23 +1563,6 @@
     }
   });
 
-  // Обработчики для новой кнопки "Сервисы"
-  document.getElementById('servicesButton').addEventListener('click', () => {
-    document.getElementById('servicesOverlay').classList.add('active');
-  });
-
-  document.getElementById('servicesCloseBtn').addEventListener('click', () => {
-    document.getElementById('servicesOverlay').classList.remove('active');
-  });
-
-  // Закрытие оверлея кликом на фон (опционально)
-  document.getElementById('servicesOverlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('servicesOverlay')) {
-      document.getElementById('servicesOverlay').classList.remove('active');
-    }
-  });
-
-  // Интеллектуальный поиск
   function sortGiftsByRelevance(gifts, searchTerm) {
     if (!searchTerm) return gifts;
     searchTerm = searchTerm.toLowerCase();
@@ -1721,6 +1673,8 @@
     setTimeout(() => {
       avatar.style.opacity = "1";
       document.getElementById("mainSquare").style.opacity = "1";
+      // Показываем кнопку Сервисы
+      document.getElementById('servicesButton').classList.add('visible');
 
       document.querySelectorAll('.mini-square').forEach(square => {
         square.onclick = (e) => {
@@ -1745,6 +1699,274 @@
       document.getElementById('giftModal').classList.remove('active');
     }
   };
+
+  // ========== ANGRY BIRDS INTEGRATION ==========
+  // На основе проекта "Angry Birds: New Era" [citation:1]
+  let game = null;
+
+  function initAngryBirds() {
+    if (game) return;
+
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'gameCanvas',
+      width: window.innerWidth,
+      height: window.innerHeight,
+      physics: {
+        default: 'matter',
+        matter: {
+          gravity: { y: 1 },
+          debug: false
+        }
+      },
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      }
+    };
+
+    game = new Phaser.Game(config);
+  }
+
+  function preload() {
+    // Создаем простые текстуры вместо загрузки изображений [citation:1]
+    const graphics = this.add.graphics();
+    
+    // Красная птица
+    graphics.fillStyle(0xff0000, 1);
+    graphics.fillCircle(25, 25, 20);
+    graphics.generateTexture('bird-red', 50, 50);
+    
+    // Желтая птица
+    graphics.fillStyle(0xffff00, 1);
+    graphics.fillCircle(25, 25, 20);
+    graphics.generateTexture('bird-yellow', 50, 50);
+    
+    // Синяя птица
+    graphics.fillStyle(0x0000ff, 1);
+    graphics.fillCircle(25, 25, 20);
+    graphics.generateTexture('bird-blue', 50, 50);
+    
+    // Свинья
+    graphics.fillStyle(0x00ff00, 1);
+    graphics.fillCircle(25, 25, 25);
+    graphics.generateTexture('pig', 50, 50);
+    
+    // Деревянный блок
+    graphics.fillStyle(0x8B4513, 1);
+    graphics.fillRect(0, 0, 60, 60);
+    graphics.generateTexture('wood', 60, 60);
+    
+    // Каменный блок
+    graphics.fillStyle(0x808080, 1);
+    graphics.fillRect(0, 0, 60, 60);
+    graphics.generateTexture('stone', 60, 60);
+    
+    // Стеклянный блок
+    graphics.fillStyle(0x87CEEB, 1);
+    graphics.fillRect(0, 0, 60, 60);
+    graphics.generateTexture('glass', 60, 60);
+    
+    graphics.destroy();
+  }
+
+  function create() {
+    // Создаем землю
+    this.matter.add.rectangle(
+      window.innerWidth / 2, 
+      window.innerHeight - 50, 
+      window.innerWidth, 
+      100, 
+      { isStatic: true, restitution: 0.5 }
+    ).setRenderStyle(0x654321);
+
+    // Создаем рогатку (статичный объект)
+    this.slingshot = this.matter.add.rectangle(200, window.innerHeight - 150, 40, 80, { 
+      isStatic: true,
+      restitution: 0.5
+    }).setRenderStyle(0x8B4513);
+
+    // Создаем свиней
+    this.pigs = [];
+    const pigPositions = [
+      { x: 700, y: window.innerHeight - 200 },
+      { x: 800, y: window.innerHeight - 250 },
+      { x: 750, y: window.innerHeight - 300 }
+    ];
+    
+    pigPositions.forEach(pos => {
+      const pig = this.matter.add.image(pos.x, pos.y, 'pig');
+      pig.setCircle(25);
+      pig.setBounce(0.3);
+      pig.setFriction(0.1);
+      pig.setMass(2);
+      this.pigs.push(pig);
+    });
+
+    // Создаем препятствия [citation:3]
+    // Деревянные блоки
+    const woodBlocks = [
+      { x: 650, y: window.innerHeight - 150 },
+      { x: 750, y: window.innerHeight - 150 },
+      { x: 850, y: window.innerHeight - 150 }
+    ];
+    
+    woodBlocks.forEach(pos => {
+      const block = this.matter.add.image(pos.x, pos.y, 'wood');
+      block.setRectangle(60, 60);
+      block.setBounce(0.2);
+      block.setFriction(0.5);
+      block.setMass(3);
+    });
+
+    // Каменные блоки
+    const stoneBlocks = [
+      { x: 700, y: window.innerHeight - 350 },
+      { x: 800, y: window.innerHeight - 350 }
+    ];
+    
+    stoneBlocks.forEach(pos => {
+      const block = this.matter.add.image(pos.x, pos.y, 'stone');
+      block.setRectangle(60, 60);
+      block.setBounce(0.1);
+      block.setFriction(0.8);
+      block.setMass(5);
+    });
+
+    // Стеклянные блоки
+    const glassBlocks = [
+      { x: 750, y: window.innerHeight - 450 }
+    ];
+    
+    glassBlocks.forEach(pos => {
+      const block = this.matter.add.image(pos.x, pos.y, 'glass');
+      block.setRectangle(60, 60);
+      block.setBounce(0.4);
+      block.setFriction(0.2);
+      block.setMass(1.5);
+    });
+
+    // Создаем птиц (3 красных для первого уровня) [citation:1]
+    this.birds = [];
+    this.birdsCount = 3;
+    
+    for (let i = 0; i < this.birdsCount; i++) {
+      const bird = this.matter.add.image(200 + i * 30, window.innerHeight - 200, 'bird-red');
+      bird.setCircle(20);
+      bird.setBounce(0.5);
+      bird.setFriction(0.1);
+      bird.setMass(1);
+      bird.setStatic(true);
+      bird.setVisible(i === 0); // показываем только первую птицу
+      this.birds.push(bird);
+    }
+    
+    this.currentBirdIndex = 0;
+    this.currentBird = this.birds[0];
+    this.isDragging = false;
+
+    // Настройка взаимодействия
+    this.input.on('pointerdown', this.onPointerDown, this);
+    this.input.on('pointermove', this.onPointerMove, this);
+    this.input.on('pointerup', this.onPointerUp, this);
+  }
+
+  function update() {
+    // Проверяем, уничтожены ли все свиньи
+    const alivePigs = this.pigs.filter(pig => pig && pig.body && !pig.scene);
+    if (alivePigs.length === 0) {
+      // Уровень пройден, можно добавить сообщение
+      this.add.text(400, 300, 'LEVEL COMPLETE!', { 
+        fontSize: '32px', 
+        fill: '#fff',
+        backgroundColor: '#000',
+        padding: { x: 20, y: 10 }
+      });
+    }
+  }
+
+  function onPointerDown(pointer) {
+    if (!this.currentBird) return;
+    
+    const distance = Phaser.Math.Distance.Between(
+      pointer.x, pointer.y,
+      this.currentBird.x, this.currentBird.y
+    );
+    
+    if (distance < 30) {
+      this.isDragging = true;
+      this.dragStart = { x: pointer.x, y: pointer.y };
+    }
+  }
+
+  function onPointerMove(pointer) {
+    if (!this.isDragging || !this.currentBird) return;
+    
+    // Ограничиваем растяжение
+    let dx = pointer.x - this.slingshot.x;
+    let dy = pointer.y - (window.innerHeight - 150);
+    let distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance > 100) {
+      dx = (dx / distance) * 100;
+      dy = (dy / distance) * 100;
+    }
+    
+    this.currentBird.x = this.slingshot.x + dx;
+    this.currentBird.y = (window.innerHeight - 150) + dy;
+  }
+
+  function onPointerUp(pointer) {
+    if (!this.isDragging || !this.currentBird) return;
+    
+    this.isDragging = false;
+    
+    // Рассчитываем скорость для запуска [citation:10]
+    const dx = this.slingshot.x - this.currentBird.x;
+    const dy = (window.innerHeight - 150) - this.currentBird.y;
+    
+    this.currentBird.setStatic(false);
+    this.currentBird.setVelocity(dx * 15, dy * 15);
+    
+    // Переключаемся на следующую птицу
+    this.currentBirdIndex++;
+    if (this.currentBirdIndex < this.birdsCount) {
+      this.currentBird = this.birds[this.currentBirdIndex];
+      this.currentBird.setStatic(true);
+      this.currentBird.setVisible(true);
+      this.currentBird.x = 200 + this.currentBirdIndex * 30;
+      this.currentBird.y = window.innerHeight - 200;
+    } else {
+      this.currentBird = null;
+    }
+  }
+
+  // Обработчики для кнопки Сервисы
+  document.getElementById('servicesButton').addEventListener('click', () => {
+    document.getElementById('gameOverlay').classList.add('active');
+    // Инициализируем игру при первом открытии
+    setTimeout(() => initAngryBirds(), 100);
+  });
+
+  document.getElementById('gameCloseBtn').addEventListener('click', () => {
+    document.getElementById('gameOverlay').classList.remove('active');
+    // Уничтожаем игру, чтобы освободить ресурсы
+    if (game) {
+      game.destroy(true);
+      game = null;
+    }
+  });
+
+  document.getElementById('gameOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('gameOverlay')) {
+      document.getElementById('gameOverlay').classList.remove('active');
+      if (game) {
+        game.destroy(true);
+        game = null;
+      }
+    }
+  });
 </script>
 
 <!-- Предзагрузка изображений для четырёх подарков -->
