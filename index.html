@@ -8,12 +8,10 @@
                  initial-scale=1.0,
                  maximum-scale=1.0,
                  user-scalable=no" />
-  <title>Telegram Roulette + Angry Birds (рабочая версия)</title>
+  <title>Telegram Roulette + Angry Birds</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Phaser 3 -->
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
   <style>
-    /* Все ваши оригинальные стили (сокращены для краткости, но сохранены) */
+    /* Все ваши оригинальные стили (полностью сохранены) */
     html, body {
       margin: 0;
       padding: 0;
@@ -738,14 +736,14 @@
       font-size: 20px;
     }
 
-    /* Оверлей для Angry Birds */
+    /* Оверлей для Angry Birds (iframe) */
     .game-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: #87CEEB; /* голубое небо */
+      background: #000;
       z-index: 200;
       display: none;
       flex-direction: column;
@@ -773,10 +771,10 @@
       backdrop-filter: blur(5px);
       z-index: 201;
     }
-    #gameCanvas {
+    .game-overlay iframe {
       width: 100%;
       height: 100%;
-      display: block;
+      border: none;
     }
   </style>
 </head>
@@ -847,10 +845,10 @@
     <span>Angry Birds</span>
   </div>
 
-  <!-- Оверлей для Angry Birds -->
+  <!-- Оверлей для Angry Birds с iframe -->
   <div class="game-overlay" id="gameOverlay">
     <div class="close-btn" id="gameCloseBtn">×</div>
-    <div id="gameCanvas"></div>
+    <iframe src="https://mikael20088.github.io/AngryBirds/AngryBirds.htm" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -869,7 +867,7 @@
 </div>
 
 <script>
-  // ========== ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЕН ПОЛНОСТЬЮ) ==========
+  // ========== ВАШ ОРИГИНАЛЬНЫЙ КОД (без Phaser) ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -1698,190 +1696,18 @@
     }
   };
 
-  // ========== ANGRY BIRDS - ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ ==========
-  let game = null;
-
-  function initAngryBirds() {
-    if (game) {
-      // Если игра уже создана, просто показываем и возобновляем
-      game.scene.resume();
-      return;
-    }
-
-    const config = {
-      type: Phaser.AUTO,
-      parent: 'gameCanvas',
-      width: window.innerWidth,
-      height: window.innerHeight,
-      backgroundColor: '#87CEEB',
-      physics: {
-        default: 'matter',
-        matter: {
-          gravity: { y: 1 },
-          debug: false
-        }
-      },
-      scene: {
-        preload: preload,
-        create: create,
-        update: update
-      }
-    };
-
-    game = new Phaser.Game(config);
-  }
-
-  function preload() {
-    // Создаём простые текстуры
-    const graphics = this.add.graphics();
-    
-    // Красная птица
-    graphics.fillStyle(0xff0000, 1);
-    graphics.fillCircle(25, 25, 20);
-    graphics.lineStyle(2, 0x000000);
-    graphics.strokeCircle(25, 25, 20);
-    graphics.generateTexture('bird', 50, 50);
-    graphics.clear();
-    
-    // Свинья
-    graphics.fillStyle(0x00ff00, 1);
-    graphics.fillCircle(25, 25, 25);
-    graphics.lineStyle(2, 0x000000);
-    graphics.strokeCircle(25, 25, 25);
-    graphics.generateTexture('pig', 50, 50);
-    graphics.clear();
-    
-    // Дерево
-    graphics.fillStyle(0x8B4513, 1);
-    graphics.fillRect(0, 0, 40, 40);
-    graphics.generateTexture('wood', 40, 40);
-    graphics.clear();
-
-    graphics.destroy();
-  }
-
-  function create() {
-    // Земля
-    this.matter.add.rectangle(
-      window.innerWidth / 2, window.innerHeight - 50,
-      window.innerWidth, 100,
-      { isStatic: true, restitution: 0.5 }
-    ).setRenderStyle(0x654321);
-
-    // Рогатка (левый столб)
-    this.slingshot = this.matter.add.rectangle(200, window.innerHeight - 150, 30, 80, {
-      isStatic: true,
-      restitution: 0.5
-    }).setRenderStyle(0x8B4513);
-
-    // Несколько свиней
-    this.pigs = [];
-    for (let i = 0; i < 3; i++) {
-      const pig = this.matter.add.image(600 + i * 80, window.innerHeight - 200, 'pig');
-      pig.setCircle(25);
-      pig.setBounce(0.3);
-      pig.setFriction(0.1);
-      this.pigs.push(pig);
-    }
-
-    // Деревянные блоки для укрытия
-    for (let i = 0; i < 3; i++) {
-      const block = this.matter.add.image(600 + i * 80, window.innerHeight - 250, 'wood');
-      block.setRectangle(40, 40);
-      block.setBounce(0.2);
-      block.setFriction(0.5);
-    }
-
-    // Птицы (3 штуки)
-    this.birds = [];
-    for (let i = 0; i < 3; i++) {
-      const bird = this.matter.add.image(200 + i * 30, window.innerHeight - 200, 'bird');
-      bird.setCircle(20);
-      bird.setBounce(0.5);
-      bird.setFriction(0.1);
-      bird.setMass(1);
-      bird.setStatic(true);
-      bird.setVisible(i === 0);
-      this.birds.push(bird);
-    }
-    this.currentBirdIndex = 0;
-    this.currentBird = this.birds[0];
-    this.isDragging = false;
-
-    // Обработчики ввода
-    this.input.on('pointerdown', (pointer) => {
-      if (!this.currentBird) return;
-      const dist = Phaser.Math.Distance.Between(pointer.x, pointer.y, this.currentBird.x, this.currentBird.y);
-      if (dist < 30) {
-        this.isDragging = true;
-      }
-    }, this);
-
-    this.input.on('pointermove', (pointer) => {
-      if (!this.isDragging || !this.currentBird) return;
-      // Ограничение расстояния от рогатки
-      let dx = pointer.x - this.slingshot.x;
-      let dy = pointer.y - this.slingshot.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > 100) {
-        dx = (dx / dist) * 100;
-        dy = (dy / dist) * 100;
-      }
-      this.currentBird.x = this.slingshot.x + dx;
-      this.currentBird.y = this.slingshot.y + dy;
-    }, this);
-
-    this.input.on('pointerup', (pointer) => {
-      if (!this.isDragging || !this.currentBird) return;
-      this.isDragging = false;
-      const dx = this.slingshot.x - this.currentBird.x;
-      const dy = this.slingshot.y - this.currentBird.y;
-      this.currentBird.setStatic(false);
-      this.currentBird.setVelocity(dx * 12, dy * 12);
-
-      // Переход к следующей птице
-      this.currentBirdIndex++;
-      if (this.currentBirdIndex < this.birds.length) {
-        this.currentBird = this.birds[this.currentBirdIndex];
-        this.currentBird.setStatic(true);
-        this.currentBird.setVisible(true);
-        this.currentBird.x = 200 + this.currentBirdIndex * 30;
-        this.currentBird.y = window.innerHeight - 200;
-      } else {
-        this.currentBird = null;
-      }
-    }, this);
-  }
-
-  function update() {
-    // Проверка победы
-    const alive = this.pigs.filter(pig => pig && pig.body && pig.scene);
-    if (alive.length === 0) {
-      this.add.text(400, 300, 'YOU WIN!', { fontSize: '48px', fill: '#fff', backgroundColor: '#000', padding: 10 });
-      this.scene.pause();
-    }
-  }
-
-  // Обработчики кнопки "Сервисы"
+  // ========== НОВЫЙ ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS ==========
   document.getElementById('servicesButton').addEventListener('click', () => {
     document.getElementById('gameOverlay').classList.add('active');
-    // Небольшая задержка, чтобы DOM точно обновился
-    setTimeout(() => initAngryBirds(), 100);
   });
 
   document.getElementById('gameCloseBtn').addEventListener('click', () => {
     document.getElementById('gameOverlay').classList.remove('active');
-    if (game) {
-      game.scene.pause();
-    }
   });
 
   document.getElementById('gameOverlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('gameOverlay')) {
       document.getElementById('gameOverlay').classList.remove('active');
-      if (game) {
-        game.scene.pause();
-      }
     }
   });
 </script>
