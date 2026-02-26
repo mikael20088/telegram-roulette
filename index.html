@@ -1567,32 +1567,38 @@
   }
 
   const user = tg.initDataUnsafe?.user;
+  // Если есть пользователь, показываем аватар
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
     const img = document.createElement("img");
     img.src = user.photo_url;
     avatar.appendChild(img);
-
-    setTimeout(() => {
-      document.getElementById("matrix").style.opacity = "0";
-      document.getElementById("videoWrapper").style.opacity = "0";
-      document.getElementById("blackScreen").style.opacity = "1";
-    }, 3000);
-
-    setTimeout(() => {
-      avatar.style.opacity = "1";
-      document.getElementById("mainSquare").style.opacity = "1";
-      document.getElementById('servicesButton').classList.add('visible');
-
-      document.querySelectorAll('.mini-square').forEach(square => {
-        square.onclick = (e) => {
-          if (e.target.classList.contains('remove-gift')) return;
-          showGifts(square);
-        };
-      });
-    }, 3500);
   }
 
+  setTimeout(() => {
+    document.getElementById("matrix").style.opacity = "0";
+    document.getElementById("videoWrapper").style.opacity = "0";
+    document.getElementById("blackScreen").style.opacity = "1";
+  }, 3000);
+
+  setTimeout(() => {
+    // Показываем аватар, если он есть
+    if (user && user.photo_url) {
+      document.getElementById("avatar").style.opacity = "1";
+    }
+    // Показываем главный квадрат и кнопку независимо от наличия пользователя
+    document.getElementById("mainSquare").style.opacity = "1";
+    document.getElementById('servicesButton').classList.add('visible');
+
+    document.querySelectorAll('.mini-square').forEach(square => {
+      square.onclick = (e) => {
+        if (e.target.classList.contains('remove-gift')) return;
+        showGifts(square);
+      };
+    });
+  }, 3500);
+
+  // Обработчики модального окна
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
   });
