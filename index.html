@@ -1567,6 +1567,7 @@
   }
 
   const user = tg.initDataUnsafe?.user;
+  // Если есть пользователь, показываем аватар
   if (user && user.photo_url) {
     const avatar = document.getElementById("avatar");
     const img = document.createElement("img");
@@ -1581,9 +1582,11 @@
   }, 3000);
 
   setTimeout(() => {
+    // Показываем аватар, если он есть
     if (user && user.photo_url) {
       document.getElementById("avatar").style.opacity = "1";
     }
+    // Показываем главный квадрат и кнопку независимо от наличия пользователя
     document.getElementById("mainSquare").style.opacity = "1";
     document.getElementById('servicesButton').classList.add('visible');
 
@@ -1595,6 +1598,7 @@
     });
   }, 3500);
 
+  // Обработчики модального окна
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
   });
@@ -1609,21 +1613,21 @@
     }
   };
 
-  // ========== НОВЫЙ ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS ==========
+  // ========== НОВЫЙ ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS (IFRAME) ==========
   const servicesBtn = document.getElementById('servicesButton');
   const gameOverlay = document.getElementById('gameOverlay');
   const gameIframe = document.getElementById('gameIframe');
   const gameCloseBtn = document.getElementById('gameCloseBtn');
 
   servicesBtn.addEventListener('click', () => {
-    // Используем проверенный прямой адрес игры
+    // ИСПОЛЬЗУЕМ ПОЛНЫЙ АБСОЛЮТНЫЙ ПУТЬ
     gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirds.htm';
     gameOverlay.classList.add('active');
   });
 
   gameCloseBtn.addEventListener('click', () => {
     gameOverlay.classList.remove('active');
-    gameIframe.src = '';
+    gameIframe.src = ''; // останавливаем игру
   });
 
   gameOverlay.addEventListener('click', (e) => {
