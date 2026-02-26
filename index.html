@@ -1616,7 +1616,8 @@
   const gameCloseBtn = document.getElementById('gameCloseBtn');
 
   servicesBtn.addEventListener('click', () => {
-    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirds.htm';
+    // Загружаем сразу игровой файл, минуя дисклеймер
+    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
     gameOverlay.classList.add('active');
   });
 
@@ -1628,24 +1629,6 @@
   gameOverlay.addEventListener('click', (e) => {
     if (e.target === gameOverlay) {
       gameOverlay.classList.remove('active');
-      gameIframe.src = '';
-    }
-  });
-</script>
-
-<!-- Предзагрузка изображений для четырёх подарков -->
-<script>
-  (function preloadImages() {
-    var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
-    var fileMap = {
-      "Durov's Cap": "Durov-Cap",
-      "Astral Shard": "Astral Shard",
-      "Kissed Frog": "Kissed Frog",
-      "Artisan Brick": "Artisan Brick"
-    };
-    gifts.forEach(function(name) {
-      var baseName = fileMap[name] || name;
-      var img = new Image');
       gameIframe.src = '';
     }
   });
