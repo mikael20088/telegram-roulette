@@ -735,47 +735,6 @@
     .services-button .icon {
       font-size: 20px;
     }
-
-    /* Новые стили для оверлея игры */
-    .game-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      z-index: 200;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .game-overlay.active {
-      display: flex;
-    }
-    .game-overlay .close-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 24px;
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(5px);
-      z-index: 201;
-    }
-    .game-overlay iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
   </style>
 </head>
 <body>
@@ -839,12 +798,6 @@
   <div class="services-button" id="servicesButton">
     <span class="icon">🐦</span>
     <span>Angry Birds</span>
-  </div>
-
-  <!-- Оверлей для игры Angry Birds (iframe) -->
-  <div class="game-overlay" id="gameOverlay">
-    <div class="close-btn" id="gameCloseBtn">×</div>
-    <iframe id="gameIframe" src=""></iframe>
   </div>
 </div>
 
@@ -1613,28 +1566,11 @@
     }
   };
 
-  // ========== НОВЫЙ ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS (IFRAME) ==========
+  // ========== НОВЫЙ ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS (ОТКРЫТИЕ ССЫЛКИ) ==========
   const servicesBtn = document.getElementById('servicesButton');
-  const gameOverlay = document.getElementById('gameOverlay');
-  const gameIframe = document.getElementById('gameIframe');
-  const gameCloseBtn = document.getElementById('gameCloseBtn');
-
   servicesBtn.addEventListener('click', () => {
-    // ИСПОЛЬЗУЕМ ПОЛНЫЙ АБСОЛЮТНЫЙ ПУТЬ
-    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirds.htm';
-    gameOverlay.classList.add('active');
-  });
-
-  gameCloseBtn.addEventListener('click', () => {
-    gameOverlay.classList.remove('active');
-    gameIframe.src = ''; // останавливаем игру
-  });
-
-  gameOverlay.addEventListener('click', (e) => {
-    if (e.target === gameOverlay) {
-      gameOverlay.classList.remove('active');
-      gameIframe.src = '';
-    }
+    // Открываем игру в новой вкладке (или внутри Telegram, но отдельно)
+    Telegram.WebApp.openLink('https://mikael20088.github.io/telegram-roulette/angry/AngryBirds.htm');
   });
 </script>
 
