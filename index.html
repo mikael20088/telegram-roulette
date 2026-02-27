@@ -17,7 +17,7 @@
     console.log('✅ TonConnectUI module loaded');
   </script>
   <style>
-    /* ========== ВСЕ ОРИГИНАЛЬНЫЕ СТИЛИ (без изменений) ========== */
+    /* ========== ВСЕ ОРИГИНАЛЬНЫЕ СТИЛИ ========== */
     html, body {
       margin: 0;
       padding: 0;
@@ -37,7 +37,6 @@
       z-index: 1;
       transition: opacity 0.5s ease;
     }
-    /* Контейнер для аватара и панели баланса */
     .top-right-container {
       position: absolute;
       top: 18px;
@@ -64,7 +63,6 @@
       height: 100%;
       object-fit: cover;
     }
-    /* Новая панель баланса вместо круглого плюса */
     .balance-panel {
       position: absolute;
       right: 18px;
@@ -109,7 +107,6 @@
       font-size: 18px;
       font-weight: bold;
     }
-    /* Остальные стили (без изменений) */
     .black-screen {
       position: absolute;
       inset: 0;
@@ -828,6 +825,20 @@
     }
 
     /* Новое модальное окно пополнения (bottom sheet) */
+    .payment-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+      z-index: 299;
+      display: none;
+    }
+    .payment-overlay.active {
+      display: block;
+    }
     .payment-modal {
       position: fixed;
       bottom: 0;
@@ -888,10 +899,24 @@
       cursor: not-allowed;
     }
     .close-payment {
-      text-align: center;
-      margin-top: 15px;
-      color: #aaa;
+      display: none; /* скрываем старую кнопку */
+    }
+    .payment-close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px; /* квадрат со скруглёнными углами */
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+      font-size: 20px;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(5px);
     }
   </style>
 </head>
@@ -971,14 +996,15 @@
     <iframe id="gameIframe" src=""></iframe>
   </div>
 
-  <!-- Модальное окно пополнения TON (новое) -->
+  <!-- Модальное окно пополнения TON (новое) с крестиком и затемнением -->
+  <div class="payment-overlay" id="paymentOverlay"></div>
   <div class="payment-modal" id="paymentModal">
+    <div class="payment-close-btn" id="paymentCloseBtn">✕</div>
     <div class="payment-header">Пополнение</div>
     <div class="payment-amount">
       <input type="text" id="amountInput" value="0" inputmode="decimal" />
     </div>
     <button class="pay-button" id="payButton" disabled>Подключить кошелек</button>
-    <div class="close-payment" id="closePayment">Отмена</div>
   </div>
 </div>
 
@@ -1718,7 +1744,6 @@
     if (user && user.photo_url) {
       document.getElementById("avatar").style.opacity = "1";
     }
-    // Показываем панель баланса вместо плюса
     document.getElementById("balancePanel").classList.add('visible');
     document.getElementById("mainSquare").style.opacity = "1";
     document.getElementById('servicesButton').classList.add('visible');
@@ -1772,7 +1797,8 @@
   (function initTonAndBalance() {
     const balancePanel = document.getElementById('balancePanel');
     const paymentModal = document.getElementById('paymentModal');
-    const closePayment = document.getElementById('closePayment');
+    const paymentOverlay = document.getElementById('paymentOverlay');
+    const paymentCloseBtn = document.getElementById('paymentCloseBtn');
     const payButton = document.getElementById('payButton');
     const amountInput = document.getElementById('amountInput');
     const balanceSpan = document.getElementById('balanceAmount');
@@ -1804,6 +1830,10 @@
       if (parts[1] && parts[1].length > 2) {
         value = parts[0] + '.' + parts[1].substring(0, 2);
       }
+      // Убираем ведущий ноль, если после нуля идёт цифра (не точка)
+      if (value.length > 1 && value[0] === '0' && value[1] !== '.' && value[1] !== ',') {
+        value = value.substring(1);
+      }
       e.target.value = value;
       selectedAmount = value === '' ? 0 : parseFloat(value);
       if (isNaN(selectedAmount)) selectedAmount = 0;
@@ -1830,16 +1860,18 @@
     // Открытие модалки по клику на панель баланса
     balancePanel.addEventListener('click', () => {
       paymentModal.classList.add('active');
-      // Фокусируемся на поле ввода
+      paymentOverlay.classList.add('active');
       setTimeout(() => amountInput.focus(), 300);
     });
 
-    // Закрытие модалки
-    closePayment.addEventListener('click', () => {
+    // Закрытие модалки (крестик и оверлей)
+    function closePaymentModal() {
       paymentModal.classList.remove('active');
-    });
+      paymentOverlay.classList.remove('active');
+    }
 
-    // Закрытие по клику на фон (саму модалку) – не предусмотрено, только по кнопке Отмена
+    paymentCloseBtn.addEventListener('click', closePaymentModal);
+    paymentOverlay.addEventListener('click', closePaymentModal);
 
     // Инициализация TonConnect
     function initTonConnect() {
@@ -1890,7 +1922,7 @@
             currentBalance += selectedAmount;
             updateBalanceDisplay();
             alert('Оплата успешно отправлена!');
-            paymentModal.classList.remove('active');
+            closePaymentModal();
           } catch (e) {
             console.error('Transaction error', e);
             alert('Ошибка при оплате. Возможно, транзакция была отклонена.');
