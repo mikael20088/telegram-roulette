@@ -33,7 +33,7 @@
       z-index: 1;
       transition: opacity 0.5s ease;
     }
-    /* Изменённый контейнер для аватара и кнопки + */
+    /* Контейнер для аватара и кнопки + */
     .top-right-container {
       position: absolute;
       top: 18px;
@@ -43,7 +43,7 @@
       justify-content: center;
       align-items: center;
       z-index: 20;
-      pointer-events: none; /* чтобы клики проходили сквозь пустую область, но элементы внутри будут переопределять */
+      pointer-events: none;
     }
     .avatar-top {
       width: 56px;
@@ -53,7 +53,7 @@
       box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
       opacity: 0;
       transition: opacity 0.6s ease;
-      pointer-events: none; /* сам аватар не кликабелен */
+      pointer-events: none;
     }
     .avatar-top img {
       width: 100%;
@@ -81,13 +81,13 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
       transition: transform 0.2s, background 0.2s;
       opacity: 0;
-      pointer-events: none; /* изначально скрыта, станет видимой через 3.5 сек */
+      pointer-events: none;
       text-shadow: 0 0 12px #00ff88;
       z-index: 21;
     }
     .plus-button.visible {
       opacity: 1;
-      pointer-events: auto; /* после появления становится кликабельной */
+      pointer-events: auto;
     }
     .plus-button:hover {
       transform: translateY(-50%) scale(1.05);
@@ -1755,92 +1755,32 @@
     }
   });
 
-  // ========== ОТДЕЛЬНЫЙ ОБРАБОТЧИК ДЛЯ ПЛЮСИКА (ВСЕГДА РАБОТАЕТ) ==========
-  const plusButton = document.getElementById('plusButton');
-  const paymentModal = document.getElementById('paymentModal');
-  const closePayment = document.getElementById('closePayment');
-  const payButton = document.getElementById('payButton');
-  const amountBtns = document.querySelectorAll('.amount-btn');
-
-  // Переменные для хранения выбранной суммы и экземпляра TON Connect
-  let selectedAmount = null;
-  let tonConnectUI = null;
-
-  // Открытие модалки по клику на плюсик (всегда, даже если TON не загружен)
-  plusButton.addEventListener('click', () => {
-    paymentModal.classList.add('active');
-  });
-
-  // Закрытие модалки
-  closePayment.addEventListener('click', () => {
-    paymentModal.classList.remove('active');
-    amountBtns.forEach(btn => btn.classList.remove('selected'));
-    selectedAmount = null;
-    if (payButton) {
-      payButton.disabled = true;
-      payButton.textContent = 'Подключить кошелек';
-    }
-  });
-
-  // Выбор суммы
-  amountBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      amountBtns.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedAmount = btn.dataset.amount;
-      if (tonConnectUI && tonConnectUI.connected) {
-        payButton.disabled = false;
-        payButton.textContent = `Оплатить ${selectedAmount} TON`;
-      } else {
-        payButton.disabled = false; // можно нажать для подключения
-        payButton.textContent = 'Подключить кошелек';
-      }
-    });
-  });
-
-  // Закрытие по клику на фон
-  paymentModal.addEventListener('click', (e) => {
-    if (e.target === paymentModal) {
-      paymentModal.classList.remove('active');
-      amountBtns.forEach(btn => btn.classList.remove('selected'));
-      selectedAmount = null;
-      if (payButton) {
-        payButton.disabled = true;
-        payButton.textContent = 'Подключить кошелек';
-      }
-    }
-  });
-
-  // ========== ИНИЦИАЛИЗАЦИЯ TON CONNECT ==========
+  // ========== ИСПРАВЛЕННАЯ ИНТЕГРАЦИЯ TON CONNECT ==========
   (function initTon() {
-    if (typeof TONConnectUI === 'undefined') {
-      console.error('TON Connect UI library not loaded');
-      // Если библиотека не загружена, показываем сообщение при попытке оплаты
-      payButton.addEventListener('click', () => {
-        alert('Библиотека TON Connect не загружена. Попробуйте обновить страницу.');
-      });
-      return;
-    }
+    const plusButton = document.getElementById('plusButton');
+    const paymentModal = document.getElementById('paymentModal');
+    const closePayment = document.getElementById('closePayment');
+    const payButton = document.getElementById('payButton');
+    const amountBtns = document.querySelectorAll('.amount-btn');
 
-    const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
+    let selectedAmount = null;
+    let tonConnectUI = null;
+    let libraryLoaded = false;
 
-    try {
-      tonConnectUI = new TONConnectUI.TonConnectUI({
-        manifestUrl: manifestUrl,
-      });
-      console.log('TON Connect initialized');
-    } catch (e) {
-      console.error('TON Connect init error', e);
-      payButton.addEventListener('click', () => {
-        alert('Ошибка инициализации TON Connect');
-      });
-      return;
-    }
-
-    // Обновление состояния кнопки при изменении статуса кошелька
-    tonConnectUI.onStatusChange(wallet => {
-      console.log('Wallet status:', wallet ? 'connected' : 'disconnected');
-      if (wallet) {
+    // Функция обновления текста кнопки
+    function updatePayButton() {
+      if (!libraryLoaded) {
+        payButton.disabled = false;
+        payButton.textContent = 'Библиотека не загружена (обновите)';
+        return;
+      }
+      if (!tonConnectUI) {
+        payButton.disabled = false;
+        payButton.textContent = 'Ошибка инициализации';
+        return;
+      }
+      const connected = tonConnectUI.connected;
+      if (connected) {
         if (selectedAmount) {
           payButton.disabled = false;
           payButton.textContent = `Оплатить ${selectedAmount} TON`;
@@ -1849,53 +1789,144 @@
           payButton.textContent = 'Выберите сумму';
         }
       } else {
-        payButton.disabled = false; // можно нажать для подключения
+        payButton.disabled = false;
         payButton.textContent = 'Подключить кошелек';
       }
+    }
+
+    // Открытие модалки по клику на плюсик
+    plusButton.addEventListener('click', () => {
+      paymentModal.classList.add('active');
+      // Если библиотека ещё не загружена, пробуем ещё раз инициализировать
+      if (!libraryLoaded && typeof TONConnectUI !== 'undefined') {
+        libraryLoaded = true;
+        initTonConnect();
+      }
     });
 
-    // Обработка клика по кнопке оплаты
-    payButton.addEventListener('click', async () => {
-      if (!tonConnectUI) return;
+    // Закрытие модалки
+    closePayment.addEventListener('click', () => {
+      paymentModal.classList.remove('active');
+      amountBtns.forEach(btn => btn.classList.remove('selected'));
+      selectedAmount = null;
+      updatePayButton();
+    });
 
-      // Если кошелёк не подключён – подключаем
-      if (!tonConnectUI.connected) {
-        try {
-          await tonConnectUI.connectWallet();
-        } catch (e) {
-          console.error('Wallet connection error', e);
-          alert('Ошибка подключения кошелька. Возможно, вы отменили запрос.');
-        }
-        return;
-      }
+    // Выбор суммы
+    amountBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        amountBtns.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedAmount = btn.dataset.amount;
+        updatePayButton();
+      });
+    });
 
-      // Если кошелёк подключён, но сумма не выбрана
-      if (!selectedAmount) {
-        alert('Выберите сумму');
-        return;
-      }
-
-      // Отправка транзакции
-      const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
-        messages: [
-          {
-            address: 'UQCty33p4WR_70PuYVQCnFEm6tZWPqtASeTl1gNUAYNE6sxd', // замените на свой адрес
-            amount: (selectedAmount * 1e9).toString(), // в нанотонах
-          }
-        ]
-      };
-
-      try {
-        const result = await tonConnectUI.sendTransaction(transaction);
-        console.log('Transaction sent', result);
-        alert('Оплата успешно отправлена!');
+    // Закрытие по клику на фон
+    paymentModal.addEventListener('click', (e) => {
+      if (e.target === paymentModal) {
         paymentModal.classList.remove('active');
-      } catch (e) {
-        console.error('Transaction error', e);
-        alert('Ошибка при оплате. Возможно, транзакция была отклонена.');
+        amountBtns.forEach(btn => btn.classList.remove('selected'));
+        selectedAmount = null;
+        updatePayButton();
       }
     });
+
+    // Инициализация TonConnect
+    function initTonConnect() {
+      const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
+      try {
+        // Правильный способ инициализации (без TONConnectUI.TonConnectUI)
+        tonConnectUI = new TONConnectUI({
+          manifestUrl: manifestUrl,
+        });
+        console.log('TON Connect initialized');
+
+        // Подписка на изменение статуса
+        tonConnectUI.onStatusChange(wallet => {
+          console.log('Wallet status:', wallet ? 'connected' : 'disconnected');
+          updatePayButton();
+        });
+
+        // Обработка клика по кнопке оплаты
+        payButton.addEventListener('click', async () => {
+          if (!tonConnectUI) return;
+
+          // Если кошелёк не подключён – подключаем
+          if (!tonConnectUI.connected) {
+            try {
+              await tonConnectUI.connectWallet();
+            } catch (e) {
+              console.error('Wallet connection error', e);
+              alert('Ошибка подключения кошелька. Возможно, вы отменили запрос.');
+            }
+            return;
+          }
+
+          // Если кошелёк подключён, но сумма не выбрана
+          if (!selectedAmount) {
+            alert('Выберите сумму');
+            return;
+          }
+
+          // Отправка транзакции
+          const transaction = {
+            validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
+            messages: [
+              {
+                address: 'UQCty33p4WR_70PuYVQCnFEm6tZWPqtASeTl1gNUAYNE6sxd', // замените на свой адрес
+                amount: (selectedAmount * 1e9).toString(), // в нанотонах
+              }
+            ]
+          };
+
+          try {
+            const result = await tonConnectUI.sendTransaction(transaction);
+            console.log('Transaction sent', result);
+            alert('Оплата успешно отправлена!');
+            paymentModal.classList.remove('active');
+          } catch (e) {
+            console.error('Transaction error', e);
+            alert('Ошибка при оплате. Возможно, транзакция была отклонена.');
+          }
+        });
+      } catch (e) {
+        console.error('TON Connect init error', e);
+        payButton.addEventListener('click', () => {
+          alert('Ошибка инициализации TON Connect');
+        });
+      }
+    }
+
+    // Проверяем, загружена ли библиотека
+    if (typeof TONConnectUI !== 'undefined') {
+      libraryLoaded = true;
+      initTonConnect();
+    } else {
+      console.warn('TONConnectUI not loaded yet, waiting...');
+      // Ждём загрузку скрипта (иногда он может грузиться долго)
+      let attempts = 0;
+      const interval = setInterval(() => {
+        if (typeof TONConnectUI !== 'undefined') {
+          libraryLoaded = true;
+          initTonConnect();
+          clearInterval(interval);
+        }
+        attempts++;
+        if (attempts > 20) { // примерно 4 секунды
+          clearInterval(interval);
+          console.error('TONConnectUI library failed to load');
+          payButton.disabled = false;
+          payButton.textContent = 'Ошибка загрузки (обновите)';
+          payButton.addEventListener('click', () => {
+            alert('Не удалось загрузить библиотеку TON Connect. Пожалуйста, обновите страницу.');
+          });
+        }
+      }, 200);
+    }
+
+    // Начальное обновление кнопки
+    updatePayButton();
   })();
 </script>
 
@@ -1918,4 +1949,4 @@
 </script>
 
 </body>
-</html>
+</html>ы
