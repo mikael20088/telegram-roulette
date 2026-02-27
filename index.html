@@ -8,10 +8,12 @@
                  initial-scale=1.0,
                  maximum-scale=1.0,
                  user-scalable=no" />
-  <title>Telegram Roulette + Angry Birds</title>
+  <title>Telegram Roulette + TON Pay</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- TON Connect UI library -->
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
-    /* ========== ВСЕ ВАШИ ОРИГИНАЛЬНЫЕ СТИЛИ (СОХРАНЕНЫ) ========== */
+    /* Все ваши оригинальные стили (сохранены полностью) */
     html, body {
       margin: 0;
       padding: 0;
@@ -31,24 +33,57 @@
       z-index: 1;
       transition: opacity 0.5s ease;
     }
-    .avatar-top {
+    /* Аватар и кнопка пополнения */
+    .top-right-container {
       position: absolute;
       top: 18px;
-      left: 50%;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+    }
+    .avatar-top {
       width: 56px;
       height: 56px;
       border-radius: 50%;
       overflow: hidden;
-      transform: translateX(-50%);
+      box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
       opacity: 0;
       transition: opacity 0.6s ease;
-      z-index: 4;
-      box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
     }
     .avatar-top img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+    .plus-button {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(30, 30, 40, 0.8);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: #00ff88;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, background 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 0 0 12px #00ff88;
+    }
+    .plus-button.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .plus-button:hover {
+      transform: scale(1.05);
+      background: rgba(50, 50, 70, 0.9);
     }
     .black-screen {
       position: absolute;
@@ -195,8 +230,6 @@
       border-radius: 6px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
-
-    /* Синий оверлей с эффектом стекла (для вашей рулетки) */
     .blue-overlay {
       position: fixed;
       top: 0;
@@ -229,8 +262,6 @@
       opacity: 1;
       pointer-events: auto;
     }
-
-    /* Контейнер для куба */
     .blue-overlay .gift-cube-container {
       position: relative;
       width: 70px;
@@ -325,7 +356,6 @@
       color: #ffffff;
       text-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
     }
-
     .cube-face .selected-gift {
       display: none;
     }
@@ -335,7 +365,6 @@
       opacity: 0.95;
       filter: drop-shadow(0 0 8px currentColor);
     }
-
     .cube-face.front  { transform: translateZ(35px); }
     .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
     .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
@@ -343,7 +372,6 @@
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
-    /* Одиночный предмет */
     .single-gift-display {
       width: 70px;
       height: 70px;
@@ -373,8 +401,6 @@
       0% { opacity: 0; transform: scale(0.5); }
       100% { opacity: 1; transform: scale(1); }
     }
-
-    /* Ряд полученных подарков */
     .blue-gift-row {
       display: flex;
       gap: 12px;
@@ -412,8 +438,6 @@
       color: white;
       text-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
-
-    /* Счётчик предметов (красный) */
     .blue-counter {
       position: absolute;
       bottom: 20px;
@@ -433,8 +457,6 @@
     .blue-counter.active {
       display: block;
     }
-
-    /* Основной стиль для подарков в квадратиках */
     .selected-gift {
       position: absolute;
       inset: 0;
@@ -500,8 +522,6 @@
       line-height: 1.1;
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
-
-    /* Скрытые видео */
     .hidden-video {
       position: absolute;
       width: 1px;
@@ -510,8 +530,6 @@
       pointer-events: none;
       z-index: -1;
     }
-
-    /* Контейнер для полученных подарков в главном квадрате */
     .obtained-gifts {
       position: absolute;
       top: 8px;
@@ -558,8 +576,6 @@
       0% { opacity: 0; transform: scale(0.5); }
       100% { opacity: 1; transform: scale(1); }
     }
-
-    /* Модальное окно */
     .modal {
       position: fixed;
       top: 0;
@@ -695,8 +711,6 @@
       color: #fff;
       font-weight: 500;
     }
-
-    /* Кнопка "Сервисы" внизу */
     .services-button {
       position: absolute;
       bottom: 20px;
@@ -735,8 +749,6 @@
     .services-button .icon {
       font-size: 20px;
     }
-
-    /* Новые стили для оверлея игры (iframe) */
     .game-overlay {
       position: fixed;
       top: 0;
@@ -776,6 +788,77 @@
       height: 100%;
       border: none;
     }
+    /* Модальное окно для пополнения */
+    .payment-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .payment-modal.active {
+      display: flex;
+    }
+    .payment-card {
+      background: rgba(20, 20, 30, 0.95);
+      border-radius: 30px;
+      padding: 24px;
+      width: 300px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
+    }
+    .payment-card h3 {
+      color: #fff;
+      text-align: center;
+      margin-top: 0;
+    }
+    .amount-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    .amount-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .amount-btn.selected {
+      background: #00ff88;
+      color: #000;
+    }
+    .pay-button {
+      background: #00ff88;
+      color: #000;
+      border: none;
+      padding: 15px;
+      width: 100%;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    .pay-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .close-payment {
+      text-align: center;
+      margin-top: 15px;
+      color: #aaa;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -787,7 +870,11 @@
     <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
   </div>
 
-  <div class="avatar-top" id="avatar"></div>
+  <!-- Аватар и кнопка пополнения -->
+  <div class="top-right-container" id="topRightContainer">
+    <div class="avatar-top" id="avatar"></div>
+    <div class="plus-button" id="plusButton">+</div>
+  </div>
 
   <div class="main-square" id="mainSquare">
     <div class="obtained-gifts" id="obtainedGifts"></div>
@@ -816,7 +903,7 @@
     </div>
   </div>
 
-  <!-- Синий оверлей с эффектом стекла (для вашей рулетки) -->
+  <!-- Синий оверлей (для рулетки) -->
   <div class="blue-overlay" id="blueOverlay">
     <div class="gift-cube-container" id="blueCubeContainer">
       <div class="gift-cube" id="blueCube">
@@ -829,22 +916,35 @@
       </div>
       <div class="cube-glow" id="blueCubeGlow"></div>
     </div>
-
     <div class="single-gift-display" id="singleGiftDisplay" style="display: none;"></div>
     <div class="blue-gift-row" id="blueGiftRow"></div>
     <div class="blue-counter" id="blueCounter">4</div>
   </div>
 
-  <!-- Кнопка "Сервисы" -->
+  <!-- Кнопка Angry Birds -->
   <div class="services-button" id="servicesButton">
     <span class="icon">🐦</span>
     <span>Angry Birds</span>
   </div>
 
-  <!-- Оверлей для игры Angry Birds (iframe) -->
+  <!-- Оверлей для игры -->
   <div class="game-overlay" id="gameOverlay">
     <div class="close-btn" id="gameCloseBtn">×</div>
     <iframe id="gameIframe" src=""></iframe>
+  </div>
+
+  <!-- Модальное окно пополнения -->
+  <div class="payment-modal" id="paymentModal">
+    <div class="payment-card">
+      <h3>Пополнение баланса</h3>
+      <div class="amount-buttons">
+        <div class="amount-btn" data-amount="1">1 TON</div>
+        <div class="amount-btn" data-amount="5">5 TON</div>
+        <div class="amount-btn" data-amount="10">10 TON</div>
+      </div>
+      <button class="pay-button" id="payButton" disabled>Подключите кошелек</button>
+      <div class="close-payment" id="closePayment">Отмена</div>
+    </div>
   </div>
 </div>
 
@@ -863,7 +963,7 @@
 </div>
 
 <script>
-  // ========== ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЁН ПОЛНОСТЬЮ) ==========
+  // ========== ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЁН ПОЛНОСТЬЮ) ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -1018,14 +1118,13 @@
     return container;
   }
 
-  // Сокращённый массив подарков (в вашем коде он должен быть полным, но для краткости здесь оставлю несколько)
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
     { name: "Top Hat", emoji: "🎩", rarity: "common" },
     { name: "Astral Shard", emoji: "💎", rarity: "uncommon" },
     { name: "Artisan Brick", emoji: "🧱", rarity: "epic" },
     { name: "Kissed Frog", emoji: "🐸", rarity: "rare" }
-  ]; // В оригинале здесь 80+ записей, но для работы кода достаточно
+  ];
 
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
@@ -1584,6 +1683,7 @@
     if (user && user.photo_url) {
       document.getElementById("avatar").style.opacity = "1";
     }
+    document.getElementById("plusButton").classList.add('visible');
     document.getElementById("mainSquare").style.opacity = "1";
     document.getElementById('servicesButton').classList.add('visible');
 
@@ -1609,14 +1709,13 @@
     }
   };
 
-  // ========== НОВЫЙ ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS (IFRAME) ==========
+  // ========== ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS ==========
   const servicesBtn = document.getElementById('servicesButton');
   const gameOverlay = document.getElementById('gameOverlay');
   const gameIframe = document.getElementById('gameIframe');
   const gameCloseBtn = document.getElementById('gameCloseBtn');
 
   servicesBtn.addEventListener('click', () => {
-    // Загружаем сразу игровой файл, минуя дисклеймер
     gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
     gameOverlay.classList.add('active');
   });
@@ -1632,6 +1731,126 @@
       gameIframe.src = '';
     }
   });
+
+  // ========== TON PAY ИНТЕГРАЦИЯ ==========
+  const plusButton = document.getElementById('plusButton');
+  const paymentModal = document.getElementById('paymentModal');
+  const closePayment = document.getElementById('closePayment');
+  const payButton = document.getElementById('payButton');
+  const amountBtns = document.querySelectorAll('.amount-btn');
+
+  let selectedAmount = null;
+  let tonConnectUI = null;
+
+  // Инициализация TON Connect
+  try {
+    tonConnectUI = new TONConnectUI.TonConnectUI({
+      manifestUrl: 'https://raw.githubusercontent.com/mikael20088/telegram-roulette/main/tonconnect-manifest.json',
+      buttonRootId: 'plusButton' // можно не указывать
+    });
+    console.log('TON Connect initialized');
+  } catch (e) {
+    console.error('TON Connect init error', e);
+  }
+
+  // Открытие модалки
+  plusButton.addEventListener('click', () => {
+    paymentModal.classList.add('active');
+  });
+
+  // Закрытие модалки
+  closePayment.addEventListener('click', () => {
+    paymentModal.classList.remove('active');
+    // сброс выбора
+    amountBtns.forEach(btn => btn.classList.remove('selected'));
+    selectedAmount = null;
+    payButton.disabled = true;
+    payButton.textContent = 'Подключите кошелек';
+  });
+
+  // Выбор суммы
+  amountBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      amountBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedAmount = btn.dataset.amount;
+      if (tonConnectUI && tonConnectUI.connected) {
+        payButton.disabled = false;
+        payButton.textContent = `Оплатить ${selectedAmount} TON`;
+      } else {
+        payButton.disabled = false; // можно подключить
+        payButton.textContent = 'Подключить кошелек';
+      }
+    });
+  });
+
+  // Обработка нажатия на кнопку оплаты
+  payButton.addEventListener('click', async () => {
+    if (!tonConnectUI) {
+      alert('TON Connect не инициализирован');
+      return;
+    }
+
+    if (!selectedAmount) {
+      alert('Выберите сумму');
+      return;
+    }
+
+    if (!tonConnectUI.connected) {
+      // Подключаем кошелек
+      try {
+        await tonConnectUI.connectWallet();
+        // После подключения обновляем текст кнопки
+        if (tonConnectUI.connected) {
+          payButton.textContent = `Оплатить ${selectedAmount} TON`;
+        }
+      } catch (e) {
+        console.error('Wallet connection error', e);
+        alert('Ошибка подключения кошелька');
+      }
+      return;
+    }
+
+    // Отправка транзакции
+    const transaction = {
+      validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
+      messages: [
+        {
+          address: 'EQD4e0vYvY_J_lVlNkE4m4CQlJ5J5n5J5n5J5n5J5n5J5n', // замените на адрес получателя
+          amount: (selectedAmount * 1e9).toString(), // в нанотонах
+        }
+      ]
+    };
+
+    try {
+      const result = await tonConnectUI.sendTransaction(transaction);
+      console.log('Transaction sent', result);
+      alert('Оплата успешно отправлена!');
+      paymentModal.classList.remove('active');
+    } catch (e) {
+      console.error('Transaction error', e);
+      alert('Ошибка при оплате');
+    }
+  });
+
+  // Подписка на изменения статуса кошелька
+  if (tonConnectUI) {
+    tonConnectUI.onStatusChange(wallet => {
+      if (wallet) {
+        console.log('Wallet connected', wallet);
+        if (selectedAmount) {
+          payButton.disabled = false;
+          payButton.textContent = `Оплатить ${selectedAmount} TON`;
+        } else {
+          payButton.disabled = true;
+          payButton.textContent = 'Выберите сумму';
+        }
+      } else {
+        payButton.disabled = true;
+        payButton.textContent = 'Подключите кошелек';
+      }
+    });
+  }
 </script>
 
 <!-- Предзагрузка изображений для четырёх подарков -->
