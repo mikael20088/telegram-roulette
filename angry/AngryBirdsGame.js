@@ -243,11 +243,6 @@ AngryBirds.Splash.prototype = {
 		}
 	};
 
-AngryBirds.Disclaimer = function(){};
-
-AngryBirds.Disclaimer.prototype = {
-
-	init: function()
 		{
 		this.line1 = null;
 		this.line2 = null;
