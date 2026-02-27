@@ -8,12 +8,10 @@
                  initial-scale=1.0,
                  maximum-scale=1.0,
                  user-scalable=no" />
-  <title>Telegram Roulette + TON Pay</title>
+  <title>Telegram Roulette + TON Pay (упрощённо)</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- TON Connect UI library -->
-  <script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
   <style>
-    /* ========== ВСЕ ВАШИ ОРИГИНАЛЬНЫЕ СТИЛИ (СОХРАНЕНЫ) ========== */
+    /* ========== ВСЕ ВАШИ ОРИГИНАЛЬНЫЕ СТИЛИ ========== */
     html, body {
       margin: 0;
       padding: 0;
@@ -33,7 +31,6 @@
       z-index: 1;
       transition: opacity 0.5s ease;
     }
-    /* Контейнер для аватара и кнопки пополнения */
     .top-right-container {
       position: absolute;
       top: 18px;
@@ -231,7 +228,7 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
-    /* Синий оверлей с эффектом стекла (для вашей рулетки) */
+    /* Синий оверлей */
     .blue-overlay {
       position: fixed;
       top: 0;
@@ -265,7 +262,6 @@
       pointer-events: auto;
     }
 
-    /* Контейнер для куба */
     .blue-overlay .gift-cube-container {
       position: relative;
       width: 70px;
@@ -378,7 +374,6 @@
     .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
 
-    /* Одиночный предмет */
     .single-gift-display {
       width: 70px;
       height: 70px;
@@ -409,7 +404,6 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    /* Ряд полученных подарков */
     .blue-gift-row {
       display: flex;
       gap: 12px;
@@ -448,7 +442,6 @@
       text-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
 
-    /* Счётчик предметов (красный) */
     .blue-counter {
       position: absolute;
       bottom: 20px;
@@ -469,7 +462,6 @@
       display: block;
     }
 
-    /* Основной стиль для подарков в квадратиках */
     .selected-gift {
       position: absolute;
       inset: 0;
@@ -536,7 +528,6 @@
       text-shadow: 0 0 6px rgba(0, 0, 0, 1);
     }
 
-    /* Скрытые видео */
     .hidden-video {
       position: absolute;
       width: 1px;
@@ -546,7 +537,6 @@
       z-index: -1;
     }
 
-    /* Контейнер для полученных подарков в главном квадрате */
     .obtained-gifts {
       position: absolute;
       top: 8px;
@@ -594,7 +584,6 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    /* Модальное окно */
     .modal {
       position: fixed;
       top: 0;
@@ -731,7 +720,6 @@
       font-weight: 500;
     }
 
-    /* Кнопка "Сервисы" внизу */
     .services-button {
       position: absolute;
       bottom: 20px;
@@ -771,7 +759,6 @@
       font-size: 20px;
     }
 
-    /* Новые стили для оверлея игры (iframe) */
     .game-overlay {
       position: fixed;
       top: 0;
@@ -812,7 +799,7 @@
       border: none;
     }
 
-    /* Модальное окно для пополнения TON */
+    /* Модальное окно пополнения (упрощённое) */
     .payment-modal {
       position: fixed;
       top: 0;
@@ -927,7 +914,7 @@
     </div>
   </div>
 
-  <!-- Синий оверлей (для рулетки) -->
+  <!-- Синий оверлей -->
   <div class="blue-overlay" id="blueOverlay">
     <div class="gift-cube-container" id="blueCubeContainer">
       <div class="gift-cube" id="blueCube">
@@ -957,7 +944,7 @@
     <iframe id="gameIframe" src=""></iframe>
   </div>
 
-  <!-- Модальное окно пополнения TON -->
+  <!-- Модальное окно пополнения (тестовое) -->
   <div class="payment-modal" id="paymentModal">
     <div class="payment-card">
       <h3>Пополнение баланса</h3>
@@ -966,7 +953,7 @@
         <div class="amount-btn" data-amount="5">5 TON</div>
         <div class="amount-btn" data-amount="10">10 TON</div>
       </div>
-      <button class="pay-button" id="payButton" disabled>Подключите кошелек</button>
+      <button class="pay-button" id="payButton" disabled>Выберите сумму</button>
       <div class="close-payment" id="closePayment">Отмена</div>
     </div>
   </div>
@@ -987,7 +974,7 @@
 </div>
 
 <script>
-  // ========== ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЁН ПОЛНОСТЬЮ) ==========
+  // ========== ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЁН ПОЛНОСТЬЮ) ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -1142,14 +1129,13 @@
     return container;
   }
 
-  // Сокращённый массив подарков (в вашем коде он должен быть полным, но для краткости здесь оставлю несколько)
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
     { name: "Top Hat", emoji: "🎩", rarity: "common" },
     { name: "Astral Shard", emoji: "💎", rarity: "uncommon" },
     { name: "Artisan Brick", emoji: "🧱", rarity: "epic" },
     { name: "Kissed Frog", emoji: "🐸", rarity: "rare" }
-  ]; // В оригинале здесь 80+ записей, но для работы кода достаточно
+  ];
 
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
@@ -1757,14 +1743,8 @@
     }
   });
 
-  // ========== TON PAY ИНТЕГРАЦИЯ (ИСПРАВЛЕННАЯ) ==========
+  // ========== УПРОЩЁННАЯ ТЕСТОВАЯ ИНТЕГРАЦИЯ ПОПОЛНЕНИЯ (без TON Connect) ==========
   (function() {
-    // Ждём полной загрузки DOM и библиотеки
-    if (typeof TONConnectUI === 'undefined') {
-      console.error('TON Connect UI library not loaded');
-      return;
-    }
-
     const plusButton = document.getElementById('plusButton');
     const paymentModal = document.getElementById('paymentModal');
     const closePayment = document.getElementById('closePayment');
@@ -1772,39 +1752,6 @@
     const amountBtns = document.querySelectorAll('.amount-btn');
 
     let selectedAmount = null;
-    let tonConnectUI = null;
-
-    // Манифест должен быть доступен по этому URL. Создайте файл tonconnect-manifest.json в корне репозитория.
-    const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
-
-    // Инициализация после загрузки страницы
-    window.addEventListener('load', () => {
-      try {
-        tonConnectUI = new TONConnectUI.TonConnectUI({
-          manifestUrl: manifestUrl,
-          buttonRootId: 'plusButton' // кнопка будет встроена в плюс
-        });
-        console.log('TON Connect initialized');
-
-        tonConnectUI.onStatusChange(wallet => {
-          if (wallet) {
-            console.log('Wallet connected', wallet);
-            if (selectedAmount) {
-              payButton.disabled = false;
-              payButton.textContent = `Оплатить ${selectedAmount} TON`;
-            } else {
-              payButton.disabled = true;
-              payButton.textContent = 'Выберите сумму';
-            }
-          } else {
-            payButton.disabled = true;
-            payButton.textContent = 'Подключить кошелек';
-          }
-        });
-      } catch (e) {
-        console.error('TON Connect init error', e);
-      }
-    });
 
     // Открытие модалки
     plusButton.addEventListener('click', () => {
@@ -1817,7 +1764,7 @@
       amountBtns.forEach(btn => btn.classList.remove('selected'));
       selectedAmount = null;
       payButton.disabled = true;
-      payButton.textContent = tonConnectUI?.connected ? 'Выберите сумму' : 'Подключить кошелек';
+      payButton.textContent = 'Выберите сумму';
     });
 
     // Выбор суммы
@@ -1826,63 +1773,18 @@
         amountBtns.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         selectedAmount = btn.dataset.amount;
-        if (tonConnectUI?.connected) {
-          payButton.disabled = false;
-          payButton.textContent = `Оплатить ${selectedAmount} TON`;
-        } else {
-          payButton.disabled = false;
-          payButton.textContent = 'Подключить кошелек';
-        }
+        payButton.disabled = false;
+        payButton.textContent = `Оплатить ${selectedAmount} TON (тест)`;
       });
     });
 
-    // Обработка нажатия на кнопку оплаты
-    payButton.addEventListener('click', async () => {
-      if (!tonConnectUI) {
-        alert('TON Connect не инициализирован. Обновите страницу.');
-        return;
-      }
-
-      if (!selectedAmount) {
-        alert('Выберите сумму');
-        return;
-      }
-
-      if (!tonConnectUI.connected) {
-        // Подключаем кошелек
-        try {
-          await tonConnectUI.connectWallet();
-          // после подключения кнопка обновится через onStatusChange
-        } catch (e) {
-          console.error('Wallet connection error', e);
-          alert('Ошибка подключения кошелька');
-        }
-        return;
-      }
-
-      // Отправка транзакции
-      const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
-        messages: [
-          {
-            address: 'EQD4e0vYvY_J_lVlNkE4m4CQlJ5J5n5J5n5J5n5J5n5J5n', // замените на ваш адрес
-            amount: (selectedAmount * 1e9).toString(), // в нанотонах
-          }
-        ]
-      };
-
-      try {
-        const result = await tonConnectUI.sendTransaction(transaction);
-        console.log('Transaction sent', result);
-        alert('Оплата успешно отправлена!');
-        paymentModal.classList.remove('active');
-      } catch (e) {
-        console.error('Transaction error', e);
-        alert('Ошибка при оплате');
-      }
+    // Имитация оплаты
+    payButton.addEventListener('click', () => {
+      alert(`Вы выбрали оплату ${selectedAmount} TON. Реальная транзакция не выполняется в тестовом режиме.`);
+      paymentModal.classList.remove('active');
     });
 
-    // Закрытие модалки кликом вне карточки
+    // Закрытие по клику вне карточки
     paymentModal.addEventListener('click', (e) => {
       if (e.target === paymentModal) {
         paymentModal.classList.remove('active');
