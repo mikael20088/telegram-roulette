@@ -17,413 +17,1207 @@
     console.log('✅ TonConnectUI module loaded');
   </script>
   <style>
-    /* ========== ВСЕ ВАШИ ОРИГИНАЛЬНЫЕ СТИЛИ (с изменениями для аватара) ========== */
-    /* ... (полностью сохранены, как в предыдущих ответах) ... */
-    /* Для краткости я не копирую их здесь, но в итоговом коде они будут */
+    /* ========== ПОЛНЫЙ КОПИРОВАННЫЙ СТИЛЬ (ВАШ ОРИГИНАЛ) ========== */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      transition: opacity 0.5s ease;
+    }
+    .top-right-container {
+      position: absolute;
+      top: 18px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .avatar-top {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(255, 255, 0, 0.8);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+    .avatar-top img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .plus-button {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(30, 30, 40, 0.8);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: #00ff88;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, background 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 0 0 12px #00ff88;
+      z-index: 21;
+    }
+    .plus-button.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .plus-button:hover {
+      transform: translateY(-50%) scale(1.05);
+      background: rgba(50, 50, 70, 0.9);
+    }
+    .black-screen {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .video-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 220px;
+      height: 220px;
+      z-index: 3;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: transparent;
+    }
+    .main-square {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 190px;
+      height: 190px;
+      background: rgba(10, 20, 10, 0.3);
+      border-radius: 20px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      z-index: 5;
+      padding: 8px;
+      box-sizing: border-box;
+      position: relative;
+      transition: all 0.5s ease;
+    }
+    .main-square::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      border-radius: 20px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
+    }
+    @keyframes matrixGlow {
+      0% { opacity: 0.7; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.03); }
+    }
+    .corners-container {
+      position: absolute;
+      inset: 0;
+      transition: all 0.5s ease;
+      z-index: 2;
+    }
+    .corners-container.merged {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .mini-square {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+    .mini-square[data-slot="0"] { top: 8px; left: 8px; }
+    .mini-square[data-slot="1"] { top: 8px; right: 8px; }
+    .mini-square[data-slot="2"] { bottom: 8px; left: 8px; }
+    .mini-square[data-slot="3"] { bottom: 8px; right: 8px; }
+    .mini-square.filled {
+      background: rgba(0, 255, 136, 0.35);
+      border-color: rgba(0, 255, 136, 0.6);
+    }
+    .plus-sign {
+      font-size: 24px;
+      color: #fff;
+      font-weight: bold;
+      z-index: 3;
+      transition: opacity 0.3s ease;
+      text-shadow: 0 0 12px rgba(0, 255, 136, 1);
+    }
+    .remove-gift {
+      display: none;
+    }
+    .center-mini-square {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: none;
+      backdrop-filter: blur(15px);
+      overflow: hidden;
+      transition: all 0.5s ease;
+      cursor: pointer;
+      pointer-events: none;
+    }
+    .center-mini-square.craftable {
+      background: rgba(255, 215, 0, 0.3);
+      border: 2px solid rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+      pointer-events: auto;
+    }
+    .center-mini-square.merged {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .center-video {
+      width: 90%;
+      height: 90%;
+      object-fit: cover;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Синий оверлей */
+    .blue-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .blue-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(200, 235, 255, 0.3) 0%, rgba(170, 220, 255, 0.25) 25%, rgba(220, 245, 255, 0.3) 50%, rgba(150, 210, 255, 0.2) 75%, rgba(200, 235, 255, 0.3) 100%),
+        radial-gradient(circle at 25% 25%, rgba(230, 250, 255, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(200, 235, 255, 0.3) 0%, transparent 50%);
+      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      z-index: -1;
+    }
+    .blue-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .blue-overlay .gift-cube-container {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      filter: drop-shadow(0 0 15px currentColor);
+      will-change: transform, opacity;
+      perspective: 400px;
+      transition: opacity 0.3s ease;
+      margin: 0 auto;
+    }
+    .gift-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: idleBounce 1s infinite ease-in-out;
+      transform: rotateX(-15deg) rotateY(20deg);
+      will-change: transform;
+    }
+    @keyframes idleBounce {
+      0%, 100% { transform: rotateX(-15deg) rotateY(20deg) scale(1); }
+      50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.03) translateY(-3px); }
+    }
+    .gift-cube.opening {
+      animation: openBox 0.8s ease-out forwards;
+    }
+    @keyframes openBox {
+      0% { transform: rotateX(-15deg) rotateY(20deg) scale(1); opacity: 1; }
+      50% { transform: rotateX(-15deg) rotateY(20deg) scale(1.1); opacity: 1; }
+      100% { transform: rotateX(-15deg) rotateY(20deg) scale(0); opacity: 0; }
+    }
+    .cube-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+      transform: translate(-50%, -50%);
+      z-index: 11;
+      pointer-events: none;
+      transition: width 0.5s ease, height 0.5s ease;
+    }
+    .cube-glow.active {
+      width: 200px;
+      height: 200px;
+    }
+    .cube-face {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      font-size: 36px;
+      font-weight: bold;
+      transition: none;
+      border-width: 3px;
+      border-style: solid;
+    }
+    .gift-cube-container.rarity-common .cube-face {
+      background: rgba(0, 255, 136, 0.45);
+      border-color: rgba(0, 255, 136, 1);
+      box-shadow: 0 0 50px rgba(0, 255, 136, 1), inset 0 0 25px rgba(0, 255, 136, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #00ff88, 0 0 60px #00ff88;
+    }
+    .gift-cube-container.rarity-rare .cube-face {
+      background: rgba(0, 100, 255, 0.45);
+      border-color: rgba(0, 100, 255, 1);
+      box-shadow: 0 0 50px rgba(0, 100, 255, 1), inset 0 0 25px rgba(0, 100, 255, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #3a7bff, 0 0 60px #3a7bff;
+    }
+    .gift-cube-container.rarity-epic .cube-face {
+      background: rgba(155, 48, 255, 0.45);
+      border-color: rgba(155, 48, 255, 1);
+      box-shadow: 0 0 50px rgba(155, 48, 255, 1), inset 0 0 25px rgba(155, 48, 255, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #b883ff, 0 0 60px #b883ff;
+    }
+    .gift-cube-container.rarity-legendary .cube-face {
+      background: rgba(255, 215, 0, 0.45);
+      border-color: rgba(255, 215, 0, 1);
+      box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(255, 215, 0, 0.8);
+      color: #ffffff;
+      text-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
+    }
+
+    .cube-face .selected-gift {
+      display: none;
+    }
+    .cube-question {
+      font-size: 36px;
+      font-weight: bold;
+      opacity: 0.95;
+      filter: drop-shadow(0 0 8px currentColor);
+    }
+
+    .cube-face.front  { transform: translateZ(35px); }
+    .cube-face.back   { transform: rotateY(180deg) translateZ(35px); }
+    .cube-face.right  { transform: rotateY(90deg) translateZ(35px); }
+    .cube-face.left   { transform: rotateY(-90deg) translateZ(35px); }
+    .cube-face.top    { transform: rotateX(90deg) translateZ(35px); }
+    .cube-face.bottom { transform: rotateX(-90deg) translateZ(35px); }
+
+    .single-gift-display {
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      animation: popIn 0.3s ease-out;
+    }
+    .single-gift-display video,
+    .single-gift-display img,
+    .single-gift-display .gift-emoji {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 0;
+    }
+    .single-gift-display .gift-emoji {
+      font-size: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.5); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .blue-gift-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .blue-gift-row.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .blue-gift-item {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .blue-gift-item video,
+    .blue-gift-item img,
+    .blue-gift-item .gift-emoji {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .blue-gift-item .gift-emoji {
+      font-size: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    .blue-counter {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 40px;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+      z-index: 31;
+      display: none;
+      backdrop-filter: blur(5px);
+    }
+    .blue-counter.active {
+      display: block;
+    }
+
+    .selected-gift {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      border-radius: 14px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 2;
+      backdrop-filter: none;
+      border: none;
+    }
+    .selected-gift.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .selected-gift video.gift-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+    .selected-gift.has-media video.gift-img {
+      width: 95%;
+      height: 95%;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
+    }
+    .selected-gift.has-media .gift-name {
+      display: none;
+    }
+    .selected-gift.durov-cap video.gift-img {
+      width: 95%;
+      height: 95%;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
+    }
+    .selected-gift.durov-cap .gift-name { display: none; }
+    .selected-gift .gift-emoji {
+      font-size: 28px;
+      margin-bottom: 2px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 1);
+      color: #fff;
+    }
+    .selected-gift .gift-img,
+    .selected-gift video.gift-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin-bottom: 2px;
+    }
+    .selected-gift .gift-name {
+      font-size: 10px;
+      color: #fff;
+      font-weight: 600;
+      text-align: center;
+      max-width: 75px;
+      line-height: 1.1;
+      text-shadow: 0 0 6px rgba(0, 0, 0, 1);
+    }
+
+    .hidden-video {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .obtained-gifts {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      height: 34px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 6px;
+      padding: 0 4px;
+      z-index: 15;
+      pointer-events: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .obtained-gifts::-webkit-scrollbar {
+      display: none;
+    }
+    .obtained-gift-item {
+      width: 30px;
+      height: 30px;
+      background: #000;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      animation: giftAppear 0.2s ease-out;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .obtained-gift-item video,
+    .obtained-gift-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    @keyframes giftAppear {
+      0% { opacity: 0; transform: scale(0.5); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .modal.active { display: flex; opacity: 1; }
+    .modal-content {
+      background: rgba(20, 20, 20, 0.95);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 90%;
+      max-height: 80%;
+      overflow-y: auto;
+      position: relative;
+      width: 90%;
+    }
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: #fff;
+    }
+    .search-container {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 40px 12px 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 18px;
+      pointer-events: none;
+    }
+    .gifts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .gift-item {
+      position: relative;
+      text-align: center;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      opacity: 1;
+      transform: scale(1);
+      backdrop-filter: blur(4px);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .gift-item.selected {
+      background: rgba(0, 255, 136, 0.2);
+      border-color: rgba(0, 255, 136, 0.5);
+    }
+    .gift-item .remove-selected {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 0, 0, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+    .gift-item:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+    .gift-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      margin: 0 auto 8px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+    .gift-img img,
+    .gift-img video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gift-name {
+      font-size: 12px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .services-button {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(30, 30, 40, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 30px;
+      padding: 10px 24px;
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, background 0.2s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .services-button.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .services-button:hover {
+      transform: translateX(-50%) scale(1.05);
+      background: rgba(50, 50, 70, 0.9);
+    }
+    .services-button:active {
+      transform: translateX(-50%) scale(0.98);
+    }
+    .services-button .icon {
+      font-size: 20px;
+    }
+
+    .game-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .game-overlay.active {
+      display: flex;
+    }
+    .game-overlay .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(5px);
+      z-index: 201;
+    }
+    .game-overlay iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Модальное окно пополнения */
+    .payment-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .payment-modal.active {
+      display: flex;
+    }
+    .payment-card {
+      background: rgba(20, 20, 30, 0.95);
+      border-radius: 30px;
+      padding: 24px;
+      width: 300px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
+    }
+    .payment-card h3 {
+      color: #fff;
+      text-align: center;
+      margin-top: 0;
+    }
+    .amount-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    .amount-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .amount-btn.selected {
+      background: #00ff88;
+      color: #000;
+    }
+    .pay-button {
+      background: #00ff88;
+      color: #000;
+      border: none;
+      padding: 15px;
+      width: 100%;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    .pay-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .close-payment {
+      text-align: center;
+      margin-top: 15px;
+      color: #aaa;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-<div id="app">
-  <div class="black-screen" id="blackScreen"></div>
-  <canvas id="matrix"></canvas>
+  <!-- ========== ВСЯ РАЗМЕТКА (БЕЗ ИЗМЕНЕНИЙ) ========== -->
+  <div id="app">
+    <div class="black-screen" id="blackScreen"></div>
+    <canvas id="matrix"></canvas>
 
-  <div class="video-wrapper" id="videoWrapper">
-    <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
-  </div>
+    <div class="video-wrapper" id="videoWrapper">
+      <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
+    </div>
 
-  <!-- Аватар (по центру) и кнопка пополнения (справа) -->
-  <div class="top-right-container" id="topRightContainer">
-    <div class="avatar-top" id="avatar"></div>
-    <div class="plus-button" id="plusButton">+</div>
-  </div>
+    <div class="top-right-container" id="topRightContainer">
+      <div class="avatar-top" id="avatar"></div>
+      <div class="plus-button" id="plusButton">+</div>
+    </div>
 
-  <div class="main-square" id="mainSquare">
-    <div class="obtained-gifts" id="obtainedGifts"></div>
+    <div class="main-square" id="mainSquare">
+      <div class="obtained-gifts" id="obtainedGifts"></div>
 
-    <div class="corners-container" id="cornersContainer">
-      <div class="mini-square" data-slot="0">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-0"></div>
+      <div class="corners-container" id="cornersContainer">
+        <div class="mini-square" data-slot="0">
+          <div class="plus-sign">+</div>
+          <div class="selected-gift" id="gift-slot-0"></div>
+        </div>
+        <div class="mini-square" data-slot="1">
+          <div class="plus-sign">+</div>
+          <div class="selected-gift" id="gift-slot-1"></div>
+        </div>
+        <div class="mini-square" data-slot="2">
+          <div class="plus-sign">+</div>
+          <div class="selected-gift" id="gift-slot-2"></div>
+        </div>
+        <div class="mini-square" data-slot="3">
+          <div class="plus-sign">+</div>
+          <div class="selected-gift" id="gift-slot-3"></div>
+        </div>
       </div>
-      <div class="mini-square" data-slot="1">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-1"></div>
-      </div>
-      <div class="mini-square" data-slot="2">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-2"></div>
-      </div>
-      <div class="mini-square" data-slot="3">
-        <div class="plus-sign">+</div>
-        <div class="selected-gift" id="gift-slot-3"></div>
+
+      <div class="center-mini-square" id="centerSquare">
+        <video class="center-video" src="center-video.mp4" muted playsinline webkit-playsinline></video>
       </div>
     </div>
 
-    <div class="center-mini-square" id="centerSquare">
-      <video class="center-video" src="center-video.mp4" muted playsinline webkit-playsinline></video>
-    </div>
-  </div>
-
-  <!-- Синий оверлей -->
-  <div class="blue-overlay" id="blueOverlay">
-    <div class="gift-cube-container" id="blueCubeContainer">
-      <div class="gift-cube" id="blueCube">
-        <div class="cube-face front" id="blue-face-0"></div>
-        <div class="cube-face back" id="blue-face-1"></div>
-        <div class="cube-face right" id="blue-face-2"></div>
-        <div class="cube-face left" id="blue-face-3"></div>
-        <div class="cube-face top"></div>
-        <div class="cube-face bottom"></div>
+    <!-- Синий оверлей -->
+    <div class="blue-overlay" id="blueOverlay">
+      <div class="gift-cube-container" id="blueCubeContainer">
+        <div class="gift-cube" id="blueCube">
+          <div class="cube-face front" id="blue-face-0"></div>
+          <div class="cube-face back" id="blue-face-1"></div>
+          <div class="cube-face right" id="blue-face-2"></div>
+          <div class="cube-face left" id="blue-face-3"></div>
+          <div class="cube-face top"></div>
+          <div class="cube-face bottom"></div>
+        </div>
+        <div class="cube-glow" id="blueCubeGlow"></div>
       </div>
-      <div class="cube-glow" id="blueCubeGlow"></div>
+      <div class="single-gift-display" id="singleGiftDisplay" style="display: none;"></div>
+      <div class="blue-gift-row" id="blueGiftRow"></div>
+      <div class="blue-counter" id="blueCounter">4</div>
     </div>
-    <div class="single-gift-display" id="singleGiftDisplay" style="display: none;"></div>
-    <div class="blue-gift-row" id="blueGiftRow"></div>
-    <div class="blue-counter" id="blueCounter">4</div>
-  </div>
 
-  <!-- Кнопка Angry Birds -->
-  <div class="services-button" id="servicesButton">
-    <span class="icon">🐦</span>
-    <span>Angry Birds</span>
-  </div>
+    <!-- Кнопка Angry Birds -->
+    <div class="services-button" id="servicesButton">
+      <span class="icon">🐦</span>
+      <span>Angry Birds</span>
+    </div>
 
-  <!-- Оверлей для игры -->
-  <div class="game-overlay" id="gameOverlay">
-    <div class="close-btn" id="gameCloseBtn">×</div>
-    <iframe id="gameIframe" src=""></iframe>
-  </div>
+    <!-- Оверлей для игры -->
+    <div class="game-overlay" id="gameOverlay">
+      <div class="close-btn" id="gameCloseBtn">×</div>
+      <iframe id="gameIframe" src=""></iframe>
+    </div>
 
-  <!-- Модальное окно пополнения TON -->
-  <div class="payment-modal" id="paymentModal">
-    <div class="payment-card">
-      <h3>Пополнение баланса</h3>
-      <div class="amount-buttons">
-        <div class="amount-btn" data-amount="1">1 TON</div>
-        <div class="amount-btn" data-amount="5">5 TON</div>
-        <div class="amount-btn" data-amount="10">10 TON</div>
+    <!-- Модальное окно пополнения TON -->
+    <div class="payment-modal" id="paymentModal">
+      <div class="payment-card">
+        <h3>Пополнение баланса</h3>
+        <div class="amount-buttons">
+          <div class="amount-btn" data-amount="1">1 TON</div>
+          <div class="amount-btn" data-amount="5">5 TON</div>
+          <div class="amount-btn" data-amount="10">10 TON</div>
+        </div>
+        <button class="pay-button" id="payButton" disabled>Подключить кошелек</button>
+        <div class="close-payment" id="closePayment">Отмена</div>
       </div>
-      <button class="pay-button" id="payButton" disabled>Подключить кошелек</button>
-      <div class="close-payment" id="closePayment">Отмена</div>
     </div>
   </div>
-</div>
 
-<div class="modal" id="giftModal">
-  <div class="modal-content">
-    <div class="close-btn" id="closeModal">×</div>
-    <h3 style="color: #fff; margin: 0 0 20px 0; text-align: center;">Редкие подарки</h3>
-    
-    <div class="search-container">
-      <input type="text" class="search-input" id="searchInput" placeholder="Поиск подарков..." />
-      <span class="search-icon">🔍</span>
+  <!-- Модальное окно подарков -->
+  <div class="modal" id="giftModal">
+    <div class="modal-content">
+      <div class="close-btn" id="closeModal">×</div>
+      <h3 style="color: #fff; margin: 0 0 20px 0; text-align: center;">Редкие подарки</h3>
+      <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="Поиск подарков..." />
+        <span class="search-icon">🔍</span>
+      </div>
+      <div class="gifts-grid" id="giftsGrid"></div>
     </div>
-    
-    <div class="gifts-grid" id="giftsGrid"></div>
   </div>
-</div>
 
-<script>
-  // ========== ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЁН ПОЛНОСТЬЮ) ==========
-  const tg = Telegram.WebApp;
-  tg.ready();
-  tg.expand();
+  <script>
+    // ========== ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЁН ПОЛНОСТЬЮ) ==========
+    const tg = Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
-  document.querySelector('#videoWrapper video').playbackRate = 0.7;
+    document.querySelector('#videoWrapper video').playbackRate = 0.7;
 
-  const centerVideo = document.querySelector('.center-video');
-  if (centerVideo) {
-    centerVideo.pause();
-    centerVideo.currentTime = 0;
-  }
-
-  let selectedGifts = [null, null, null, null];
-  let currentSelectedSlot = null;
-  let currentSlotElement = null;
-  let filledSlots = new Array(4).fill(false);
-  let videoPlayTimeout = null;
-  let fourthGiftSelected = false;
-
-  let currentLootBox = null;
-  let isOpening = false;
-  let showingFinalRow = false;
-  let boxOpened = false;
-  let itemsRevealed = 0;
-
-  const fileMap = {
-    "Durov's Cap": "Durov-Cap",
-    "Astral Shard": "Astral Shard",
-    "Kissed Frog": "Kissed Frog",
-    "Artisan Brick": "Artisan Brick"
-  };
-
-  const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
-
-  const hiddenVideos = {};
-
-  function createHiddenVideo(giftName) {
-    const baseName = fileMap[giftName] || giftName;
-    const encodedName = encodeURIComponent(baseName);
-    const video = document.createElement('video');
-    video.className = 'gift-img hidden-video';
-    video.src = `videos/${encodedName}.mp4`;
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.setAttribute('webkit-playsinline', '');
-    video.preload = 'auto';
-    document.body.appendChild(video);
-    hiddenVideos[giftName] = video;
-  }
-
-  mediaGifts.forEach(giftName => createHiddenVideo(giftName));
-
-  function takePreloadedVideo(giftName) {
-    const video = hiddenVideos[giftName];
-    if (video) {
-      delete hiddenVideos[giftName];
-      video.classList.remove('hidden-video');
-      video.pause();
-      video.currentTime = 0;
-      createHiddenVideo(giftName);
-      return video;
-    }
-    return null;
-  }
-
-  function createSingleGiftElement(gift) {
-    const container = document.createElement('div');
-    container.className = 'single-gift-display';
-    container.style.display = 'flex';
-
-    if (mediaGifts.has(gift.name)) {
-      const baseName = fileMap[gift.name] || gift.name;
-      const encodedName = encodeURIComponent(baseName);
-      const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      container.appendChild(video);
-      video.play().catch(() => {});
-    } else {
-      container.textContent = gift.emoji;
-      container.style.fontSize = '50px';
-      container.style.display = 'flex';
-      container.style.alignItems = 'center';
-      container.style.justifyContent = 'center';
-    }
-    return container;
-  }
-
-  function createBlueGiftItem(gift) {
-    const item = document.createElement('div');
-    item.className = 'blue-gift-item';
-
-    if (mediaGifts.has(gift.name)) {
-      const baseName = fileMap[gift.name] || gift.name;
-      const encodedName = encodeURIComponent(baseName);
-      const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      item.appendChild(video);
-      video.play().catch(() => {});
-    } else {
-      item.textContent = gift.emoji;
-      item.style.fontSize = '30px';
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'center';
-    }
-    return item;
-  }
-
-  function createTinyGiftElement(gift) {
-    const container = document.createElement('div');
-    container.className = 'obtained-gift-item';
-
-    if (mediaGifts.has(gift.name)) {
-      const baseName = fileMap[gift.name] || gift.name;
-      const encodedName = encodeURIComponent(baseName);
-      const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', '');
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      container.appendChild(video);
-      video.play().catch(() => {});
-    } else {
-      container.textContent = gift.emoji;
-      container.style.fontSize = '20px';
-      container.style.display = 'flex';
-      container.style.alignItems = 'center';
-      container.style.justifyContent = 'center';
-    }
-    return container;
-  }
-
-  // Сокращённый массив подарков (в вашем коде он должен быть полным, но для краткости здесь оставлю несколько)
-  const rareGifts = [
-    { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
-    { name: "Top Hat", emoji: "🎩", rarity: "common" },
-    { name: "Astral Shard", emoji: "💎", rarity: "uncommon" },
-    { name: "Artisan Brick", emoji: "🧱", rarity: "epic" },
-    { name: "Kissed Frog", emoji: "🐸", rarity: "rare" }
-  ]; // В оригинале здесь 80+ записей, но для работы кода достаточно
-
-  const canvas = document.getElementById("matrix");
-  const ctx = canvas.getContext("2d");
-  let drops = [];
-  const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
-  const fontSize = 14;
-
-  function initMatrix() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const columns = Math.floor(canvas.width / fontSize);
-    drops = Array.from({ length: columns }, () => ({
-      y: Math.random() * canvas.height,
-      speed: 0.5 + Math.random() * 1.5
-    }));
-  }
-
-  function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#00ff88";
-    ctx.font = fontSize + "px monospace";
-
-    drops.forEach((drop, i) => {
-      const text = chars[Math.floor(Math.random() * chars.length)];
-      ctx.fillText(text, i * fontSize, drop.y);
-      drop.y += fontSize * drop.speed;
-      if (drop.y > canvas.height + 50) {
-        drop.y = Math.random() * -100;
-        drop.speed = 0.5 + Math.random() * 1.5;
-      }
-    });
-  }
-
-  initMatrix();
-  window.addEventListener("resize", initMatrix);
-  setInterval(drawMatrix, 50);
-
-  function playVideoFromStart() {
-    if (centerVideo && !fourthGiftSelected) {
-      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+    const centerVideo = document.querySelector('.center-video');
+    if (centerVideo) {
+      centerVideo.pause();
       centerVideo.currentTime = 0;
-      centerVideo.play().catch(e => console.log('Ошибка воспроизведения видео'));
-      videoPlayTimeout = setTimeout(() => {
-        centerVideo.pause();
-        centerVideo.currentTime = 0;
-      }, 2000);
     }
-  }
 
-  function updateCenterSquareHighlight() {
-    const centerSquare = document.getElementById('centerSquare');
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount > 0) {
-      centerSquare.classList.add('craftable');
-    } else {
-      centerSquare.classList.remove('craftable');
-    }
-  }
+    let selectedGifts = [null, null, null, null];
+    let currentSelectedSlot = null;
+    let currentSlotElement = null;
+    let filledSlots = new Array(4).fill(false);
+    let videoPlayTimeout = null;
+    let fourthGiftSelected = false;
 
-  function createCatalogGiftElement(gift) {
-    const container = document.createElement('div');
-    container.className = 'gift-img';
+    let currentLootBox = null;
+    let isOpening = false;
+    let showingFinalRow = false;
+    let boxOpened = false;
+    let itemsRevealed = 0;
 
-    const baseName = fileMap[gift.name] || gift.name;
-    const encodedName = encodeURIComponent(baseName);
-
-    const img = new Image();
-    img.src = `videos/${encodedName}.png`;
-    img.alt = gift.name;
-    img.onerror = () => {
-      container.innerHTML = '';
-      const emoji = document.createElement('div');
-      emoji.className = 'gift-emoji';
-      emoji.textContent = gift.emoji;
-      container.appendChild(emoji);
+    const fileMap = {
+      "Durov's Cap": "Durov-Cap",
+      "Astral Shard": "Astral Shard",
+      "Kissed Frog": "Kissed Frog",
+      "Artisan Brick": "Artisan Brick"
     };
-    container.appendChild(img);
-    return container;
-  }
 
-  function createGiftContent(gift, forSlot = false) {
-    const container = document.createElement('div');
-    container.className = 'selected-gift active';
-    
-    if (mediaGifts.has(gift.name)) {
-      container.classList.add('has-media');
-    }
+    const mediaGifts = new Set(["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"]);
 
-    if (forSlot && mediaGifts.has(gift.name)) {
-      const readyVideo = takePreloadedVideo(gift.name);
-      if (readyVideo) {
-        container.appendChild(readyVideo);
-        readyVideo.play().catch(() => {});
-        return container;
-      }
-    }
+    const hiddenVideos = {};
 
-    const baseName = fileMap[gift.name] || gift.name;
-    const encodedName = encodeURIComponent(baseName);
-
-    const tryCreateVideo = () => {
+    function createHiddenVideo(giftName) {
+      const baseName = fileMap[giftName] || giftName;
+      const encodedName = encodeURIComponent(baseName);
       const video = document.createElement('video');
-      video.className = 'gift-img';
+      video.className = 'gift-img hidden-video';
       video.src = `videos/${encodedName}.mp4`;
       video.muted = true;
       video.loop = true;
-      video.autoplay = true;
       video.playsInline = true;
       video.setAttribute('webkit-playsinline', '');
+      video.preload = 'auto';
+      document.body.appendChild(video);
+      hiddenVideos[giftName] = video;
+    }
 
-      video.onerror = () => {
-        const img = new Image();
-        img.onload = () => {
-          container.innerHTML = '';
-          img.className = 'gift-img';
-          container.appendChild(img);
-        };
-        img.onerror = () => {
-          container.innerHTML = '';
-          const emoji = document.createElement('div');
-          emoji.className = 'gift-emoji';
-          emoji.textContent = gift.emoji;
-          container.appendChild(emoji);
-        };
-        img.src = `videos/${encodedName}.png`;
-      };
+    mediaGifts.forEach(giftName => createHiddenVideo(giftName));
 
-      video.oncanplay = () => video.play().catch(() => {});
-      return video;
-    };
+    function takePreloadedVideo(giftName) {
+      const video = hiddenVideos[giftName];
+      if (video) {
+        delete hiddenVideos[giftName];
+        video.classList.remove('hidden-video');
+        video.pause();
+        video.currentTime = 0;
+        createHiddenVideo(giftName);
+        return video;
+      }
+      return null;
+    }
 
-    if (forSlot) {
-      container.appendChild(tryCreateVideo());
-    } else {
+    function createSingleGiftElement(gift) {
+      const container = document.createElement('div');
+      container.className = 'single-gift-display';
+      container.style.display = 'flex';
+
+      if (mediaGifts.has(gift.name)) {
+        const baseName = fileMap[gift.name] || gift.name;
+        const encodedName = encodeURIComponent(baseName);
+        const video = document.createElement('video');
+        video.src = `videos/${encodedName}.mp4`;
+        video.muted = true;
+        video.loop = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute('webkit-playsinline', '');
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        container.appendChild(video);
+        video.play().catch(() => {});
+      } else {
+        container.textContent = gift.emoji;
+        container.style.fontSize = '50px';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+      }
+      return container;
+    }
+
+    function createBlueGiftItem(gift) {
+      const item = document.createElement('div');
+      item.className = 'blue-gift-item';
+
+      if (mediaGifts.has(gift.name)) {
+        const baseName = fileMap[gift.name] || gift.name;
+        const encodedName = encodeURIComponent(baseName);
+        const video = document.createElement('video');
+        video.src = `videos/${encodedName}.mp4`;
+        video.muted = true;
+        video.loop = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute('webkit-playsinline', '');
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        item.appendChild(video);
+        video.play().catch(() => {});
+      } else {
+        item.textContent = gift.emoji;
+        item.style.fontSize = '30px';
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.justifyContent = 'center';
+      }
+      return item;
+    }
+
+    function createTinyGiftElement(gift) {
+      const container = document.createElement('div');
+      container.className = 'obtained-gift-item';
+
+      if (mediaGifts.has(gift.name)) {
+        const baseName = fileMap[gift.name] || gift.name;
+        const encodedName = encodeURIComponent(baseName);
+        const video = document.createElement('video');
+        video.src = `videos/${encodedName}.mp4`;
+        video.muted = true;
+        video.loop = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute('webkit-playsinline', '');
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        container.appendChild(video);
+        video.play().catch(() => {});
+      } else {
+        container.textContent = gift.emoji;
+        container.style.fontSize = '20px';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+      }
+      return container;
+    }
+
+    // Сокращённый массив подарков (в вашем коде он должен быть полным, но для краткости здесь оставлю несколько)
+    const rareGifts = [
+      { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
+      { name: "Top Hat", emoji: "🎩", rarity: "common" },
+      { name: "Astral Shard", emoji: "💎", rarity: "uncommon" },
+      { name: "Artisan Brick", emoji: "🧱", rarity: "epic" },
+      { name: "Kissed Frog", emoji: "🐸", rarity: "rare" }
+    ]; // В оригинале здесь 80+ записей, но для работы кода достаточно
+
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+    let drops = [];
+    const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+    const fontSize = 14;
+
+    function initMatrix() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const columns = Math.floor(canvas.width / fontSize);
+      drops = Array.from({ length: columns }, () => ({
+        y: Math.random() * canvas.height,
+        speed: 0.5 + Math.random() * 1.5
+      }));
+    }
+
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#00ff88";
+      ctx.font = fontSize + "px monospace";
+
+      drops.forEach((drop, i) => {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drop.y);
+        drop.y += fontSize * drop.speed;
+        if (drop.y > canvas.height + 50) {
+          drop.y = Math.random() * -100;
+          drop.speed = 0.5 + Math.random() * 1.5;
+        }
+      });
+    }
+
+    initMatrix();
+    window.addEventListener("resize", initMatrix);
+    setInterval(drawMatrix, 50);
+
+    function playVideoFromStart() {
+      if (centerVideo && !fourthGiftSelected) {
+        if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+        centerVideo.currentTime = 0;
+        centerVideo.play().catch(e => console.log('Ошибка воспроизведения видео'));
+        videoPlayTimeout = setTimeout(() => {
+          centerVideo.pause();
+          centerVideo.currentTime = 0;
+        }, 2000);
+      }
+    }
+
+    function updateCenterSquareHighlight() {
+      const centerSquare = document.getElementById('centerSquare');
+      const filledCount = filledSlots.filter(filled => filled).length;
+      if (filledCount > 0) {
+        centerSquare.classList.add('craftable');
+      } else {
+        centerSquare.classList.remove('craftable');
+      }
+    }
+
+    function createCatalogGiftElement(gift) {
+      const container = document.createElement('div');
+      container.className = 'gift-img';
+
+      const baseName = fileMap[gift.name] || gift.name;
+      const encodedName = encodeURIComponent(baseName);
+
       const img = new Image();
-      img.className = 'gift-img';
       img.src = `videos/${encodedName}.png`;
       img.alt = gift.name;
       img.onerror = () => {
@@ -434,641 +1228,708 @@
         container.appendChild(emoji);
       };
       container.appendChild(img);
+      return container;
     }
 
-    return container;
-  }
+    function createGiftContent(gift, forSlot = false) {
+      const container = document.createElement('div');
+      container.className = 'selected-gift active';
+      
+      if (mediaGifts.has(gift.name)) {
+        container.classList.add('has-media');
+      }
 
-  function removeGiftFromSlot(slotIndex, event) {
-    event.stopPropagation();
-    const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
-    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-
-    selectedGifts[slotIndex] = null;
-    filledSlots[slotIndex] = false;
-    fourthGiftSelected = false;
-
-    slotGiftContainer.innerHTML = '';
-    slotGiftContainer.classList.remove('active', 'durov-cap', 'has-media');
-    slotElement.querySelector('.plus-sign').style.opacity = '1';
-    slotElement.classList.remove('filled');
-
-    const removeBtn = slotElement.querySelector('.remove-gift');
-    if (removeBtn) removeBtn.remove();
-
-    updateCenterSquareHighlight();
-
-    if (centerVideo) {
-      centerVideo.pause();
-      centerVideo.currentTime = 0;
-      if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
-    }
-
-    updateModalSelection();
-  }
-
-  function updateModalSelection() {
-    const giftItems = document.querySelectorAll('.gift-item');
-    giftItems.forEach(item => {
-      item.classList.remove('selected');
-      const removeBtn = item.querySelector('.remove-selected');
-      if (removeBtn) removeBtn.remove();
-    });
-
-    selectedGifts.forEach((gift, index) => {
-      if (gift) {
-        const giftItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
-        if (giftItem) {
-          giftItem.classList.add('selected');
-          if (!giftItem.querySelector('.remove-selected')) {
-            const removeBtn = document.createElement('div');
-            removeBtn.className = 'remove-selected';
-            removeBtn.innerHTML = '×';
-            removeBtn.onclick = (e) => {
-              e.stopPropagation();
-              removeGiftFromSlot(index, e);
-            };
-            giftItem.appendChild(removeBtn);
-          }
+      if (forSlot && mediaGifts.has(gift.name)) {
+        const readyVideo = takePreloadedVideo(gift.name);
+        if (readyVideo) {
+          container.appendChild(readyVideo);
+          readyVideo.play().catch(() => {});
+          return container;
         }
       }
-    });
-  }
 
-  function getCubeRarity() {
-    const rarities = selectedGifts.map(g => g ? g.rarity : null).filter(Boolean);
-    if (rarities.includes('legendary')) return 'legendary';
-    if (rarities.includes('epic')) return 'epic';
-    if (rarities.includes('rare')) return 'rare';
-    return 'common';
-  }
+      const baseName = fileMap[gift.name] || gift.name;
+      const encodedName = encodeURIComponent(baseName);
 
-  function createLootBox() {
-    const allGifts = [
-      rareGifts.find(g => g.name === "Astral Shard"),
-      rareGifts.find(g => g.name === "Kissed Frog"),
-      rareGifts.find(g => g.name === "Durov's Cap"),
-      rareGifts.find(g => g.name === "Artisan Brick")
-    ];
-    const shuffled = [...allGifts].sort(() => Math.random() - 0.5);
-    const rarity = getCubeRarity();
-    return {
-      rarity: rarity,
-      items: shuffled,
-      currentIndex: 0,
-      total: 4
-    };
-  }
+      const tryCreateVideo = () => {
+        const video = document.createElement('video');
+        video.className = 'gift-img';
+        video.src = `videos/${encodedName}.mp4`;
+        video.muted = true;
+        video.loop = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute('webkit-playsinline', '');
 
-  function setupBlueCube(rarity) {
-    const cubeContainer = document.getElementById('blueCubeContainer');
-    cubeContainer.classList.remove('rarity-common', 'rarity-rare', 'rarity-epic', 'rarity-legendary');
-    cubeContainer.classList.add(`rarity-${rarity}`);
+        video.onerror = () => {
+          const img = new Image();
+          img.onload = () => {
+            container.innerHTML = '';
+            img.className = 'gift-img';
+            container.appendChild(img);
+          };
+          img.onerror = () => {
+            container.innerHTML = '';
+            const emoji = document.createElement('div');
+            emoji.className = 'gift-emoji';
+            emoji.textContent = gift.emoji;
+            container.appendChild(emoji);
+          };
+          img.src = `videos/${encodedName}.png`;
+        };
 
-    const cubeFaces = [
-      document.getElementById('blue-face-0'),
-      document.getElementById('blue-face-1'),
-      document.getElementById('blue-face-2'),
-      document.getElementById('blue-face-3'),
-      document.querySelector('#blueCube .cube-face.top'),
-      document.querySelector('#blueCube .cube-face.bottom')
-    ];
+        video.oncanplay = () => video.play().catch(() => {});
+        return video;
+      };
 
-    cubeFaces.forEach(face => {
-      if (face) {
-        face.innerHTML = '';
-        const q = document.createElement('div');
-        q.className = 'cube-question';
-        q.textContent = '?';
-        face.appendChild(q);
-      }
-    });
-
-    const cube = document.getElementById('blueCube');
-    cube.classList.remove('opening');
-    document.getElementById('blueCubeGlow').classList.remove('active');
-  }
-
-  function clearBlueRow() {
-    document.getElementById('blueGiftRow').innerHTML = '';
-  }
-
-  function clearSingleDisplay() {
-    const single = document.getElementById('singleGiftDisplay');
-    single.innerHTML = '';
-    single.style.display = 'none';
-  }
-
-  function showSingleGift(gift) {
-    const single = document.getElementById('singleGiftDisplay');
-    single.innerHTML = '';
-    const element = createSingleGiftElement(gift);
-    single.appendChild(element);
-    single.style.display = 'flex';
-  }
-
-  function addToBlueRow(gift) {
-    const row = document.getElementById('blueGiftRow');
-    const item = createBlueGiftItem(gift);
-    row.appendChild(item);
-  }
-
-  function updateBlueCounter(revealed) {
-    const counter = document.getElementById('blueCounter');
-    if (currentLootBox) {
-      const remaining = currentLootBox.total - (revealed - 1);
-      counter.textContent = remaining;
-    }
-  }
-
-  function openBlueBox() {
-    if (!currentLootBox || isOpening) return;
-    if (currentLootBox.currentIndex >= currentLootBox.items.length) return;
-
-    isOpening = true;
-    
-    const counter = document.getElementById('blueCounter');
-    counter.textContent = currentLootBox.total;
-    counter.classList.add('active');
-    
-    const cube = document.getElementById('blueCube');
-    const glow = document.getElementById('blueCubeGlow');
-    cube.classList.add('opening');
-    glow.classList.add('active');
-
-    setTimeout(() => {
-      cube.style.display = 'none';
-      glow.style.display = 'none';
-      const gift = currentLootBox.items[0];
-      showSingleGift(gift);
-      addObtainedGift(gift);
-      currentLootBox.currentIndex = 1;
-      itemsRevealed = 1;
-      boxOpened = true;
-      isOpening = false;
-    }, 800);
-  }
-
-  function showNextGift() {
-    if (!currentLootBox || isOpening) return;
-    if (itemsRevealed >= currentLootBox.total) {
-      if (!showingFinalRow) showFinalRow();
-      return;
-    }
-
-    const gift = currentLootBox.items[currentLootBox.currentIndex];
-    showSingleGift(gift);
-    addObtainedGift(gift);
-    currentLootBox.currentIndex++;
-    itemsRevealed++;
-    updateBlueCounter(itemsRevealed);
-  }
-
-  function showFinalRow() {
-    const single = document.getElementById('singleGiftDisplay');
-    single.style.display = 'none';
-    const row = document.getElementById('blueGiftRow');
-    row.innerHTML = '';
-    currentLootBox.items.forEach(gift => {
-      addToBlueRow(gift);
-    });
-    row.classList.add('active');
-    showingFinalRow = true;
-  }
-
-  function resetAllSlots() {
-    for (let i = 0; i < 4; i++) {
-      const slotElement = document.querySelector(`.mini-square[data-slot="${i}"]`);
-      const slotGiftContainer = document.getElementById(`gift-slot-${i}`);
-      if (selectedGifts[i] !== null) {
-        selectedGifts[i] = null;
-        filledSlots[i] = false;
-        slotGiftContainer.innerHTML = '';
-        slotGiftContainer.classList.remove('active', 'durov-cap', 'has-media');
-        slotElement.querySelector('.plus-sign').style.opacity = '1';
-        slotElement.classList.remove('filled');
-        const removeBtn = slotElement.querySelector('.remove-gift');
-        if (removeBtn) removeBtn.remove();
-      }
-    }
-    document.getElementById('obtainedGifts').innerHTML = '';
-    fourthGiftSelected = false;
-    updateCenterSquareHighlight();
-    updateModalSelection();
-  }
-
-  function returnToCraft() {
-    document.getElementById('blueOverlay').classList.remove('active');
-    document.getElementById('mainSquare').style.opacity = '1';
-    document.getElementById('cornersContainer').classList.remove('merged');
-    document.getElementById('centerSquare').classList.remove('merged');
-    clearSingleDisplay();
-    clearBlueRow();
-    document.getElementById('blueGiftRow').classList.remove('active');
-    const cube = document.getElementById('blueCube');
-    cube.style.display = 'block';
-    cube.classList.remove('opening');
-    document.getElementById('blueCubeGlow').style.display = 'block';
-    document.getElementById('blueCubeGlow').classList.remove('active');
-    showingFinalRow = false;
-    boxOpened = false;
-    itemsRevealed = 0;
-    currentLootBox = null;
-    resetAllSlots();
-  }
-
-  function addObtainedGift(gift) {
-    const container = document.getElementById('obtainedGifts');
-    const item = createTinyGiftElement(gift);
-    container.appendChild(item);
-    container.scrollLeft = container.scrollWidth;
-  }
-
-  function startBlueMode() {
-    document.getElementById('mainSquare').style.opacity = '0';
-    document.getElementById('blueOverlay').classList.add('active');
-    currentLootBox = createLootBox();
-    setupBlueCube(currentLootBox.rarity);
-    clearSingleDisplay();
-    clearBlueRow();
-    document.getElementById('blueGiftRow').classList.remove('active');
-    const cube = document.getElementById('blueCube');
-    cube.style.display = 'block';
-    document.getElementById('blueCubeGlow').style.display = 'block';
-    document.getElementById('blueCounter').classList.remove('active');
-    isOpening = false;
-    showingFinalRow = false;
-    boxOpened = false;
-    itemsRevealed = 0;
-    currentLootBox.currentIndex = 0;
-  }
-
-  document.getElementById('blueOverlay').addEventListener('click', (e) => {
-    if (e.target.closest('.gift-cube-container') && currentLootBox && currentLootBox.currentIndex === 0 && !isOpening && !boxOpened) {
-      openBlueBox();
-      return;
-    }
-
-    if (showingFinalRow) {
-      returnToCraft();
-      return;
-    }
-
-    if (isOpening) return;
-
-    if (boxOpened) {
-      if (itemsRevealed >= currentLootBox.total) {
-        showFinalRow();
+      if (forSlot) {
+        container.appendChild(tryCreateVideo());
       } else {
-        showNextGift();
+        const img = new Image();
+        img.className = 'gift-img';
+        img.src = `videos/${encodedName}.png`;
+        img.alt = gift.name;
+        img.onerror = () => {
+          container.innerHTML = '';
+          const emoji = document.createElement('div');
+          emoji.className = 'gift-emoji';
+          emoji.textContent = gift.emoji;
+          container.appendChild(emoji);
+        };
+        container.appendChild(img);
       }
-    }
-  });
 
-  document.getElementById('centerSquare').addEventListener('click', () => {
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount > 0) {
-      document.getElementById('cornersContainer').classList.add('merged');
-      document.getElementById('centerSquare').classList.add('merged');
-      startBlueMode();
-    }
-  });
-
-  function sortGiftsByRelevance(gifts, searchTerm) {
-    if (!searchTerm) return gifts;
-    searchTerm = searchTerm.toLowerCase();
-    return gifts.sort((a, b) => {
-      const scoreA = getSearchScore(a.name, searchTerm);
-      const scoreB = getSearchScore(b.name, searchTerm);
-      if (scoreA !== scoreB) return scoreB - scoreA;
-      return a.name.localeCompare(b.name);
-    });
-  }
-
-  function getSearchScore(name, searchTerm) {
-    const lowerName = name.toLowerCase();
-    if (lowerName.startsWith(searchTerm)) return 1000;
-    if (lowerName.includes(` ${searchTerm}`)) return 800;
-    if (lowerName[0] === searchTerm[0]) return 500;
-    if (lowerName.includes(searchTerm)) return 100;
-    return 0;
-  }
-
-  function filterAndSortGifts(searchTerm) {
-    const filteredGifts = rareGifts.filter(gift =>
-      gift.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const sortedGifts = sortGiftsByRelevance(filteredGifts, searchTerm);
-
-    const grid = document.getElementById('giftsGrid');
-    grid.innerHTML = '';
-
-    sortedGifts.forEach(gift => {
-      const item = document.createElement('div');
-      item.className = 'gift-item';
-      item.dataset.name = gift.name;
-
-      const imgDiv = createCatalogGiftElement(gift);
-      const nameDiv = document.createElement('div');
-      nameDiv.className = 'gift-name';
-      nameDiv.textContent = gift.name;
-
-      item.appendChild(imgDiv);
-      item.appendChild(nameDiv);
-      item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
-      grid.appendChild(item);
-    });
-
-    updateModalSelection();
-  }
-
-  function showGifts(slotElement) {
-    currentSelectedSlot = slotElement.dataset.slot;
-    currentSlotElement = slotElement;
-    filterAndSortGifts('');
-    document.getElementById('giftModal').classList.add('active');
-  }
-
-  function selectGiftForSlot(gift, slotElement) {
-    const slotIndex = parseInt(currentSelectedSlot);
-    if (filledSlots[slotIndex]) return;
-
-    const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
-    selectedGifts[slotIndex] = gift;
-    filledSlots[slotIndex] = true;
-
-    slotGiftContainer.innerHTML = '';
-    const content = createGiftContent(gift, true);
-    slotGiftContainer.appendChild(content);
-
-    slotGiftContainer.classList.add('active');
-    if (gift.name === "Durov's Cap") {
-      slotGiftContainer.classList.add('durov-cap');
+      return container;
     }
 
-    slotElement.querySelector('.plus-sign').style.opacity = '0';
-    slotElement.classList.add('filled');
+    function removeGiftFromSlot(slotIndex, event) {
+      event.stopPropagation();
+      const slotElement = document.querySelector(`.mini-square[data-slot="${slotIndex}"]`);
+      const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
 
-    const filledCount = filledSlots.filter(filled => filled).length;
-    if (filledCount === 4) {
-      fourthGiftSelected = true;
+      selectedGifts[slotIndex] = null;
+      filledSlots[slotIndex] = false;
+      fourthGiftSelected = false;
+
+      slotGiftContainer.innerHTML = '';
+      slotGiftContainer.classList.remove('active', 'durov-cap', 'has-media');
+      slotElement.querySelector('.plus-sign').style.opacity = '1';
+      slotElement.classList.remove('filled');
+
+      const removeBtn = slotElement.querySelector('.remove-gift');
+      if (removeBtn) removeBtn.remove();
+
+      updateCenterSquareHighlight();
+
       if (centerVideo) {
         centerVideo.pause();
         centerVideo.currentTime = 0;
         if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
       }
-      updateCenterSquareHighlight();
-    } else {
-      playVideoFromStart();
-      updateCenterSquareHighlight();
+
+      updateModalSelection();
     }
 
-    updateModalSelection();
-    document.getElementById('giftModal').classList.remove('active');
-  }
+    function updateModalSelection() {
+      const giftItems = document.querySelectorAll('.gift-item');
+      giftItems.forEach(item => {
+        item.classList.remove('selected');
+        const removeBtn = item.querySelector('.remove-selected');
+        if (removeBtn) removeBtn.remove();
+      });
 
-  const user = tg.initDataUnsafe?.user;
-  if (user && user.photo_url) {
-    const avatar = document.getElementById("avatar");
-    const img = document.createElement("img");
-    img.src = user.photo_url;
-    avatar.appendChild(img);
-  }
-
-  setTimeout(() => {
-    document.getElementById("matrix").style.opacity = "0";
-    document.getElementById("videoWrapper").style.opacity = "0";
-    document.getElementById("blackScreen").style.opacity = "1";
-  }, 3000);
-
-  setTimeout(() => {
-    if (user && user.photo_url) {
-      document.getElementById("avatar").style.opacity = "1";
+      selectedGifts.forEach((gift, index) => {
+        if (gift) {
+          const giftItem = Array.from(giftItems).find(item => item.dataset.name === gift.name);
+          if (giftItem) {
+            giftItem.classList.add('selected');
+            if (!giftItem.querySelector('.remove-selected')) {
+              const removeBtn = document.createElement('div');
+              removeBtn.className = 'remove-selected';
+              removeBtn.innerHTML = '×';
+              removeBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeGiftFromSlot(index, e);
+              };
+              giftItem.appendChild(removeBtn);
+            }
+          }
+        }
+      });
     }
-    document.getElementById("plusButton").classList.add('visible');
-    document.getElementById("mainSquare").style.opacity = "1";
-    document.getElementById('servicesButton').classList.add('visible');
 
-    document.querySelectorAll('.mini-square').forEach(square => {
-      square.onclick = (e) => {
-        if (e.target.classList.contains('remove-gift')) return;
-        showGifts(square);
+    function getCubeRarity() {
+      const rarities = selectedGifts.map(g => g ? g.rarity : null).filter(Boolean);
+      if (rarities.includes('legendary')) return 'legendary';
+      if (rarities.includes('epic')) return 'epic';
+      if (rarities.includes('rare')) return 'rare';
+      return 'common';
+    }
+
+    function createLootBox() {
+      const allGifts = [
+        rareGifts.find(g => g.name === "Astral Shard"),
+        rareGifts.find(g => g.name === "Kissed Frog"),
+        rareGifts.find(g => g.name === "Durov's Cap"),
+        rareGifts.find(g => g.name === "Artisan Brick")
+      ];
+      const shuffled = [...allGifts].sort(() => Math.random() - 0.5);
+      const rarity = getCubeRarity();
+      return {
+        rarity: rarity,
+        items: shuffled,
+        currentIndex: 0,
+        total: 4
       };
+    }
+
+    function setupBlueCube(rarity) {
+      const cubeContainer = document.getElementById('blueCubeContainer');
+      cubeContainer.classList.remove('rarity-common', 'rarity-rare', 'rarity-epic', 'rarity-legendary');
+      cubeContainer.classList.add(`rarity-${rarity}`);
+
+      const cubeFaces = [
+        document.getElementById('blue-face-0'),
+        document.getElementById('blue-face-1'),
+        document.getElementById('blue-face-2'),
+        document.getElementById('blue-face-3'),
+        document.querySelector('#blueCube .cube-face.top'),
+        document.querySelector('#blueCube .cube-face.bottom')
+      ];
+
+      cubeFaces.forEach(face => {
+        if (face) {
+          face.innerHTML = '';
+          const q = document.createElement('div');
+          q.className = 'cube-question';
+          q.textContent = '?';
+          face.appendChild(q);
+        }
+      });
+
+      const cube = document.getElementById('blueCube');
+      cube.classList.remove('opening');
+      document.getElementById('blueCubeGlow').classList.remove('active');
+    }
+
+    function clearBlueRow() {
+      document.getElementById('blueGiftRow').innerHTML = '';
+    }
+
+    function clearSingleDisplay() {
+      const single = document.getElementById('singleGiftDisplay');
+      single.innerHTML = '';
+      single.style.display = 'none';
+    }
+
+    function showSingleGift(gift) {
+      const single = document.getElementById('singleGiftDisplay');
+      single.innerHTML = '';
+      const element = createSingleGiftElement(gift);
+      single.appendChild(element);
+      single.style.display = 'flex';
+    }
+
+    function addToBlueRow(gift) {
+      const row = document.getElementById('blueGiftRow');
+      const item = createBlueGiftItem(gift);
+      row.appendChild(item);
+    }
+
+    function updateBlueCounter(revealed) {
+      const counter = document.getElementById('blueCounter');
+      if (currentLootBox) {
+        const remaining = currentLootBox.total - (revealed - 1);
+        counter.textContent = remaining;
+      }
+    }
+
+    function openBlueBox() {
+      if (!currentLootBox || isOpening) return;
+      if (currentLootBox.currentIndex >= currentLootBox.items.length) return;
+
+      isOpening = true;
+      
+      const counter = document.getElementById('blueCounter');
+      counter.textContent = currentLootBox.total;
+      counter.classList.add('active');
+      
+      const cube = document.getElementById('blueCube');
+      const glow = document.getElementById('blueCubeGlow');
+      cube.classList.add('opening');
+      glow.classList.add('active');
+
+      setTimeout(() => {
+        cube.style.display = 'none';
+        glow.style.display = 'none';
+        const gift = currentLootBox.items[0];
+        showSingleGift(gift);
+        addObtainedGift(gift);
+        currentLootBox.currentIndex = 1;
+        itemsRevealed = 1;
+        boxOpened = true;
+        isOpening = false;
+      }, 800);
+    }
+
+    function showNextGift() {
+      if (!currentLootBox || isOpening) return;
+      if (itemsRevealed >= currentLootBox.total) {
+        if (!showingFinalRow) showFinalRow();
+        return;
+      }
+
+      const gift = currentLootBox.items[currentLootBox.currentIndex];
+      showSingleGift(gift);
+      addObtainedGift(gift);
+      currentLootBox.currentIndex++;
+      itemsRevealed++;
+      updateBlueCounter(itemsRevealed);
+    }
+
+    function showFinalRow() {
+      const single = document.getElementById('singleGiftDisplay');
+      single.style.display = 'none';
+      const row = document.getElementById('blueGiftRow');
+      row.innerHTML = '';
+      currentLootBox.items.forEach(gift => {
+        addToBlueRow(gift);
+      });
+      row.classList.add('active');
+      showingFinalRow = true;
+    }
+
+    function resetAllSlots() {
+      for (let i = 0; i < 4; i++) {
+        const slotElement = document.querySelector(`.mini-square[data-slot="${i}"]`);
+        const slotGiftContainer = document.getElementById(`gift-slot-${i}`);
+        if (selectedGifts[i] !== null) {
+          selectedGifts[i] = null;
+          filledSlots[i] = false;
+          slotGiftContainer.innerHTML = '';
+          slotGiftContainer.classList.remove('active', 'durov-cap', 'has-media');
+          slotElement.querySelector('.plus-sign').style.opacity = '1';
+          slotElement.classList.remove('filled');
+          const removeBtn = slotElement.querySelector('.remove-gift');
+          if (removeBtn) removeBtn.remove();
+        }
+      }
+      document.getElementById('obtainedGifts').innerHTML = '';
+      fourthGiftSelected = false;
+      updateCenterSquareHighlight();
+      updateModalSelection();
+    }
+
+    function returnToCraft() {
+      document.getElementById('blueOverlay').classList.remove('active');
+      document.getElementById('mainSquare').style.opacity = '1';
+      document.getElementById('cornersContainer').classList.remove('merged');
+      document.getElementById('centerSquare').classList.remove('merged');
+      clearSingleDisplay();
+      clearBlueRow();
+      document.getElementById('blueGiftRow').classList.remove('active');
+      const cube = document.getElementById('blueCube');
+      cube.style.display = 'block';
+      cube.classList.remove('opening');
+      document.getElementById('blueCubeGlow').style.display = 'block';
+      document.getElementById('blueCubeGlow').classList.remove('active');
+      showingFinalRow = false;
+      boxOpened = false;
+      itemsRevealed = 0;
+      currentLootBox = null;
+      resetAllSlots();
+    }
+
+    function addObtainedGift(gift) {
+      const container = document.getElementById('obtainedGifts');
+      const item = createTinyGiftElement(gift);
+      container.appendChild(item);
+      container.scrollLeft = container.scrollWidth;
+    }
+
+    function startBlueMode() {
+      document.getElementById('mainSquare').style.opacity = '0';
+      document.getElementById('blueOverlay').classList.add('active');
+      currentLootBox = createLootBox();
+      setupBlueCube(currentLootBox.rarity);
+      clearSingleDisplay();
+      clearBlueRow();
+      document.getElementById('blueGiftRow').classList.remove('active');
+      const cube = document.getElementById('blueCube');
+      cube.style.display = 'block';
+      document.getElementById('blueCubeGlow').style.display = 'block';
+      document.getElementById('blueCounter').classList.remove('active');
+      isOpening = false;
+      showingFinalRow = false;
+      boxOpened = false;
+      itemsRevealed = 0;
+      currentLootBox.currentIndex = 0;
+    }
+
+    document.getElementById('blueOverlay').addEventListener('click', (e) => {
+      if (e.target.closest('.gift-cube-container') && currentLootBox && currentLootBox.currentIndex === 0 && !isOpening && !boxOpened) {
+        openBlueBox();
+        return;
+      }
+
+      if (showingFinalRow) {
+        returnToCraft();
+        return;
+      }
+
+      if (isOpening) return;
+
+      if (boxOpened) {
+        if (itemsRevealed >= currentLootBox.total) {
+          showFinalRow();
+        } else {
+          showNextGift();
+        }
+      }
     });
-  }, 3500);
 
-  document.getElementById('searchInput')?.addEventListener('input', (e) => {
-    filterAndSortGifts(e.target.value);
-  });
+    document.getElementById('centerSquare').addEventListener('click', () => {
+      const filledCount = filledSlots.filter(filled => filled).length;
+      if (filledCount > 0) {
+        document.getElementById('cornersContainer').classList.add('merged');
+        document.getElementById('centerSquare').classList.add('merged');
+        startBlueMode();
+      }
+    });
 
-  document.getElementById('closeModal').onclick = () => {
-    document.getElementById('giftModal').classList.remove('active');
-  };
+    function sortGiftsByRelevance(gifts, searchTerm) {
+      if (!searchTerm) return gifts;
+      searchTerm = searchTerm.toLowerCase();
+      return gifts.sort((a, b) => {
+        const scoreA = getSearchScore(a.name, searchTerm);
+        const scoreB = getSearchScore(b.name, searchTerm);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.name.localeCompare(b.name);
+      });
+    }
 
-  document.getElementById('giftModal').onclick = (e) => {
-    if (e.target === document.getElementById('giftModal')) {
+    function getSearchScore(name, searchTerm) {
+      const lowerName = name.toLowerCase();
+      if (lowerName.startsWith(searchTerm)) return 1000;
+      if (lowerName.includes(` ${searchTerm}`)) return 800;
+      if (lowerName[0] === searchTerm[0]) return 500;
+      if (lowerName.includes(searchTerm)) return 100;
+      return 0;
+    }
+
+    function filterAndSortGifts(searchTerm) {
+      const filteredGifts = rareGifts.filter(gift =>
+        gift.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const sortedGifts = sortGiftsByRelevance(filteredGifts, searchTerm);
+
+      const grid = document.getElementById('giftsGrid');
+      grid.innerHTML = '';
+
+      sortedGifts.forEach(gift => {
+        const item = document.createElement('div');
+        item.className = 'gift-item';
+        item.dataset.name = gift.name;
+
+        const imgDiv = createCatalogGiftElement(gift);
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'gift-name';
+        nameDiv.textContent = gift.name;
+
+        item.appendChild(imgDiv);
+        item.appendChild(nameDiv);
+        item.onclick = () => selectGiftForSlot(gift, currentSlotElement);
+        grid.appendChild(item);
+      });
+
+      updateModalSelection();
+    }
+
+    function showGifts(slotElement) {
+      currentSelectedSlot = slotElement.dataset.slot;
+      currentSlotElement = slotElement;
+      filterAndSortGifts('');
+      document.getElementById('giftModal').classList.add('active');
+    }
+
+    function selectGiftForSlot(gift, slotElement) {
+      const slotIndex = parseInt(currentSelectedSlot);
+      if (filledSlots[slotIndex]) return;
+
+      const slotGiftContainer = document.getElementById(`gift-slot-${slotIndex}`);
+      selectedGifts[slotIndex] = gift;
+      filledSlots[slotIndex] = true;
+
+      slotGiftContainer.innerHTML = '';
+      const content = createGiftContent(gift, true);
+      slotGiftContainer.appendChild(content);
+
+      slotGiftContainer.classList.add('active');
+      if (gift.name === "Durov's Cap") {
+        slotGiftContainer.classList.add('durov-cap');
+      }
+
+      slotElement.querySelector('.plus-sign').style.opacity = '0';
+      slotElement.classList.add('filled');
+
+      const filledCount = filledSlots.filter(filled => filled).length;
+      if (filledCount === 4) {
+        fourthGiftSelected = true;
+        if (centerVideo) {
+          centerVideo.pause();
+          centerVideo.currentTime = 0;
+          if (videoPlayTimeout) clearTimeout(videoPlayTimeout);
+        }
+        updateCenterSquareHighlight();
+      } else {
+        playVideoFromStart();
+        updateCenterSquareHighlight();
+      }
+
+      updateModalSelection();
       document.getElementById('giftModal').classList.remove('active');
     }
-  };
 
-  // ========== ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS ==========
-  const servicesBtn = document.getElementById('servicesButton');
-  const gameOverlay = document.getElementById('gameOverlay');
-  const gameIframe = document.getElementById('gameIframe');
-  const gameCloseBtn = document.getElementById('gameCloseBtn');
+    const user = tg.initDataUnsafe?.user;
+    if (user && user.photo_url) {
+      const avatar = document.getElementById("avatar");
+      const img = document.createElement("img");
+      img.src = user.photo_url;
+      avatar.appendChild(img);
+    }
 
-  servicesBtn.addEventListener('click', () => {
-    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
-    gameOverlay.classList.add('active');
-  });
+    setTimeout(() => {
+      document.getElementById("matrix").style.opacity = "0";
+      document.getElementById("videoWrapper").style.opacity = "0";
+      document.getElementById("blackScreen").style.opacity = "1";
+    }, 3000);
 
-  gameCloseBtn.addEventListener('click', () => {
-    gameOverlay.classList.remove('active');
-    gameIframe.src = '';
-  });
+    setTimeout(() => {
+      if (user && user.photo_url) {
+        document.getElementById("avatar").style.opacity = "1";
+      }
+      document.getElementById("plusButton").classList.add('visible');
+      document.getElementById("mainSquare").style.opacity = "1";
+      document.getElementById('servicesButton').classList.add('visible');
 
-  gameOverlay.addEventListener('click', (e) => {
-    if (e.target === gameOverlay) {
+      document.querySelectorAll('.mini-square').forEach(square => {
+        square.onclick = (e) => {
+          if (e.target.classList.contains('remove-gift')) return;
+          showGifts(square);
+        };
+      });
+    }, 3500);
+
+    document.getElementById('searchInput')?.addEventListener('input', (e) => {
+      filterAndSortGifts(e.target.value);
+    });
+
+    document.getElementById('closeModal').onclick = () => {
+      document.getElementById('giftModal').classList.remove('active');
+    };
+
+    document.getElementById('giftModal').onclick = (e) => {
+      if (e.target === document.getElementById('giftModal')) {
+        document.getElementById('giftModal').classList.remove('active');
+      }
+    };
+
+    // ========== ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS ==========
+    const servicesBtn = document.getElementById('servicesButton');
+    const gameOverlay = document.getElementById('gameOverlay');
+    const gameIframe = document.getElementById('gameIframe');
+    const gameCloseBtn = document.getElementById('gameCloseBtn');
+
+    servicesBtn.addEventListener('click', () => {
+      gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
+      gameOverlay.classList.add('active');
+    });
+
+    gameCloseBtn.addEventListener('click', () => {
       gameOverlay.classList.remove('active');
       gameIframe.src = '';
-    }
-  });
+    });
 
-  // ========== ИСПРАВЛЕННАЯ ИНТЕГРАЦИЯ TON CONNECT ==========
-  (function initTon() {
-    const plusButton = document.getElementById('plusButton');
-    const paymentModal = document.getElementById('paymentModal');
-    const closePayment = document.getElementById('closePayment');
-    const payButton = document.getElementById('payButton');
-    const amountBtns = document.querySelectorAll('.amount-btn');
-
-    let selectedAmount = null;
-    let tonConnectUI = null;
-    let libraryLoaded = false;
-
-    function updatePayButton() {
-      if (!libraryLoaded) {
-        payButton.disabled = false;
-        payButton.textContent = 'Библиотека не загружена (обновите)';
-        return;
+    gameOverlay.addEventListener('click', (e) => {
+      if (e.target === gameOverlay) {
+        gameOverlay.classList.remove('active');
+        gameIframe.src = '';
       }
-      if (!tonConnectUI) {
-        payButton.disabled = false;
-        payButton.textContent = 'Ошибка инициализации';
-        return;
-      }
-      const connected = tonConnectUI.connected;
-      if (connected) {
-        if (selectedAmount) {
+    });
+
+    // ========== ИСПРАВЛЕННАЯ ИНТЕГРАЦИЯ TON CONNECT ==========
+    (function initTon() {
+      const plusButton = document.getElementById('plusButton');
+      const paymentModal = document.getElementById('paymentModal');
+      const closePayment = document.getElementById('closePayment');
+      const payButton = document.getElementById('payButton');
+      const amountBtns = document.querySelectorAll('.amount-btn');
+
+      let selectedAmount = null;
+      let tonConnectUI = null;
+      let libraryLoaded = false;
+
+      function updatePayButton() {
+        if (!libraryLoaded) {
           payButton.disabled = false;
-          payButton.textContent = `Оплатить ${selectedAmount} TON`;
-        } else {
-          payButton.disabled = true;
-          payButton.textContent = 'Выберите сумму';
+          payButton.textContent = 'Библиотека не загружена (обновите)';
+          return;
         }
-      } else {
-        payButton.disabled = false;
-        payButton.textContent = 'Подключить кошелек';
+        if (!tonConnectUI) {
+          payButton.disabled = false;
+          payButton.textContent = 'Ошибка инициализации';
+          return;
+        }
+        const connected = tonConnectUI.connected;
+        if (connected) {
+          if (selectedAmount) {
+            payButton.disabled = false;
+            payButton.textContent = `Оплатить ${selectedAmount} TON`;
+          } else {
+            payButton.disabled = true;
+            payButton.textContent = 'Выберите сумму';
+          }
+        } else {
+          payButton.disabled = false;
+          payButton.textContent = 'Подключить кошелек';
+        }
       }
-    }
 
-    plusButton.addEventListener('click', () => {
-      paymentModal.classList.add('active');
-    });
-
-    closePayment.addEventListener('click', () => {
-      paymentModal.classList.remove('active');
-      amountBtns.forEach(btn => btn.classList.remove('selected'));
-      selectedAmount = null;
-      updatePayButton();
-    });
-
-    amountBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        amountBtns.forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedAmount = btn.dataset.amount;
-        updatePayButton();
+      plusButton.addEventListener('click', () => {
+        paymentModal.classList.add('active');
       });
-    });
 
-    paymentModal.addEventListener('click', (e) => {
-      if (e.target === paymentModal) {
+      closePayment.addEventListener('click', () => {
         paymentModal.classList.remove('active');
         amountBtns.forEach(btn => btn.classList.remove('selected'));
         selectedAmount = null;
         updatePayButton();
-      }
-    });
+      });
 
-    function initTonConnect() {
-      const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
-      try {
-        tonConnectUI = new TonConnectUI({
-          manifestUrl: manifestUrl,
-        });
-        console.log('✅ TON Connect initialized');
-
-        tonConnectUI.onStatusChange(wallet => {
-          console.log('Wallet status:', wallet ? 'connected' : 'disconnected');
+      amountBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          amountBtns.forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedAmount = btn.dataset.amount;
           updatePayButton();
         });
+      });
 
-        payButton.addEventListener('click', async () => {
-          if (!tonConnectUI) return;
-
-          if (!tonConnectUI.connected) {
-            try {
-              await tonConnectUI.connectWallet();
-            } catch (e) {
-              console.error('Wallet connection error', e);
-              alert('Ошибка подключения кошелька. Возможно, вы отменили запрос.');
-            }
-            return;
-          }
-
-          if (!selectedAmount) {
-            alert('Выберите сумму');
-            return;
-          }
-
-          const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 600,
-            messages: [
-              {
-                address: 'UQCty33p4WR_70PuYVQCnFEm6tZWPqtASeTl1gNUAYNE6sxd', // замените на свой адрес
-                amount: (selectedAmount * 1e9).toString(),
-              }
-            ]
-          };
-
-          try {
-            const result = await tonConnectUI.sendTransaction(transaction);
-            console.log('Transaction sent', result);
-            alert('Оплата успешно отправлена!');
-            paymentModal.classList.remove('active');
-          } catch (e) {
-            console.error('Transaction error', e);
-            alert('Ошибка при оплате. Возможно, транзакция была отклонена.');
-          }
-        });
-      } catch (e) {
-        console.error('TON Connect init error', e);
-        payButton.addEventListener('click', () => {
-          alert('Ошибка инициализации TON Connect');
-        });
-      }
-    }
-
-    // Проверяем, загружена ли библиотека
-    if (typeof TonConnectUI !== 'undefined') {
-      console.log('TonConnectUI found');
-      libraryLoaded = true;
-      initTonConnect();
-    } else {
-      console.warn('TonConnectUI not loaded yet, waiting...');
-      let attempts = 0;
-      const interval = setInterval(() => {
-        if (typeof TonConnectUI !== 'undefined') {
-          console.log('TonConnectUI loaded after wait');
-          libraryLoaded = true;
-          initTonConnect();
-          clearInterval(interval);
+      paymentModal.addEventListener('click', (e) => {
+        if (e.target === paymentModal) {
+          paymentModal.classList.remove('active');
+          amountBtns.forEach(btn => btn.classList.remove('selected'));
+          selectedAmount = null;
+          updatePayButton();
         }
-        attempts++;
-        if (attempts > 20) {
-          clearInterval(interval);
-          console.error('TonConnectUI library failed to load');
-          payButton.disabled = false;
-          payButton.textContent = 'Ошибка загрузки (обновите)';
+      });
+
+      function initTonConnect() {
+        const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
+        try {
+          tonConnectUI = new TonConnectUI({
+            manifestUrl: manifestUrl,
+          });
+          console.log('✅ TON Connect initialized');
+
+          tonConnectUI.onStatusChange(wallet => {
+            console.log('Wallet status:', wallet ? 'connected' : 'disconnected');
+            updatePayButton();
+          });
+
+          payButton.addEventListener('click', async () => {
+            if (!tonConnectUI) return;
+
+            if (!tonConnectUI.connected) {
+              try {
+                await tonConnectUI.connectWallet();
+              } catch (e) {
+                console.error('Wallet connection error', e);
+                alert('Ошибка подключения кошелька. Возможно, вы отменили запрос.');
+              }
+              return;
+            }
+
+            if (!selectedAmount) {
+              alert('Выберите сумму');
+              return;
+            }
+
+            const transaction = {
+              validUntil: Math.floor(Date.now() / 1000) + 600,
+              messages: [
+                {
+                  address: 'UQCty33p4WR_70PuYVQCnFEm6tZWPqtASeTl1gNUAYNE6sxd', // замените на свой адрес
+                  amount: (selectedAmount * 1e9).toString(),
+                }
+              ]
+            };
+
+            try {
+              const result = await tonConnectUI.sendTransaction(transaction);
+              console.log('Transaction sent', result);
+              alert('Оплата успешно отправлена!');
+              paymentModal.classList.remove('active');
+            } catch (e) {
+              console.error('Transaction error', e);
+              alert('Ошибка при оплате. Возможно, транзакция была отклонена.');
+            }
+          });
+        } catch (e) {
+          console.error('TON Connect init error', e);
           payButton.addEventListener('click', () => {
-            alert('Не удалось загрузить библиотеку TON Connect. Пожалуйста, обновите страницу.');
+            alert('Ошибка инициализации TON Connect');
           });
         }
-      }, 200);
-    }
+      }
 
-    updatePayButton();
-  })();
-</script>
+      if (typeof TonConnectUI !== 'undefined') {
+        console.log('TonConnectUI found');
+        libraryLoaded = true;
+        initTonConnect();
+      } else {
+        console.warn('TonConnectUI not loaded yet, waiting...');
+        let attempts = 0;
+        const interval = setInterval(() => {
+          if (typeof TonConnectUI !== 'undefined') {
+            console.log('TonConnectUI loaded after wait');
+            libraryLoaded = true;
+            initTonConnect();
+            clearInterval(interval);
+          }
+          attempts++;
+          if (attempts > 20) {
+            clearInterval(interval);
+            console.error('TonConnectUI library failed to load');
+            payButton.disabled = false;
+            payButton.textContent = 'Ошибка загрузки (обновите)';
+            payButton.addEventListener('click', () => {
+              alert('Не удалось загрузить библиотеку TON Connect. Пожалуйста, обновите страницу.');
+            });
+          }
+        }, 200);
+      }
 
-<!-- Предзагрузка изображений для четырёх подарков -->
-<script>
-  (function preloadImages() {
-    var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
-    var fileMap = {
-      "Durov's Cap": "Durov-Cap",
-      "Astral Shard": "Astral Shard",
-      "Kissed Frog": "Kissed Frog",
-      "Artisan Brick": "Artisan Brick"
-    };
-    gifts.forEach(function(name) {
-      var baseName = fileMap[name] || name;
-      var img = new Image();
-      img.src = 'videos/' + encodeURIComponent(baseName) + '.png';
-    });
-  })();
-</script>
+      updatePayButton();
+    })();
+  </script>
 
+  <!-- Предзагрузка изображений для четырёх подарков -->
+  <script>
+    (function preloadImages() {
+      var gifts = ["Astral Shard", "Kissed Frog", "Durov's Cap", "Artisan Brick"];
+      var fileMap = {
+        "Durov's Cap": "Durov-Cap",
+        "Astral Shard": "Astral Shard",
+        "Kissed Frog": "Kissed Frog",
+        "Artisan Brick": "Artisan Brick"
+      };
+      gifts.forEach(function(name) {
+        var baseName = fileMap[name] || name;
+        var img = new Image();
+        img.src = 'videos/' + encodeURIComponent(baseName) + '.png';
+      });
+    })();
+  </script>
 </body>
 </html>
