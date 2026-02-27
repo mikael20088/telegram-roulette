@@ -10,8 +10,8 @@
                  user-scalable=no" />
   <title>Telegram Roulette + TON Pay</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- TON Connect UI (актуальная версия) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
+  <!-- TON Connect UI (альтернативный CDN) -->
+  <script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
   <style>
     /* ========== ВСЕ ВАШИ ОРИГИНАЛЬНЫЕ СТИЛИ (с изменениями для аватара) ========== */
     html, body {
@@ -1797,11 +1797,6 @@
     // Открытие модалки по клику на плюсик
     plusButton.addEventListener('click', () => {
       paymentModal.classList.add('active');
-      // Если библиотека ещё не загружена, пробуем ещё раз инициализировать
-      if (!libraryLoaded && typeof TONConnectUI !== 'undefined') {
-        libraryLoaded = true;
-        initTonConnect();
-      }
     });
 
     // Закрытие модалки
@@ -1836,11 +1831,11 @@
     function initTonConnect() {
       const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
       try {
-        // Правильный способ инициализации (без TONConnectUI.TonConnectUI)
-        tonConnectUI = new TONConnectUI({
+        // Правильное имя конструктора – TonConnectUI
+        tonConnectUI = new TonConnectUI({
           manifestUrl: manifestUrl,
         });
-        console.log('TON Connect initialized');
+        console.log('✅ TON Connect initialized');
 
         // Подписка на изменение статуса
         tonConnectUI.onStatusChange(wallet => {
@@ -1898,16 +1893,17 @@
       }
     }
 
-    // Проверяем, загружена ли библиотека
-    if (typeof TONConnectUI !== 'undefined') {
+    // Проверяем, загружена ли библиотека (глобальная переменная TonConnectUI)
+    if (typeof TonConnectUI !== 'undefined') {
+      console.log('TonConnectUI found');
       libraryLoaded = true;
       initTonConnect();
     } else {
-      console.warn('TONConnectUI not loaded yet, waiting...');
-      // Ждём загрузку скрипта (иногда он может грузиться долго)
+      console.warn('TonConnectUI not loaded yet, waiting...');
       let attempts = 0;
       const interval = setInterval(() => {
-        if (typeof TONConnectUI !== 'undefined') {
+        if (typeof TonConnectUI !== 'undefined') {
+          console.log('TonConnectUI loaded after wait');
           libraryLoaded = true;
           initTonConnect();
           clearInterval(interval);
@@ -1915,11 +1911,11 @@
         attempts++;
         if (attempts > 20) { // примерно 4 секунды
           clearInterval(interval);
-          console.error('TONConnectUI library failed to load');
+          console.error('TonConnectUI library failed to load');
           payButton.disabled = false;
           payButton.textContent = 'Ошибка загрузки (обновите)';
           payButton.addEventListener('click', () => {
-            alert('Не удалось загрузить библиотеку TON Connect. Пожалуйста, обновите страницу.');
+            alert('Не удалось загрузить библиотеку TON Connect. Пожалуйста, проверьте интернет и обновите страницу.');
           });
         }
       }, 200);
@@ -1949,4 +1945,4 @@
 </script>
 
 </body>
-</html>ы
+</html>
