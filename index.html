@@ -10,8 +10,8 @@
                  user-scalable=no" />
   <title>Telegram Roulette + TON Pay</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- TON Connect UI (альтернативный CDN) -->
-  <script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
+  <!-- TON Connect UI – правильная ссылка (рабочая) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.umd.min.js"></script>
   <style>
     /* ========== ВСЕ ВАШИ ОРИГИНАЛЬНЫЕ СТИЛИ (с изменениями для аватара) ========== */
     html, body {
@@ -1831,7 +1831,7 @@
     function initTonConnect() {
       const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
       try {
-        // Правильное имя конструктора – TonConnectUI
+        // Правильное имя конструктора – TonConnectUI (глобальная переменная из загруженного скрипта)
         tonConnectUI = new TonConnectUI({
           manifestUrl: manifestUrl,
         });
