@@ -2001,7 +2001,6 @@ var game = new Phaser.Game(config);
 // CREATING THE STATES
 game.state.add("AngryBirds.Preloader", AngryBirds.Preloader);
 game.state.add("AngryBirds.Splash", AngryBirds.Splash);
-game.state.add("AngryBirds.Disclaimer", AngryBirds.Disclaimer);
 game.state.add("AngryBirds.SplashGame", AngryBirds.SplashGame);
 game.state.add("AngryBirds.Menu", AngryBirds.Menu);
 game.state.add("AngryBirds.LevelSelector", AngryBirds.LevelSelector);
