@@ -824,7 +824,7 @@
       border: none;
     }
 
-    /* Модальное окно пополнения (переработанный заголовок) */
+    /* Модальное окно пополнения (исправленное) */
     .payment-overlay {
       position: fixed;
       top: 0;
@@ -863,39 +863,19 @@
     }
     .payment-header {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      margin-bottom: 20px;
-      padding-right: 40px; /* место для крестика */
+      margin-bottom: 15px;
       position: relative;
-    }
-    .payment-header-left {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 14px;
-      background: rgba(0,0,0,0.3);
-      padding: 4px 8px;
-      border-radius: 20px;
     }
     .payment-header-center {
       font-size: 20px;
       font-weight: bold;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    .payment-header-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .connected-label {
-      font-size: 12px;
-      color: #aaa;
-      white-space: nowrap;
     }
     .payment-close-btn {
+      position: absolute;
+      right: 0;
+      top: 0;
       width: 30px;
       height: 30px;
       background: linear-gradient(45deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 200, 100, 0.1) 25%, rgba(0, 255, 200, 0.15) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.2) 100%),
@@ -916,8 +896,20 @@
     .payment-close-btn:hover {
       opacity: 0.8;
     }
-    .hidden {
-      display: none !important;
+    /* Блок с информацией о кошельке под заголовком */
+    .wallet-connected-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      padding: 8px 12px;
+      margin-bottom: 20px;
+    }
+    .wallet-address-block {
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
     .wallet-icon {
       width: 20px;
@@ -928,6 +920,14 @@
       align-items: center;
       justify-content: center;
       font-size: 12px;
+    }
+    .connected-label {
+      font-size: 12px;
+      color: #aaa;
+      white-space: nowrap;
+    }
+    .hidden {
+      display: none !important;
     }
     .wallet-info {
       margin-bottom: 20px;
@@ -1071,19 +1071,21 @@
     <iframe id="gameIframe" src=""></iframe>
   </div>
 
-  <!-- Модальное окно пополнения TON (исправленный заголовок) -->
+  <!-- Модальное окно пополнения TON (исправленное) -->
   <div class="payment-overlay" id="paymentOverlay"></div>
   <div class="payment-modal" id="paymentModal">
     <div class="payment-header">
-      <div class="payment-header-left hidden" id="walletHeaderInfo">
+      <span class="payment-header-center">Пополнение</span>
+      <div class="payment-close-btn" id="paymentCloseBtn">✕</div>
+    </div>
+
+    <!-- Блок с информацией о кошельке (отображается только при подключении) -->
+    <div class="wallet-connected-info hidden" id="walletConnectedInfo">
+      <div class="wallet-address-block">
         <span class="wallet-icon">💎</span>
         <span id="walletShortAddress">EQ...1234</span>
       </div>
-      <span class="payment-header-center">Пополнение</span>
-      <div class="payment-header-right">
-        <span class="connected-label hidden" id="walletConnectedLabel">Подключенный кошелек</span>
-        <div class="payment-close-btn" id="paymentCloseBtn">✕</div>
-      </div>
+      <span class="connected-label">Подключенный кошелек</span>
     </div>
 
     <div class="wallet-info" id="walletInfoSection">
@@ -1898,9 +1900,8 @@
     const payButton = document.getElementById('payButton');
     const amountInput = document.getElementById('amountInput');
     const balanceSpan = document.getElementById('balanceAmount');
-    const walletHeaderInfo = document.getElementById('walletHeaderInfo');
+    const walletConnectedInfo = document.getElementById('walletConnectedInfo');
     const walletShortAddress = document.getElementById('walletShortAddress');
-    const walletConnectedLabel = document.getElementById('walletConnectedLabel');
     const walletBalanceSpan = document.getElementById('walletBalance');
     const usdEquivalentSpan = document.getElementById('usdEquivalent');
 
@@ -2013,14 +2014,12 @@
         // Формируем короткий адрес: первые 4 + ... + последние 4
         let shortAddr = walletAddress.slice(0,4) + '...' + walletAddress.slice(-4);
         walletShortAddress.textContent = shortAddr;
-        walletHeaderInfo.classList.remove('hidden');
-        walletConnectedLabel.classList.remove('hidden');
+        walletConnectedInfo.classList.remove('hidden');
         // Запрашиваем баланс кошелька
         fetchWalletBalance(walletAddress);
       } else {
         // Кошелёк отключён
-        walletHeaderInfo.classList.add('hidden');
-        walletConnectedLabel.classList.add('hidden');
+        walletConnectedInfo.classList.add('hidden');
         walletBalanceSpan.textContent = '0.00 TON';
         walletAddress = null;
         walletBalance = 0;
