@@ -179,6 +179,67 @@
       object-fit: contain;
       background: transparent;
     }
+
+    /* Новое меню с двумя квадратами */
+    .menu-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 20px;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    .menu-container.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .menu-item {
+      width: 150px;
+      height: 150px;
+      background: rgba(10, 20, 10, 0.3);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .menu-item:hover {
+      transform: scale(1.05);
+    }
+    .menu-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      border-radius: 20px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
+    }
+    .menu-item .icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .menu-item .label {
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    }
+
+    /* Основной игровой квадрат (крафт) */
     .main-square {
       position: absolute;
       top: 50%;
@@ -194,6 +255,11 @@
       box-sizing: border-box;
       position: relative;
       transition: all 0.5s ease;
+      pointer-events: none;
+    }
+    .main-square.visible {
+      opacity: 1;
+      pointer-events: auto;
     }
     .main-square::before {
       content: '';
@@ -209,10 +275,7 @@
       z-index: -1;
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
-    @keyframes matrixGlow {
-      0% { opacity: 0.7; transform: scale(1); }
-      100% { opacity: 1; transform: scale(1.03); }
-    }
+    /* Остальные стили для крафта (без изменений) */
     .corners-container {
       position: absolute;
       inset: 0;
@@ -300,7 +363,7 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
-    /* Синий оверлей */
+    /* Синий оверлей (игровой процесс) */
     .blue-overlay {
       position: fixed;
       top: 0;
@@ -317,6 +380,10 @@
       align-items: center;
       justify-content: center;
     }
+    .blue-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
     .blue-overlay::before {
       content: '';
       position: absolute;
@@ -329,11 +396,6 @@
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       z-index: -1;
     }
-    .blue-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
     .blue-overlay .gift-cube-container {
       position: relative;
       width: 70px;
@@ -656,6 +718,7 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
+    /* Модальное окно подарков (без изменений) */
     .modal {
       position: fixed;
       top: 0;
@@ -792,43 +855,9 @@
       font-weight: 500;
     }
 
+    /* Кнопка Angry Birds больше не нужна, заменим на второй квадрат */
     .services-button {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      background: rgba(30, 30, 40, 0.8);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 30px;
-      padding: 10px 24px;
-      color: white;
-      font-size: 16px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-      transition: transform 0.2s, background 0.2s;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .services-button.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .services-button:hover {
-      transform: translateX(-50%) scale(1.05);
-      background: rgba(50, 50, 70, 0.9);
-    }
-    .services-button:active {
-      transform: translateX(-50%) scale(0.98);
-    }
-    .services-button .icon {
-      font-size: 20px;
+      display: none; /* скрываем старую кнопку */
     }
 
     .game-overlay {
@@ -871,7 +900,7 @@
       border: none;
     }
 
-    /* Модальное окно пополнения */
+    /* Модальное окно пополнения (без изменений) */
     .payment-overlay {
       position: fixed;
       top: 0;
@@ -1062,6 +1091,19 @@
     </div>
   </div>
 
+  <!-- Меню с двумя квадратами (появляется после анимации) -->
+  <div class="menu-container" id="menuContainer">
+    <div class="menu-item" id="craftMenuItem">
+      <span class="icon">⚒️</span>
+      <span class="label">Craft</span>
+    </div>
+    <div class="menu-item" id="angryMenuItem">
+      <span class="icon">🐦</span>
+      <span class="label">Angry Birds</span>
+    </div>
+  </div>
+
+  <!-- Основной игровой квадрат (крафт) -->
   <div class="main-square" id="mainSquare">
     <div class="obtained-gifts" id="obtainedGifts"></div>
 
@@ -1089,7 +1131,7 @@
     </div>
   </div>
 
-  <!-- Синий оверлей -->
+  <!-- Синий оверлей (игровой процесс крафта) -->
   <div class="blue-overlay" id="blueOverlay">
     <div class="gift-cube-container" id="blueCubeContainer">
       <div class="gift-cube" id="blueCube">
@@ -1107,13 +1149,7 @@
     <div class="blue-counter" id="blueCounter">4</div>
   </div>
 
-  <!-- Кнопка Angry Birds -->
-  <div class="services-button" id="servicesButton">
-    <span class="icon">🐦</span>
-    <span>Angry Birds</span>
-  </div>
-
-  <!-- Оверлей для игры -->
+  <!-- Оверлей для Angry Birds -->
   <div class="game-overlay" id="gameOverlay">
     <div class="close-btn" id="gameCloseBtn">×</div>
     <iframe id="gameIframe" src=""></iframe>
@@ -1153,6 +1189,7 @@
   </div>
 </div>
 
+<!-- Модальное окно подарков -->
 <div class="modal" id="giftModal">
   <div class="modal-content">
     <div class="close-btn" id="closeModal">×</div>
@@ -1879,6 +1916,18 @@
     avatar.appendChild(img);
   }
 
+  // Управление экранами после анимации
+  const menuContainer = document.getElementById('menuContainer');
+  const mainSquare = document.getElementById('mainSquare');
+  const gameOverlay = document.getElementById('gameOverlay');
+  const gameIframe = document.getElementById('gameIframe');
+  const gameCloseBtn = document.getElementById('gameCloseBtn');
+
+  // Сначала скрываем всё, кроме анимации и верхней панели
+  menuContainer.classList.remove('visible');
+  mainSquare.classList.remove('visible');
+  gameOverlay.classList.remove('active');
+
   setTimeout(() => {
     document.getElementById("matrix").style.opacity = "0";
     document.getElementById("videoWrapper").style.opacity = "0";
@@ -1890,16 +1939,46 @@
       document.getElementById("avatar").style.opacity = "1";
     }
     document.getElementById("balancePanel").classList.add('visible');
-    document.getElementById("mainSquare").style.opacity = "1";
-    document.getElementById('servicesButton').classList.add('visible');
-
-    document.querySelectorAll('.mini-square').forEach(square => {
-      square.onclick = (e) => {
-        if (e.target.classList.contains('remove-gift')) return;
-        showGifts(square);
-      };
-    });
+    // Показываем меню
+    menuContainer.classList.add('visible');
   }, 3500);
+
+  // Обработчики для квадратов меню
+  document.getElementById('craftMenuItem').addEventListener('click', () => {
+    menuContainer.classList.remove('visible');
+    mainSquare.classList.add('visible');
+    // Инициализация игры крафта (если нужно)
+    // (уже есть обработчики)
+  });
+
+  document.getElementById('angryMenuItem').addEventListener('click', () => {
+    menuContainer.classList.remove('visible');
+    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
+    gameOverlay.classList.add('active');
+  });
+
+  // Закрытие Angry Birds по крестику
+  gameCloseBtn.addEventListener('click', () => {
+    gameOverlay.classList.remove('active');
+    gameIframe.src = '';
+    menuContainer.classList.add('visible'); // возвращаем в меню
+  });
+
+  gameOverlay.addEventListener('click', (e) => {
+    if (e.target === gameOverlay) {
+      gameOverlay.classList.remove('active');
+      gameIframe.src = '';
+      menuContainer.classList.add('visible');
+    }
+  });
+
+  // Обработчики для квадратов крафта (оригинальные)
+  document.querySelectorAll('.mini-square').forEach(square => {
+    square.onclick = (e) => {
+      if (e.target.classList.contains('remove-gift')) return;
+      showGifts(square);
+    };
+  });
 
   document.getElementById('searchInput')?.addEventListener('input', (e) => {
     filterAndSortGifts(e.target.value);
@@ -1915,28 +1994,9 @@
     }
   };
 
-  // ========== ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS ==========
-  const servicesBtn = document.getElementById('servicesButton');
-  const gameOverlay = document.getElementById('gameOverlay');
-  const gameIframe = document.getElementById('gameIframe');
-  const gameCloseBtn = document.getElementById('gameCloseBtn');
-
-  servicesBtn.addEventListener('click', () => {
-    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
-    gameOverlay.classList.add('active');
-  });
-
-  gameCloseBtn.addEventListener('click', () => {
-    gameOverlay.classList.remove('active');
-    gameIframe.src = '';
-  });
-
-  gameOverlay.addEventListener('click', (e) => {
-    if (e.target === gameOverlay) {
-      gameOverlay.classList.remove('active');
-      gameIframe.src = '';
-    }
-  });
+  // ========== ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS (уже не нужен, но оставим для совместимости) ==========
+  // servicesButton скрыт, но обработчик не помешает
+  // (если вдруг кнопка появится)
 
   // ========== НОВАЯ ЛОГИКА БАЛАНСА И TON CONNECT ==========
   (function initTonAndBalance() {
