@@ -1,101 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TON Price Chart</title>
     <style>
-        body { 
-            margin: 0; 
-            padding: 20px; 
-            background: #000; 
-            color: #fff; 
-            font-family: sans-serif; 
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
         }
-        #chart_div { 
-            width: 100%; 
-            height: 90%; 
-        }
-        #error { 
-            display: none; 
-            color: #ff6666; 
-            margin: 20px; 
-            white-space: pre-wrap; 
-            font-size: 14px;
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
     </style>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-        let debugInfo = '';
-
-        function log(msg) {
-            debugInfo += msg + '\n';
-            console.log(msg);
-        }
-
-        google.charts.load('current', {'packages':['corechart', 'line']});
-        google.charts.setOnLoadCallback(drawChart);
-
-        async function drawChart() {
-            try {
-                log('Загрузка данных с Binance...');
-                const response = await fetch('https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=1h&limit=100');
-                if (!response.ok) {
-                    throw new Error('HTTP error ' + response.status);
-                }
-                const data = await response.json();
-                log('Получено ' + data.length + ' свечей');
-                
-                if (!data || data.length === 0) throw new Error('Нет данных');
-
-                const chartData = [['Время', 'Цена закрытия']];
-                data.forEach(item => {
-                    const time = new Date(item[0]); // timestamp в миллисекундах
-                    const close = parseFloat(item[4]); // цена закрытия
-                    chartData.push([time, close]);
-                });
-
-                const chartDiv = document.getElementById('chart_div');
-                const chart = new google.visualization.LineChart(chartDiv);
-                const options = {
-                    title: 'TON / USDT (1 час)',
-                    titleTextStyle: { color: '#00ff88', fontSize: 16 },
-                    legend: { position: 'none' },
-                    colors: ['#00ff88'],
-                    backgroundColor: '#000',
-                    chartArea: { 
-                        backgroundColor: '#000',
-                        left: 60,
-                        top: 60,
-                        right: 30,
-                        bottom: 40
-                    },
-                    hAxis: { 
-                        textStyle: { color: '#fff' }, 
-                        gridlines: { color: '#333' },
-                        format: 'HH:mm dd.MM'
-                    },
-                    vAxis: { 
-                        textStyle: { color: '#fff' }, 
-                        gridlines: { color: '#333' },
-                        format: 'currency'
-                    },
-                    lineWidth: 2,
-                    curveType: 'function',
-                    crosshair: { trigger: 'both' }
-                };
-                chart.draw(google.visualization.arrayToDataTable(chartData), options);
-                log('График отрисован');
-                document.getElementById('error').style.display = 'none';
-            } catch (e) {
-                log('Ошибка: ' + e.message);
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('error').innerHTML = '<h3>⚠️ Ошибка загрузки графика</h3><pre>' + debugInfo + '</pre>';
-            }
-        }
-    </script>
 </head>
 <body>
-    <div id="error"></div>
-    <div id="chart_div"></div>
+    <!-- График от CoinGecko (статическое изображение) -->
+    <img src="https://www.coingecko.com/coins/15585/sparkline" alt="TON Chart">
 </body>
-</html>ы
+</html>
