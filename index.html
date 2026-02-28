@@ -82,10 +82,10 @@
     /* Панель баланса с новым дизайном (как главный квадрат) */
     .balance-panel {
       position: relative;
-      padding: 4px 8px 4px 4px; /* уменьшен левый отступ */
+      padding: 4px 8px 4px 4px;
       display: flex;
       align-items: center;
-      gap: 2px; /* уменьшен зазор между элементами */
+      gap: 2px;
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
@@ -192,7 +192,7 @@
       justify-content: center;
       font-size: 18px;
       color: #00ff88;
-      cursor: default;
+      cursor: pointer;
     }
     .wallet-icon-header.hidden,
     .connect-wallet-button.hidden {
@@ -945,8 +945,8 @@
       border: none;
     }
 
-    /* Модальное окно пополнения (без изменений) */
-    .payment-overlay {
+    /* Общие стили для модальных окон (пополнение и аккаунт) */
+    .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
@@ -957,10 +957,10 @@
       z-index: 299;
       display: none;
     }
-    .payment-overlay.active {
+    .modal-overlay.active {
       display: block;
     }
-    .payment-modal {
+    .modal-bottom {
       position: fixed;
       bottom: 0;
       left: 0;
@@ -979,21 +979,21 @@
       color: #fff;
       overflow-y: auto;
     }
-    .payment-modal.active {
+    .modal-bottom.active {
       transform: translateY(0);
     }
-    .payment-header {
+    .modal-header {
       display: flex;
       justify-content: center;
       align-items: center;
       margin-bottom: 15px;
       position: relative;
     }
-    .payment-header-center {
+    .modal-header-center {
       font-size: 20px;
       font-weight: bold;
     }
-    .payment-close-btn {
+    .modal-close-btn {
       position: absolute;
       right: 0;
       top: 0;
@@ -1014,10 +1014,12 @@
       backdrop-filter: blur(5px);
       transition: opacity 0.2s;
     }
-    .payment-close-btn:hover {
+    .modal-close-btn:hover {
       opacity: 0.8;
     }
-    .wallet-connected-info {
+
+    /* Модальное окно пополнения (использует общие стили) */
+    #paymentModal.modal-bottom .wallet-connected-info {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1112,6 +1114,51 @@
                   radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.18) 0%, transparent 50%);
       cursor: not-allowed;
     }
+
+    /* Модальное окно аккаунта */
+    .account-modal-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .account-balance-label {
+      font-size: 16px;
+      color: #aaa;
+      margin-bottom: 5px;
+    }
+    .account-balance-amount {
+      font-size: 32px;
+      font-weight: bold;
+      color: #00ff88;
+      margin-bottom: 20px;
+    }
+    .account-address {
+      font-size: 14px;
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: 30px;
+      margin-bottom: 20px;
+      word-break: break-all;
+    }
+    .disconnect-button {
+      background: rgba(255, 80, 80, 0.2);
+      border: 1px solid rgba(255, 80, 80, 0.5);
+      color: #ff5050;
+      border-radius: 30px;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .disconnect-button:hover {
+      background: rgba(255, 80, 80, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -1203,12 +1250,12 @@
     <iframe id="gameIframe" src=""></iframe>
   </div>
 
-  <!-- Модальное окно пополнения TON -->
-  <div class="payment-overlay" id="paymentOverlay"></div>
-  <div class="payment-modal" id="paymentModal">
-    <div class="payment-header">
-      <span class="payment-header-center">Пополнение</span>
-      <div class="payment-close-btn" id="paymentCloseBtn">✕</div>
+  <!-- Модальное окно пополнения TON (обновлённое) -->
+  <div class="modal-overlay" id="paymentOverlay"></div>
+  <div class="modal-bottom" id="paymentModal">
+    <div class="modal-header">
+      <span class="modal-header-center">Пополнение</span>
+      <div class="modal-close-btn" id="paymentCloseBtn">✕</div>
     </div>
 
     <div class="wallet-connected-info hidden" id="walletConnectedInfo">
@@ -1234,6 +1281,23 @@
     </div>
     <div class="usd-equivalent" id="usdEquivalent">$0.00</div>
     <button class="pay-button" id="payButton" disabled>Пополнить</button>
+  </div>
+
+  <!-- Модальное окно аккаунта -->
+  <div class="modal-overlay" id="accountOverlay"></div>
+  <div class="modal-bottom" id="accountModal">
+    <div class="modal-header">
+      <span class="modal-header-center">Аккаунт</span>
+      <div class="modal-close-btn" id="accountCloseBtn">✕</div>
+    </div>
+    <div class="account-modal-content">
+      <div class="account-balance-label">Баланс вашего TON кошелька</div>
+      <div class="account-balance-amount" id="accountBalanceAmount">0.00</div>
+      <div class="account-address" id="accountAddress">EQ...1234</div>
+      <div class="disconnect-button" id="disconnectWalletBtn">
+        <span>🔌</span> Отвязать кошелек
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2047,7 +2111,7 @@
     }
   };
 
-  // ========== НОВАЯ ЛОГИКА БАЛАНСА И TON CONNECT ==========
+  // ========== НОВАЯ ЛОГИКА БАЛАНСА, TON CONNECT И ОКНА АККАУНТА ==========
   (function initTonAndBalance() {
     const balancePanel = document.getElementById('balancePanel');
     const paymentModal = document.getElementById('paymentModal');
@@ -2062,6 +2126,14 @@
     const usdEquivalentSpan = document.getElementById('usdEquivalent');
     const walletHeaderIcon = document.getElementById('walletHeaderIcon');
     const connectWalletButton = document.getElementById('connectWalletButton');
+
+    // Элементы окна аккаунта
+    const accountModal = document.getElementById('accountModal');
+    const accountOverlay = document.getElementById('accountOverlay');
+    const accountCloseBtn = document.getElementById('accountCloseBtn');
+    const accountBalanceAmount = document.getElementById('accountBalanceAmount');
+    const accountAddress = document.getElementById('accountAddress');
+    const disconnectWalletBtn = document.getElementById('disconnectWalletBtn');
 
     let currentBalance = 0.00; // баланс в мини-аппе
     let tonConnectUI = null;
@@ -2108,6 +2180,7 @@
         walletBalance = 0;
       }
       walletBalanceSpan.textContent = walletBalance.toFixed(2) + ' TON';
+      accountBalanceAmount.textContent = walletBalance.toFixed(2);
     }
 
     // Обновление отображения баланса
@@ -2174,13 +2247,10 @@
         let displayAddress = walletAddress;
         if (walletAddress.startsWith('0:') && tonweb) {
           try {
-            // Пробуем сконвертировать raw в user-friendly
             const addressObj = tonweb.Address.parseRaw(walletAddress);
-            // Параметры: isUserFriendly = true, isUrlSafe = true, isBounceable = false (обычный кошелёк)
             displayAddress = addressObj.toString(true, true, false);
           } catch (e) {
             console.error('Error converting address', e);
-            // Если ошибка, оставляем raw
           }
         }
         let shortAddr = displayAddress.slice(0,4) + '...' + displayAddress.slice(-4);
@@ -2188,12 +2258,19 @@
         walletConnectedInfo.classList.remove('hidden');
         walletHeaderIcon.classList.remove('hidden');
         connectWalletButton.classList.add('hidden');
+
+        // Обновляем данные в окне аккаунта
+        accountAddress.textContent = displayAddress;
+        accountBalanceAmount.textContent = walletBalance.toFixed(2);
+
         fetchWalletBalance(walletAddress);
       } else {
         walletConnectedInfo.classList.add('hidden');
         walletHeaderIcon.classList.add('hidden');
         connectWalletButton.classList.remove('hidden');
         walletBalanceSpan.textContent = '0.00 TON';
+        accountBalanceAmount.textContent = '0.00';
+        accountAddress.textContent = '';
         walletAddress = null;
         walletBalance = 0;
       }
@@ -2206,6 +2283,7 @@
       }
     };
 
+    // Открытие модалки пополнения
     balancePanel.addEventListener('click', async () => {
       await fetchTonRate();
       paymentModal.classList.add('active');
@@ -2214,6 +2292,39 @@
       updateUsdEquivalent();
       if (tonConnectUI && tonConnectUI.connected && walletAddress) {
         fetchWalletBalance(walletAddress);
+      }
+    });
+
+    // Открытие модалки аккаунта при клике на круглую иконку кошелька
+    walletHeaderIcon.addEventListener('click', () => {
+      if (tonConnectUI && tonConnectUI.connected) {
+        accountModal.classList.add('active');
+        accountOverlay.classList.add('active');
+      }
+    });
+
+    // Закрытие окон
+    function closePaymentModal() {
+      paymentModal.classList.remove('active');
+      paymentOverlay.classList.remove('active');
+    }
+
+    function closeAccountModal() {
+      accountModal.classList.remove('active');
+      accountOverlay.classList.remove('active');
+    }
+
+    paymentCloseBtn.addEventListener('click', closePaymentModal);
+    paymentOverlay.addEventListener('click', closePaymentModal);
+
+    accountCloseBtn.addEventListener('click', closeAccountModal);
+    accountOverlay.addEventListener('click', closeAccountModal);
+
+    // Отвязка кошелька
+    disconnectWalletBtn.addEventListener('click', async () => {
+      if (tonConnectUI) {
+        await tonConnectUI.disconnect();
+        closeAccountModal();
       }
     });
 
@@ -2228,14 +2339,6 @@
         }
       }
     });
-
-    function closePaymentModal() {
-      paymentModal.classList.remove('active');
-      paymentOverlay.classList.remove('active');
-    }
-
-    paymentCloseBtn.addEventListener('click', closePaymentModal);
-    paymentOverlay.addEventListener('click', closePaymentModal);
 
     function initTonConnect() {
       const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
