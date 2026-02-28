@@ -66,7 +66,7 @@
       object-fit: cover;
     }
 
-    /* Группа справа (панель баланса + иконка кошелька) */
+    /* Группа справа (панель баланса + иконка/квадрат) */
     .right-group {
       position: absolute;
       right: 18px;
@@ -134,7 +134,52 @@
       font-weight: bold;
     }
 
-    /* Иконка кошелька справа от панели */
+    /* Квадратная кнопка для подключения кошелька (появляется когда кошелек не подключен) */
+    .connect-wallet-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(10, 20, 10, 0.3);
+      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s;
+      font-size: 24px;
+      color: #00ff88;
+    }
+    .connect-wallet-button:hover {
+      transform: scale(1.05);
+    }
+    .connect-wallet-button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      border-radius: 10px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
+    }
+    /* Маленький плюсик в углу */
+    .connect-wallet-button::after {
+      content: '+';
+      position: absolute;
+      bottom: 2px;
+      right: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #00ff88;
+      text-shadow: 0 0 5px #00ff88;
+    }
+
+    /* Иконка кошелька (круглая) справа от панели (появляется при подключении) */
     .wallet-icon-header {
       width: 40px;
       height: 40px;
@@ -180,7 +225,7 @@
       background: transparent;
     }
 
-    /* Новое меню с двумя квадратами */
+    /* Меню с двумя квадратами */
     .menu-container {
       position: absolute;
       top: 50%;
@@ -1078,7 +1123,7 @@
     <video src="roulette.webm" autoplay loop muted playsinline webkit-playsinline></video>
   </div>
 
-  <!-- Аватар по центру и группа справа (панель баланса + иконка кошелька) -->
+  <!-- Аватар по центру и группа справа (панель баланса + иконка/квадрат) -->
   <div class="top-right-container" id="topRightContainer">
     <div class="avatar-top" id="avatar"></div>
     <div class="right-group" id="rightGroup">
@@ -1087,6 +1132,9 @@
         <span class="balance-amount" id="balanceAmount">0.00</span>
         <span class="plus-square">+</span>
       </div>
+      <!-- Квадратная кнопка подключения (видна, когда кошелек не подключен) -->
+      <div class="connect-wallet-button" id="connectWalletButton" title="Подключить кошелек">💳</div>
+      <!-- Круглая иконка кошелька (видна, когда кошелек подключен) -->
       <div class="wallet-icon-header hidden" id="walletHeaderIcon">💎</div>
     </div>
   </div>
@@ -1947,8 +1995,6 @@
   document.getElementById('craftMenuItem').addEventListener('click', () => {
     menuContainer.classList.remove('visible');
     mainSquare.classList.add('visible');
-    // Инициализация игры крафта (если нужно)
-    // (уже есть обработчики)
   });
 
   document.getElementById('angryMenuItem').addEventListener('click', () => {
@@ -1994,10 +2040,6 @@
     }
   };
 
-  // ========== ОБРАБОТЧИК ДЛЯ КНОПКИ ANGRY BIRDS (уже не нужен, но оставим для совместимости) ==========
-  // servicesButton скрыт, но обработчик не помешает
-  // (если вдруг кнопка появится)
-
   // ========== НОВАЯ ЛОГИКА БАЛАНСА И TON CONNECT ==========
   (function initTonAndBalance() {
     const balancePanel = document.getElementById('balancePanel');
@@ -2012,6 +2054,7 @@
     const walletBalanceSpan = document.getElementById('walletBalance');
     const usdEquivalentSpan = document.getElementById('usdEquivalent');
     const walletHeaderIcon = document.getElementById('walletHeaderIcon');
+    const connectWalletButton = document.getElementById('connectWalletButton');
 
     let currentBalance = 0.00; // баланс в мини-аппе
     let tonConnectUI = null;
@@ -2130,10 +2173,12 @@
         walletShortAddress.textContent = shortAddr;
         walletConnectedInfo.classList.remove('hidden');
         walletHeaderIcon.classList.remove('hidden');
+        connectWalletButton.style.display = 'none'; // скрываем квадрат подключения
         fetchWalletBalance(walletAddress);
       } else {
         walletConnectedInfo.classList.add('hidden');
         walletHeaderIcon.classList.add('hidden');
+        connectWalletButton.style.display = 'flex'; // показываем квадрат подключения
         walletBalanceSpan.textContent = '0.00 TON';
         walletAddress = null;
         walletBalance = 0;
@@ -2148,6 +2193,18 @@
       updateUsdEquivalent();
       if (tonConnectUI && tonConnectUI.connected && walletAddress) {
         fetchWalletBalance(walletAddress);
+      }
+    });
+
+    // Клик по квадратной кнопке подключения
+    connectWalletButton.addEventListener('click', async () => {
+      if (tonConnectUI && !tonConnectUI.connected) {
+        try {
+          await tonConnectUI.connectWallet();
+        } catch (e) {
+          console.error('Wallet connection error', e);
+          alert('Ошибка подключения кошелька. Возможно, вы отменили запрос.');
+        }
       }
     });
 
