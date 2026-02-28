@@ -9,21 +9,21 @@
             margin: 0;
             padding: 0;
             background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             overflow: hidden;
+            height: 100vh;
         }
-        img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <!-- График от CoinGecko (статическое изображение) -->
-    <img src="https://www.coingecko.com/coins/15585/sparkline" alt="TON Chart">
+    <iframe 
+        src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_xxxx&symbol=BINANCE%3ATONUSDT&interval=60&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&showpopupbutton=1&popupwidth=1000&popupheight=650&locale=ru"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+        allowfullscreen>
+    </iframe>
 </body>
 </html>
