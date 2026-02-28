@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Price Chart</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            overflow: hidden;
+            height: 100vh;
+        }
+        #tv_chart_container {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="tv_chart_container"></div>
+
+    <!-- TradingView Charting Library -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    
+    <script>
+        (function() {
+            // Создаём график
+            const chart = LightweightCharts.createChart(document.getElementById('tv_chart_container'), {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                layout: {
+                    backgroundColor: '#0a0a0a',
+                    textColor: '#d1d4dc',
+                },
+                grid: {
+                    vertLines: {
+                        color: 'rgba(42, 46, 57, 0.5)',
+                    },
+                    horzLines: {
+                        color: 'rgba(42, 46, 57, 0.5)',
+                    },
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                },
+                rightPriceScale: {
+                    borderColor: 'rgba(197, 203, 206, 0.3)',
+                },
+                timeScale: {
+                    borderColor: 'rgba(197, 203, 206, 0.3)',
+                    timeVisible: true,
+                    secondsVisible: false,
+                },
+            });
+
+            // Добавляем свечную серию
+            const candlestickSeries = chart.addCandlestickSeries({
+                upColor: '#00ff88',
+                downColor: '#ff4d4d',
+                borderDownColor: '#ff4d4d',
+                borderUpColor: '#00ff88',
+                wickDownColor: '#ff4d4d',
+                wickUpColor: '#00ff88',
+            });
+
+            // Загружаем данные с Binance
+            async function loadData() {
+                try {
+                    const response = await fetch('https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=1h&limit=500');
+                    const data = await response.json();
+                    
+                    const chartData = data.map(d => ({
+                        time: Math.floor(d[0] / 1000), // Binance timestamp in ms → seconds
+                        open: parseFloat(d[1]),
+                        high: parseFloat(d[2]),
+                        low: parseFloat(d[3]),
+                        close: parseFloat(d[4]),
+                    }));
+                    
+                    candlestickSeries.setData(chartData);
+                } catch (error) {
+                    console.error('Ошибка загрузки данных:', error);
+                }
+            }
+
+            loadData();
+
+            // Подстраиваем размер при изменении окна
+            window.addEventListener('resize', () => {
+                chart.applyOptions({ width: window.innerWidth, height: window.innerHeight });
+            });
+        })();
+    </script>
+</body>
+</html>
