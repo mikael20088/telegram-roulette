@@ -844,7 +844,7 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 50vh; /* половина экрана */
+      height: 70vh; /* увеличена для новой информации */
       background: rgba(20, 20, 30, 0.95);
       backdrop-filter: blur(10px);
       z-index: 300;
@@ -856,6 +856,7 @@
       box-sizing: border-box;
       display: block;
       color: #fff;
+      overflow-y: auto;
     }
     .payment-modal.active {
       transform: translateY(0);
@@ -865,11 +866,58 @@
       font-weight: bold;
       text-align: center;
       margin-bottom: 20px;
+      position: relative;
+    }
+    .payment-header-left {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      font-weight: normal;
+    }
+    .payment-header-right {
+      position: absolute;
+      right: 0;
+      top: 0;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .wallet-info {
+      margin-top: 40px;
+      margin-bottom: 20px;
+    }
+    .wallet-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .wallet-label {
+      color: #aaa;
+    }
+    .wallet-value {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .wallet-icon {
+      width: 20px;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
     }
     .payment-amount {
       display: flex;
       justify-content: center;
-      margin-bottom: 30px;
+      margin: 20px 0 10px;
     }
     #amountInput {
       background: rgba(255, 255, 255, 0.1);
@@ -882,12 +930,19 @@
       width: 150px;
       outline: none;
     }
-
-    /* Стили для кнопок в стиле главного квадрата */
+    .usd-equivalent {
+      text-align: left;
+      font-size: 14px;
+      color: #00ff88;
+      margin-bottom: 20px;
+      padding-left: 10px;
+    }
+    /* Стили для кнопок в стиле главного квадрата (исправленные) */
     .pay-button {
-      background: linear-gradient(45deg, rgba(0, 255, 136, 0.25) 0%, rgba(0, 200, 100, 0.15) 25%, rgba(0, 255, 200, 0.2) 50%, rgba(0, 150, 80, 0.1) 75%, rgba(0, 255, 136, 0.25) 100%),
-                  radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.35) 0%, transparent 50%),
-                  radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.3) 0%, transparent 50%);
+      /* Яркий градиент - активное состояние (доступна) */
+      background: linear-gradient(45deg, rgba(0, 255, 136, 0.35) 0%, rgba(0, 200, 100, 0.25) 25%, rgba(0, 255, 200, 0.3) 50%, rgba(0, 150, 80, 0.2) 75%, rgba(0, 255, 136, 0.35) 100%),
+                  radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.45) 0%, transparent 50%),
+                  radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.4) 0%, transparent 50%);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: #fff;
       animation: matrixGlow 4s ease-in-out infinite alternate;
@@ -901,8 +956,10 @@
       transition: opacity 0.2s;
     }
     .pay-button:disabled {
-      opacity: 0.4;
-      animation: none;
+      /* Бледный градиент - неактивное состояние (заблокирована) */
+      background: linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+                  radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.2) 0%, transparent 50%),
+                  radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.18) 0%, transparent 50%);
       cursor: not-allowed;
     }
     .payment-close-btn {
@@ -920,13 +977,17 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 20px;
+      font-size: 22px;
+      line-height: 1;
       color: #fff;
       backdrop-filter: blur(5px);
       transition: opacity 0.2s;
     }
     .payment-close-btn:hover {
       opacity: 0.8;
+    }
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
@@ -1010,11 +1071,30 @@
   <div class="payment-overlay" id="paymentOverlay"></div>
   <div class="payment-modal" id="paymentModal">
     <div class="payment-close-btn" id="paymentCloseBtn">✕</div>
-    <div class="payment-header">Пополнение</div>
+    <div class="payment-header">
+      Пополнение
+      <span class="payment-header-left hidden" id="walletHeaderInfo">
+        <span class="wallet-icon">💎</span>
+        <span id="walletShortAddress">EQ...1234</span>
+      </span>
+      <span class="payment-header-right" id="walletConnectedLabel">Подключенный кошелек</span>
+    </div>
+
+    <div class="wallet-info" id="walletInfoSection">
+      <div class="wallet-row">
+        <span class="wallet-label">Доступный баланс</span>
+        <span class="wallet-value">
+          <span class="wallet-icon">💎</span>
+          <span id="walletBalance">0.00 TON</span>
+        </span>
+      </div>
+    </div>
+
     <div class="payment-amount">
       <input type="text" id="amountInput" value="0" inputmode="decimal" />
     </div>
-    <button class="pay-button" id="payButton" disabled>Подключить кошелек</button>
+    <div class="usd-equivalent" id="usdEquivalent">$0.00</div>
+    <button class="pay-button" id="payButton" disabled>Пополнить</button>
   </div>
 </div>
 
@@ -1812,14 +1892,31 @@
     const payButton = document.getElementById('payButton');
     const amountInput = document.getElementById('amountInput');
     const balanceSpan = document.getElementById('balanceAmount');
+    const walletHeaderInfo = document.getElementById('walletHeaderInfo');
+    const walletShortAddress = document.getElementById('walletShortAddress');
+    const walletConnectedLabel = document.getElementById('walletConnectedLabel');
+    const walletBalanceSpan = document.getElementById('walletBalance');
+    const usdEquivalentSpan = document.getElementById('usdEquivalent');
 
-    let currentBalance = 0.00; // храним баланс в TON
+    // Фиксированный курс TON/USD (можно заменить на реальный API)
+    const TON_USD_RATE = 3.5; // 1 TON = 3.5 USD
+
+    let currentBalance = 0.00; // баланс в мини-аппе
     let tonConnectUI = null;
     let libraryLoaded = false;
+    let walletAddress = null;
+    let walletBalance = 0; // баланс кошелька в TON (будем обновлять при подключении)
 
     // Обновление отображения баланса
     function updateBalanceDisplay() {
       balanceSpan.textContent = currentBalance.toFixed(2);
+    }
+
+    // Обновление USD эквивалента
+    function updateUsdEquivalent() {
+      let amount = parseFloat(amountInput.value) || 0;
+      let usd = amount * TON_USD_RATE;
+      usdEquivalentSpan.textContent = '$' + usd.toFixed(2);
     }
 
     // Обработка ввода суммы
@@ -1848,13 +1945,14 @@
       selectedAmount = value === '' ? 0 : parseFloat(value);
       if (isNaN(selectedAmount)) selectedAmount = 0;
       updatePayButton();
+      updateUsdEquivalent();
     });
 
     // Функция обновления текста и состояния кнопки
     function updatePayButton() {
       if (!tonConnectUI) {
         payButton.disabled = true;
-        payButton.textContent = 'Загрузка...';
+        payButton.textContent = 'Пополнить';
         return;
       }
       const connected = tonConnectUI.connected;
@@ -1867,11 +1965,41 @@
       }
     }
 
+    // Обновление интерфейса в зависимости от подключения кошелька
+    function updateWalletUI(wallet) {
+      if (wallet) {
+        // Есть подключённый кошелёк
+        walletAddress = wallet.account.address;
+        // Формируем короткий адрес: первые 4 + ... + последние 4
+        let shortAddr = walletAddress.slice(0,4) + '...' + walletAddress.slice(-4);
+        walletShortAddress.textContent = shortAddr;
+        walletHeaderInfo.classList.remove('hidden');
+        walletConnectedLabel.classList.remove('hidden');
+        // Здесь нужно получить баланс кошелька (в демо поставим заглушку)
+        // В реальности нужно запросить баланс через toncenter или другой API
+        // Пока используем фиктивное значение
+        walletBalance = 15.5; // Пример
+        walletBalanceSpan.textContent = walletBalance.toFixed(2) + ' TON';
+      } else {
+        // Кошелёк отключён
+        walletHeaderInfo.classList.add('hidden');
+        walletConnectedLabel.classList.add('hidden');
+        walletBalanceSpan.textContent = '0.00 TON';
+        walletAddress = null;
+      }
+    }
+
     // Открытие модалки по клику на панель баланса
     balancePanel.addEventListener('click', () => {
       paymentModal.classList.add('active');
       paymentOverlay.classList.add('active');
       setTimeout(() => amountInput.focus(), 300);
+      // При открытии обновляем USD эквивалент и баланс кошелька (если подключён)
+      updateUsdEquivalent();
+      if (tonConnectUI && tonConnectUI.connected) {
+        // Запросить баланс можно здесь (пока заглушка)
+        // В реальности сделать запрос к API
+      }
     });
 
     // Закрытие модалки (крестик и оверлей)
@@ -1894,6 +2022,7 @@
 
         tonConnectUI.onStatusChange(wallet => {
           console.log('Wallet status:', wallet ? 'connected' : 'disconnected');
+          updateWalletUI(wallet);
           updatePayButton();
         });
 
@@ -1966,7 +2095,7 @@
           clearInterval(interval);
           console.error('TonConnectUI library failed to load');
           payButton.disabled = false;
-          payButton.textContent = 'Ошибка загрузки';
+          payButton.textContent = 'Пополнить';
           payButton.addEventListener('click', () => {
             alert('Не удалось загрузить библиотеку TON Connect. Пожалуйста, обновите страницу.');
           });
@@ -1976,6 +2105,7 @@
 
     updatePayButton();
     updateBalanceDisplay();
+    updateUsdEquivalent();
   })();
 </script>
 
