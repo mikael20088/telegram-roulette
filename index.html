@@ -74,7 +74,7 @@
       transform: translateY(-50%);
       display: flex;
       align-items: center;
-      gap: 6px; /* уменьшенный gap */
+      gap: 6px;
       pointer-events: auto;
       z-index: 21;
     }
@@ -82,10 +82,10 @@
     /* Панель баланса с новым дизайном (как главный квадрат) */
     .balance-panel {
       position: relative;
-      padding: 4px 8px;
+      padding: 4px 8px 4px 4px; /* уменьшен левый отступ */
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px; /* уменьшен зазор между элементами */
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
@@ -134,7 +134,7 @@
       font-weight: bold;
     }
 
-    /* Квадратная кнопка для подключения кошелька (уменьшена) */
+    /* Квадратная кнопка для подключения кошелька */
     .connect-wallet-button {
       width: 32px;
       height: 32px;
@@ -149,7 +149,7 @@
       cursor: pointer;
       position: relative;
       transition: transform 0.2s;
-      font-size: 18px; /* уменьшен */
+      font-size: 18px;
       color: #00ff88;
     }
     .connect-wallet-button:hover {
@@ -1971,6 +1971,9 @@
   const gameIframe = document.getElementById('gameIframe');
   const gameCloseBtn = document.getElementById('gameCloseBtn');
 
+  // Флаг, что анимация завершена
+  let animationCompleted = false;
+
   // Сначала скрываем всё, кроме анимации и верхней панели
   menuContainer.classList.remove('visible');
   mainSquare.classList.remove('visible');
@@ -1989,8 +1992,9 @@
     document.getElementById("balancePanel").classList.add('visible');
     // Показываем меню
     menuContainer.classList.add('visible');
-    // После появления элементов вызываем обновление интерфейса кошелька,
-    // чтобы отобразить квадратик или иконку в зависимости от статуса.
+    // Анимация завершена
+    animationCompleted = true;
+    // Обновляем интерфейс кошелька с учётом текущего статуса
     if (typeof updateWalletUIFn === 'function') updateWalletUIFn();
   }, 3500);
 
@@ -2161,15 +2165,22 @@
 
     // Обновление интерфейса в зависимости от подключения кошелька
     function updateWalletUI(wallet) {
+      // Если анимация ещё не завершена, не показываем элементы
+      if (!animationCompleted) return;
+
       if (wallet) {
         walletAddress = wallet.account.address;
         // Преобразуем адрес в user-friendly формат, если это raw
         let displayAddress = walletAddress;
         if (walletAddress.startsWith('0:') && tonweb) {
           try {
-            displayAddress = tonweb.Address.parseRaw(walletAddress).toString(true, true, false);
+            // Пробуем сконвертировать raw в user-friendly
+            const addressObj = tonweb.Address.parseRaw(walletAddress);
+            // Параметры: isUserFriendly = true, isUrlSafe = true, isBounceable = false (обычный кошелёк)
+            displayAddress = addressObj.toString(true, true, false);
           } catch (e) {
             console.error('Error converting address', e);
+            // Если ошибка, оставляем raw
           }
         }
         let shortAddr = displayAddress.slice(0,4) + '...' + displayAddress.slice(-4);
