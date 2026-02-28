@@ -1251,7 +1251,13 @@
   <!-- Оверлей для Angry Birds -->
   <div class="game-overlay" id="gameOverlay">
     <div class="close-btn" id="gameCloseBtn">×</div>
-    <iframe id="gameIframe" src=""></iframe>
+    <iframe id="gameIframe" src="https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm"></iframe>
+  </div>
+
+  <!-- Оверлей для Price с iframe -->
+  <div class="game-overlay" id="priceOverlay">
+    <div class="close-btn" id="priceCloseBtn">×</div>
+    <iframe id="priceIframe" src="price_chart.html"></iframe>
   </div>
 
   <!-- Модальное окно пополнения TON -->
@@ -1321,7 +1327,7 @@
 </div>
 
 <script>
-  // ========== ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД (СОХРАНЁН ПОЛНОСТЬЮ) ==========
+  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -1476,14 +1482,14 @@
     return container;
   }
 
-  // Сокращённый массив подарков (в вашем коде он должен быть полным, но для краткости здесь оставлю несколько)
+  // Сокращённый массив подарков
   const rareGifts = [
     { name: "Durov's Cap", emoji: "🎩", rarity: "legendary" },
     { name: "Top Hat", emoji: "🎩", rarity: "common" },
     { name: "Astral Shard", emoji: "💎", rarity: "uncommon" },
     { name: "Artisan Brick", emoji: "🧱", rarity: "epic" },
     { name: "Kissed Frog", emoji: "🐸", rarity: "rare" }
-  ]; // В оригинале здесь 80+ записей, но для работы кода достаточно
+  ];
 
   const canvas = document.getElementById("matrix");
   const ctx = canvas.getContext("2d");
@@ -2039,6 +2045,11 @@
   const gameIframe = document.getElementById('gameIframe');
   const gameCloseBtn = document.getElementById('gameCloseBtn');
 
+  // Новые элементы для Price
+  const priceOverlay = document.getElementById('priceOverlay');
+  const priceIframe = document.getElementById('priceIframe');
+  const priceCloseBtn = document.getElementById('priceCloseBtn');
+
   // Флаг, что анимация завершена
   let animationCompleted = false;
 
@@ -2046,6 +2057,7 @@
   menuContainer.classList.remove('visible');
   mainSquare.classList.remove('visible');
   gameOverlay.classList.remove('active');
+  priceOverlay.classList.remove('active');
 
   setTimeout(() => {
     document.getElementById("matrix").style.opacity = "0";
@@ -2078,16 +2090,17 @@
     gameOverlay.classList.add('active');
   });
 
+  // Price
   document.getElementById('priceMenuItem').addEventListener('click', () => {
-    // Временная заглушка, чтобы не ломать приложение
-    alert('Price section — здесь будет график TON');
+    menuContainer.classList.remove('visible');
+    priceOverlay.classList.add('active');
   });
 
-  // Закрытие Angry Birds по крестику
+  // Закрытие Angry Birds
   gameCloseBtn.addEventListener('click', () => {
     gameOverlay.classList.remove('active');
     gameIframe.src = '';
-    menuContainer.classList.add('visible'); // возвращаем в меню
+    menuContainer.classList.add('visible');
   });
 
   gameOverlay.addEventListener('click', (e) => {
@@ -2098,7 +2111,20 @@
     }
   });
 
-  // Обработчики для квадратов крафта (оригинальные)
+  // Закрытие Price
+  priceCloseBtn.addEventListener('click', () => {
+    priceOverlay.classList.remove('active');
+    menuContainer.classList.add('visible');
+  });
+
+  priceOverlay.addEventListener('click', (e) => {
+    if (e.target === priceOverlay) {
+      priceOverlay.classList.remove('active');
+      menuContainer.classList.add('visible');
+    }
+  });
+
+  // Обработчики для квадратов крафта
   document.querySelectorAll('.mini-square').forEach(square => {
     square.onclick = (e) => {
       if (e.target.classList.contains('remove-gift')) return;
@@ -2120,7 +2146,7 @@
     }
   };
 
-  // ========== НОВАЯ ЛОГИКА БАЛАНСА, TON CONNECT И ОКНА АККАУНТА ==========
+  // ========== ЛОГИКА TON CONNECT ==========
   (function initTonAndBalance() {
     const balancePanel = document.getElementById('balancePanel');
     const paymentModal = document.getElementById('paymentModal');
@@ -2136,7 +2162,6 @@
     const walletHeaderIcon = document.getElementById('walletHeaderIcon');
     const connectWalletButton = document.getElementById('connectWalletButton');
 
-    // Элементы окна аккаунта
     const accountModal = document.getElementById('accountModal');
     const accountOverlay = document.getElementById('accountOverlay');
     const accountCloseBtn = document.getElementById('accountCloseBtn');
@@ -2144,20 +2169,18 @@
     const accountAddress = document.getElementById('accountAddress');
     const disconnectWalletBtn = document.getElementById('disconnectWalletBtn');
 
-    let currentBalance = 0.00; // баланс в мини-аппе
+    let currentBalance = 0.00;
     let tonConnectUI = null;
     let libraryLoaded = false;
     let walletAddress = null;
-    let walletBalance = 0; // баланс кошелька в TON
-    let tonUsdRate = 3.5; // курс по умолчанию, будет обновляться
+    let walletBalance = 0;
+    let tonUsdRate = 3.5;
     let tonweb = null;
 
-    // Инициализируем TonWeb для преобразования адресов
     if (window.TonWeb) {
       tonweb = new TonWeb();
     }
 
-    // Функция получения реального курса TON/USD с CoinGecko
     async function fetchTonRate() {
       try {
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
@@ -2170,10 +2193,8 @@
       }
     }
 
-    // Функция получения баланса кошелька через TON Center (требуется API ключ)
     async function fetchWalletBalance(address) {
-      // Замените на свой API ключ от toncenter.com
-      const apiKey = 'YOUR_TONCENTER_API_KEY'; // <--- вставьте сюда свой ключ
+      const apiKey = 'YOUR_TONCENTER_API_KEY'; // замените на свой ключ
       try {
         const response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${address}`, {
           headers: apiKey ? { 'X-API-Key': apiKey } : {}
@@ -2192,19 +2213,16 @@
       accountBalanceAmount.textContent = walletBalance.toFixed(2);
     }
 
-    // Обновление отображения баланса
     function updateBalanceDisplay() {
       balanceSpan.textContent = currentBalance.toFixed(2);
     }
 
-    // Обновление USD эквивалента
     function updateUsdEquivalent() {
       let amount = parseFloat(amountInput.value) || 0;
       let usd = amount * tonUsdRate;
       usdEquivalentSpan.textContent = '$' + usd.toFixed(2);
     }
 
-    // Обработка ввода суммы
     let selectedAmount = 0;
     amountInput.addEventListener('input', function(e) {
       let value = e.target.value.replace(',', '.');
@@ -2245,14 +2263,11 @@
       }
     }
 
-    // Обновление интерфейса в зависимости от подключения кошелька
     function updateWalletUI(wallet) {
-      // Если анимация ещё не завершена, не показываем элементы
       if (!animationCompleted) return;
 
       if (wallet) {
         walletAddress = wallet.account.address;
-        // Преобразуем адрес в user-friendly формат, если это raw
         let displayAddress = walletAddress;
         if (walletAddress.startsWith('0:') && tonweb) {
           try {
@@ -2268,7 +2283,6 @@
         walletHeaderIcon.classList.remove('hidden');
         connectWalletButton.classList.add('hidden');
 
-        // Обновляем данные в окне аккаунта
         accountAddress.textContent = displayAddress;
         accountBalanceAmount.textContent = walletBalance.toFixed(2);
 
@@ -2285,7 +2299,6 @@
       }
     }
 
-    // Выносим функцию в глобальную область, чтобы вызвать из таймера
     window.updateWalletUIFn = function() {
       if (tonConnectUI) {
         updateWalletUI(tonConnectUI.connected ? tonConnectUI.wallet : null);
@@ -2303,7 +2316,6 @@
       }
     });
 
-    // Открытие модалки аккаунта при клике на круглую иконку кошелька
     walletHeaderIcon.addEventListener('click', () => {
       if (tonConnectUI && tonConnectUI.connected) {
         accountModal.classList.add('active');
@@ -2311,7 +2323,6 @@
       }
     });
 
-    // Закрытие окон
     function closePaymentModal() {
       paymentModal.classList.remove('active');
       paymentOverlay.classList.remove('active');
@@ -2328,7 +2339,6 @@
     accountCloseBtn.addEventListener('click', closeAccountModal);
     accountOverlay.addEventListener('click', closeAccountModal);
 
-    // Отвязка кошелька
     disconnectWalletBtn.addEventListener('click', async () => {
       if (tonConnectUI) {
         await tonConnectUI.disconnect();
@@ -2336,7 +2346,6 @@
       }
     });
 
-    // Клик по квадратной кнопке подключения
     connectWalletButton.addEventListener('click', async () => {
       if (tonConnectUI && !tonConnectUI.connected) {
         try {
