@@ -1,31 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <meta charset="utf-8">
-    <title>TON / USDT</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON / USDT — DXcharts Lite</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             height: 100vh;
             overflow: hidden;
-            font-family: monospace;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        #chart {
+        #chart_container {
             width: 100%;
-            height: calc(100% - 50px);
+            height: calc(100% - 60px);
+            background: #0a0a0a; /* запасной тёмный фон */
         }
         .timeframe-bar {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 50px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 15px;
-            background: rgba(0, 20, 10, 0.8);
+            background: rgba(0, 20, 10, 0.85);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-top: 1px solid rgba(0, 255, 136, 0.3);
@@ -36,24 +39,38 @@
             background: transparent;
             border: 1px solid rgba(0, 255, 136, 0.5);
             color: #00ff88;
-            padding: 8px 16px;
+            padding: 8px 18px;
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
             text-shadow: 0 0 8px #00ff88;
             box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            font-size: 14px;
         }
         .tf-btn.active, .tf-btn:hover {
             background: rgba(0, 255, 136, 0.2);
             border-color: #00ff88;
             box-shadow: 0 0 15px #00ff88;
         }
+        /* логотип библиотеки (можно убрать) */
+        .dxcharts-watermark {
+            display: none !important;
+        }
     </style>
-    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- DXcharts Lite from CDN (версия 2.0.1) -->
+    <script src="https://www.unpkg.com/@devexperts/dxcharts-lite@2.0.1/dist/dxchart.min.js"></script>
+    <!-- import map для генератора свечей -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@devexperts/dxcharts-lite/": "https://www.unpkg.com/@devexperts/dxcharts-lite@2.0.1/"
+            }
+        }
+    </script>
 </head>
 <body>
-    <div id="chart"></div>
+    <div id="chart_container"></div>
     <div class="timeframe-bar">
         <button class="tf-btn" data-interval="5m">5м</button>
         <button class="tf-btn" data-interval="15m">15м</button>
@@ -62,86 +79,80 @@
         <button class="tf-btn" data-interval="1d">1д</button>
     </div>
 
-    <script>
-        const chartElement = document.getElementById('chart');
-        
-        // Создаём график с градиентным фоном
-        const chart = LightweightCharts.createChart(chartElement, {
-            width: chartElement.clientWidth,
-            height: chartElement.clientHeight,
-            layout: {
-                background: {
-                    type: LightweightCharts.ColorType.VerticalGradient,
-                    topColor: '#0a1a0a',    // тёмно-зелёный сверху
-                    bottomColor: '#001500',   // почти чёрный снизу
-                },
-                textColor: '#00ff88',
-                fontFamily: 'monospace',
-            },
-            grid: {
-                vertLines: { color: 'rgba(0, 255, 136, 0.15)' },
-                horzLines: { color: 'rgba(0, 255, 136, 0.15)' },
-            },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal,
-                vertLine: { color: '#00ff88', width: 1, style: 1 },
-                horzLine: { color: '#00ff88', width: 1, style: 1 },
-            },
-            rightPriceScale: {
-                borderColor: 'rgba(0, 255, 136, 0.3)',
-                textColor: '#00ff88',
-            },
-            timeScale: {
-                borderColor: 'rgba(0, 255, 136, 0.3)',
-                textColor: '#00ff88',
-                timeVisible: true,
-                secondsVisible: false,
-            },
-        });
+    <script type="module">
+        // Импортируем утилиту для конвертации данных (необязательно, используем свою)
+        // import generateCandlesData from '@devexperts/dxcharts-lite/dist/chart/utils/candles-generator.utils';
 
-        const candlestickSeries = chart.addCandlestickSeries({
-            upColor: '#00ff88',
-            downColor: '#ff4d4d',
-            borderDownColor: '#ff4d4d',
-            borderUpColor: '#00ff88',
-            wickDownColor: '#ff4d4d',
-            wickUpColor: '#00ff88',
-        });
+        // Глобальный объект DXChart доступен благодаря подключённому скрипту
+        const container = document.getElementById('chart_container');
+        
+        // Создаём экземпляр графика
+        const chart = DXChart.createChart(container);
+        
+        // Базовая настройка внешнего вида (по желанию)
+        // Доступные опции: https://devexperts.com/dxcharts/documentation-for-developers/dxcharts-lite/Chart%20Config/
+        // Но оставим пока умолчания — они тёмные.
 
         let currentInterval = '1h';
 
+        // Функция загрузки данных с Binance и преобразования в формат DXcharts
         async function loadData(interval) {
-            // Максимальные лимиты для каждого интервала (Binance позволяет до 1500)
-            const limits = {
-                '5m': 1500,   // ~5.2 дней
-                '15m': 1500,  // ~15.6 дней
-                '1h': 1500,   // ~62.5 дней
-                '4h': 1500,   // ~250 дней
-                '1d': 1000    // ~2.7 года (можно и 1500, но ~4 года)
-            };
-            const limit = limits[interval] || 500;
-            
             try {
+                // Определяем лимит в зависимости от интервала
+                const limits = {
+                    '5m': 500,
+                    '15m': 500,
+                    '1h': 500,
+                    '4h': 500,
+                    '1d': 365
+                };
+                const limit = limits[interval] || 500;
+                
                 const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
                 const data = await response.json();
-                const chartData = data.map(d => ({
-                    time: Math.floor(d[0] / 1000),
+                
+                // Преобразуем свечи в формат DXcharts
+                // Документация: Candle должен содержать timestamp (в секундах или миллисекундах), open, high, low, close
+                const candles = data.map(d => ({
+                    timestamp: Math.floor(d[0]), // Binance даёт миллисекунды, оставляем как есть
                     open: parseFloat(d[1]),
                     high: parseFloat(d[2]),
                     low: parseFloat(d[3]),
-                    close: parseFloat(d[4]),
+                    close: parseFloat(d[4])
                 }));
-                candlestickSeries.setData(chartData);
-                chart.timeScale().fitContent();
-            } catch (error) {
-                console.error('Data error:', error);
+
+                // Создаём объект инструмента (нужен для отображения точности цены)
+                const instrument = {
+                    symbol: 'TONUSDT',
+                    priceIncrements: [0.001] // шаг цены, можно подобрать точнее
+                };
+
+                // Передаём данные в график
+                // chart.chartComponent.setMainSeries({ candles, instrument }); // старый вариант
+                // В новых версиях может быть chart.setData({ candles, instrument }) — проверим оба
+                if (chart.setData) {
+                    chart.setData({ candles, instrument });
+                } else if (chart.chartComponent) {
+                    chart.chartComponent.setMainSeries({ candles, instrument });
+                } else {
+                    console.warn('Неизвестный API, пробуем прямой метод');
+                    // fallback
+                    chart.candles = candles;
+                }
+
+                console.log(`Загружено ${candles.length} свечей для ${interval}`);
+            } catch (e) {
+                console.error('Ошибка загрузки:', e);
             }
         }
 
+        // Загружаем начальные данные
         loadData('1h');
 
+        // Обработчики кнопок таймфреймов
         document.querySelectorAll('.tf-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                if (btn.classList.contains('active')) return;
                 document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentInterval = btn.dataset.interval;
@@ -149,11 +160,10 @@
             });
         });
 
+        // По желанию: адаптация под ресайз окна
         window.addEventListener('resize', () => {
-            chart.applyOptions({
-                width: chartElement.clientWidth,
-                height: chartElement.clientHeight,
-            });
+            // DXcharts сам подстраивается под размер контейнера, если не задан fixedSize
+            // поэтому ничего делать не нужно
         });
     </script>
 </body>
