@@ -11,12 +11,13 @@
             height: 100vh;
             overflow: hidden;
             background: #000;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: monospace;
         }
-        #chart-container {
+        /* Контейнер с фоном в стиле главного квадрата */
+        .chart-container {
             position: relative;
             width: 100%;
-            height: calc(100% - 50px);
+            height: calc(100% - 50px); /* оставляем место для панели */
             background: radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.15) 0%, transparent 50%),
                         radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
                         linear-gradient(45deg, rgba(0, 255, 136, 0.05) 0%, rgba(0, 200, 100, 0.02) 25%, rgba(0, 255, 200, 0.03) 50%, rgba(0, 150, 80, 0.01) 75%, rgba(0, 255, 136, 0.05) 100%);
@@ -57,6 +58,7 @@
             transition: all 0.2s;
             text-shadow: 0 0 8px #00ff88;
             box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            font-family: monospace;
         }
         .tf-btn:hover, .tf-btn.active {
             background: rgba(0, 255, 136, 0.2);
@@ -67,7 +69,7 @@
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
-    <div id="chart-container">
+    <div class="chart-container">
         <div id="chart"></div>
     </div>
     <div class="timeframe-bar" id="timeframe-bar">
@@ -77,94 +79,91 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('chart-container');
-            const chartElement = document.getElementById('chart');
-            
-            // Убедимся, что размеры корректны
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-            
-            // Настройки графика в стиле главного квадрата
-            const chart = LightweightCharts.createChart(chartElement, {
-                width: width,
-                height: height,
-                layout: {
-                    backgroundColor: 'transparent',
-                    textColor: '#00ff88',
-                    fontFamily: 'monospace',
-                },
-                grid: {
-                    vertLines: { color: 'rgba(0, 255, 136, 0.15)' },
-                    horzLines: { color: 'rgba(0, 255, 136, 0.15)' },
-                },
-                crosshair: {
-                    mode: LightweightCharts.CrosshairMode.Normal,
-                    vertLine: { color: '#00ff88', width: 1, style: 1 },
-                    horzLine: { color: '#00ff88', width: 1, style: 1 },
-                },
-                rightPriceScale: {
-                    borderColor: 'rgba(0, 255, 136, 0.3)',
-                    textColor: '#00ff88',
-                },
-                timeScale: {
-                    borderColor: 'rgba(0, 255, 136, 0.3)',
-                    textColor: '#00ff88',
-                    timeVisible: true,
-                    secondsVisible: false,
-                },
-            });
+        // Получаем размеры контейнера (убедимся, что они корректны)
+        const container = document.querySelector('.chart-container');
+        const chartElement = document.getElementById('chart');
 
-            // Свечная серия
-            const candlestickSeries = chart.addCandlestickSeries({
-                upColor: '#00ff88',
-                downColor: '#ff4d4d',
-                borderDownColor: '#ff4d4d',
-                borderUpColor: '#00ff88',
-                wickDownColor: '#ff4d4d',
-                wickUpColor: '#00ff88',
-            });
+        // Создаём график с прозрачным фоном
+        const chart = LightweightCharts.createChart(chartElement, {
+            width: container.clientWidth,
+            height: container.clientHeight,
+            layout: {
+                backgroundColor: 'transparent',
+                textColor: '#00ff88',
+                fontFamily: 'monospace',
+            },
+            grid: {
+                vertLines: { color: 'rgba(0, 255, 136, 0.15)' },
+                horzLines: { color: 'rgba(0, 255, 136, 0.15)' },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+                vertLine: { color: '#00ff88', width: 1, style: 1 },
+                horzLine: { color: '#00ff88', width: 1, style: 1 },
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(0, 255, 136, 0.3)',
+                textColor: '#00ff88',
+            },
+            timeScale: {
+                borderColor: 'rgba(0, 255, 136, 0.3)',
+                textColor: '#00ff88',
+                timeVisible: true,
+                secondsVisible: false,
+            },
+        });
 
-            let currentInterval = '1h';
+        // Свечная серия
+        const candlestickSeries = chart.addCandlestickSeries({
+            upColor: '#00ff88',
+            downColor: '#ff4d4d',
+            borderDownColor: '#ff4d4d',
+            borderUpColor: '#00ff88',
+            wickDownColor: '#ff4d4d',
+            wickUpColor: '#00ff88',
+        });
 
-            async function loadData(interval) {
-                const limits = { '1h': 500, '4h': 500, '1d': 365 };
-                const limit = limits[interval] || 500;
-                try {
-                    const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
-                    const data = await response.json();
-                    
-                    const chartData = data.map(d => ({
-                        time: Math.floor(d[0] / 1000),
-                        open: parseFloat(d[1]),
-                        high: parseFloat(d[2]),
-                        low: parseFloat(d[3]),
-                        close: parseFloat(d[4]),
-                    }));
-                    
-                    candlestickSeries.setData(chartData);
-                    chart.timeScale().fitContent();
-                } catch (error) {
-                    console.error('Ошибка загрузки данных:', error);
-                }
+        let currentInterval = '1h';
+
+        async function loadData(interval) {
+            const limits = { '1h': 500, '4h': 500, '1d': 365 };
+            const limit = limits[interval] || 500;
+            try {
+                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
+                const data = await response.json();
+                
+                const chartData = data.map(d => ({
+                    time: Math.floor(d[0] / 1000),
+                    open: parseFloat(d[1]),
+                    high: parseFloat(d[2]),
+                    low: parseFloat(d[3]),
+                    close: parseFloat(d[4]),
+                }));
+                
+                candlestickSeries.setData(chartData);
+                chart.timeScale().fitContent();
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
             }
+        }
 
-            loadData('1h');
+        loadData('1h');
 
-            document.querySelectorAll('.tf-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentInterval = btn.dataset.interval;
-                    loadData(currentInterval);
-                });
+        // Обработчики кнопок
+        document.querySelectorAll('.tf-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentInterval = btn.dataset.interval;
+                loadData(currentInterval);
             });
+        });
 
-            window.addEventListener('resize', () => {
-                chart.applyOptions({
-                    width: container.clientWidth,
-                    height: container.clientHeight,
-                });
+        // Адаптация под изменение размера
+        window.addEventListener('resize', () => {
+            chart.applyOptions({
+                width: container.clientWidth,
+                height: container.clientHeight,
             });
         });
     </script>
