@@ -13,7 +13,6 @@
             background: #000;
             font-family: monospace;
         }
-        /* Контейнер для графика */
         .chart-wrapper {
             width: 100%;
             height: calc(100% - 50px);
@@ -62,7 +61,8 @@
             box-shadow: 0 0 15px #00ff88;
         }
     </style>
-    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- Последняя версия библиотеки -->
+    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div class="chart-wrapper">
@@ -75,7 +75,6 @@
     </div>
 
     <script>
-        // Получаем размеры контейнера
         const wrapper = document.querySelector('.chart-wrapper');
         const chartElement = document.getElementById('chart');
 
@@ -84,7 +83,7 @@
             width: wrapper.clientWidth,
             height: wrapper.clientHeight,
             layout: {
-                backgroundColor: '#000000',
+                backgroundColor: '#000000',  // чёрный фон
                 textColor: '#00ff88',
                 fontFamily: 'monospace',
             },
@@ -109,7 +108,6 @@
             },
         });
 
-        // Свечная серия
         const candlestickSeries = chart.addCandlestickSeries({
             upColor: '#00ff88',
             downColor: '#ff4d4d',
@@ -127,7 +125,6 @@
             try {
                 const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
                 const data = await response.json();
-                
                 const chartData = data.map(d => ({
                     time: Math.floor(d[0] / 1000),
                     open: parseFloat(d[1]),
@@ -135,7 +132,6 @@
                     low: parseFloat(d[3]),
                     close: parseFloat(d[4]),
                 }));
-                
                 candlestickSeries.setData(chartData);
                 chart.timeScale().fitContent();
             } catch (error) {
@@ -145,7 +141,6 @@
 
         loadData('1h');
 
-        // Обработчики кнопок
         document.querySelectorAll('.tf-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
@@ -155,7 +150,6 @@
             });
         });
 
-        // Адаптация под изменение размера
         window.addEventListener('resize', () => {
             chart.applyOptions({
                 width: wrapper.clientWidth,
