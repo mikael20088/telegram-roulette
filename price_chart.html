@@ -17,13 +17,12 @@
             height: 100%;
         }
     </style>
-    <!-- Lightweight Charts CDN (на случай если локальный не сработает) -->
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div id="chart"></div>
     <script>
-        // Создаём график на весь экран
+        // Создаём график
         const chart = LightweightCharts.createChart(document.getElementById('chart'), {
             width: window.innerWidth,
             height: window.innerHeight,
@@ -35,11 +34,20 @@
                 vertLines: { color: 'rgba(42, 46, 57, 0.5)' },
                 horzLines: { color: 'rgba(42, 46, 57, 0.5)' },
             },
-            rightPriceScale: { borderColor: 'rgba(197, 203, 206, 0.3)' },
-            timeScale: { borderColor: 'rgba(197, 203, 206, 0.3)' },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(197, 203, 206, 0.3)',
+            },
+            timeScale: {
+                borderColor: 'rgba(197, 203, 206, 0.3)',
+                timeVisible: true,
+                secondsVisible: false,
+            },
         });
 
-        // Свечная серия в ваших цветах
+        // Добавляем свечную серию
         const candlestickSeries = chart.addCandlestickSeries({
             upColor: '#00ff88',
             downColor: '#ff4d4d',
@@ -49,10 +57,12 @@
             wickUpColor: '#00ff88',
         });
 
-        // Загружаем реальные данные с Binance
-        fetch('https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=1h&limit=500')
-            .then(response => response.json())
-            .then(data => {
+        // Загружаем данные с Binance
+        async function loadData() {
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=1h&limit=500');
+                const data = await response.json();
+                
                 const chartData = data.map(d => ({
                     time: Math.floor(d[0] / 1000),
                     open: parseFloat(d[1]),
@@ -60,13 +70,16 @@
                     low: parseFloat(d[3]),
                     close: parseFloat(d[4]),
                 }));
+                
                 candlestickSeries.setData(chartData);
                 chart.timeScale().fitContent();
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
-                document.body.innerHTML += '<div style="color:#ff4d4d; padding:20px;">Ошибка загрузки данных</div>';
-            });
+                document.body.innerHTML += '<div style="color:#ff4d4d; padding:20px;">Ошибка загрузки данных. Проверьте интернет.</div>';
+            }
+        }
+
+        loadData();
 
         // Адаптация под изменение размера
         window.addEventListener('resize', () => {
