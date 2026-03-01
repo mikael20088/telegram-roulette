@@ -122,12 +122,11 @@
 
         let chartData = [];
         let currentInterval = '1h';
-        let startIndex = 0;
+        let startIndex = 0;          // дробный индекс первой отображаемой свечи
         let zoomLevel = 1;
         let isDragging = false;
         let dragStartX = 0;
-        let dragStartIndex = 0;
-        let dragAccumulator = 0; // накопленное смещение в пикселях
+        let dragStartIndex = 0;      // дробный индекс на момент начала перетаскивания
 
         // Функция для установки правильных размеров canvas
         function resizeCanvas() {
@@ -135,7 +134,7 @@
             canvas.height = canvas.clientHeight;
         }
 
-        // Отрисовка
+        // Отрисовка с учётом дробного индекса
         function drawChart() {
             if (!chartData || chartData.length === 0) return;
 
@@ -146,19 +145,26 @@
             const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
 
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            let visibleCount = Math.floor((width - paddingLeft - paddingRight) / candleWidth);
-            if (visibleCount < 1) visibleCount = 1;
+            const visibleCount = Math.floor((width - paddingLeft - paddingRight) / candleWidth);
+            if (visibleCount < 1) return;
 
-            // Корректируем startIndex с учётом границ
-            let maxStart = chartData.length - visibleCount;
-            if (maxStart < 0) maxStart = 0;
-            if (startIndex > maxStart) startIndex = maxStart;
-            if (startIndex < 0) startIndex = 0;
+            // Целая часть индекса определяет первую свечу, дробная – смещение в пикселях
+            const intStart = Math.floor(startIndex);
+            const fractionalOffset = (startIndex - intStart) * candleWidth; // смещение в пикселях (положительное – вправо)
 
-            const endIndex = Math.min(startIndex + visibleCount, chartData.length);
-            const visibleData = chartData.slice(startIndex, endIndex);
+            // Проверка границ: intStart должно быть в допустимых пределах
+            let safeIntStart = Math.max(0, Math.min(intStart, chartData.length - 1));
+            if (safeIntStart !== intStart) {
+                // Если вышли за границы, корректируем startIndex
+                startIndex = safeIntStart;
+                fractionalOffset = 0;
+            }
+
+            const endIndex = Math.min(safeIntStart + visibleCount + 1, chartData.length); // +1 на случай дробного смещения
+            const visibleData = chartData.slice(safeIntStart, endIndex);
             if (visibleData.length === 0) return;
 
+            // Вычисляем min/max цены
             let minPrice = Math.min(...visibleData.map(d => d.low));
             let maxPrice = Math.max(...visibleData.map(d => d.high));
             const priceRange = maxPrice - minPrice;
@@ -171,15 +177,17 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // Сетка (вертикальная)
+            // Сетка (вертикальная) – рисуем с учётом смещения
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
-            for (let i = 0; i < visibleData.length; i += 5) {
-                const x = paddingLeft + i * candleWidth;
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, height);
-                ctx.stroke();
+            for (let i = 0; i < visibleData.length; i++) {
+                const x = paddingLeft + (i - fractionalOffset / candleWidth) * candleWidth; // смещаем всю сетку
+                if (i % 5 === 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                }
             }
 
             // Горизонтальная сетка
@@ -193,7 +201,8 @@
 
             // Свечи
             visibleData.forEach((candle, i) => {
-                const x = paddingLeft + i * candleWidth;
+                // Координата x с учётом смещения
+                const x = paddingLeft + (i - fractionalOffset / candleWidth) * candleWidth;
                 const w = candleWidth - 1;
 
                 const openY = height - paddingBottom - ((candle.open - minPrice) / (maxPrice - minPrice)) * (height - paddingTop - paddingBottom);
@@ -260,7 +269,6 @@
 
                 startIndex = 0;
                 zoomLevel = 1;
-                dragAccumulator = 0;
                 loading.style.display = 'none';
                 drawChart();
             } catch (err) {
@@ -270,52 +278,42 @@
             }
         }
 
-        // --- Улучшенное перетаскивание ---
+        // --- Плавное перетаскивание с дробным индексом ---
         canvas.addEventListener('mousedown', (e) => {
             isDragging = true;
             dragStartX = e.clientX;
             dragStartIndex = startIndex;
-            dragAccumulator = 0; // сбрасываем накопленное смещение
             canvas.style.cursor = 'grabbing';
         });
 
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             const dx = e.clientX - dragStartX;
-            if (Math.abs(dx) < 2) return; // небольшой порог для предотвращения дрожания
+            if (Math.abs(dx) < 1) return; // небольшой порог
 
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            // Накопленное смещение увеличиваем на dx
-            dragAccumulator += dx;
+            // Перемещение в пикселях преобразуем в изменение индекса
+            const indexDelta = dx / candleWidth; // дробное
+            let newIndex = dragStartIndex - indexDelta; // при движении вправо (dx>0) индекс уменьшается (идём в прошлое)
 
-            // Вычисляем, на сколько свечей нужно сместиться (целая часть от деления накопленного смещения на ширину свечи)
-            const indexDelta = Math.round(dragAccumulator / candleWidth);
-            if (indexDelta !== 0) {
-                // Обновляем startIndex
-                let newIndex = dragStartIndex - indexDelta; // при движении вправо (dx>0) newIndex уменьшается (прошлое)
-                const visibleCount = Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
-                const maxStart = Math.max(0, chartData.length - visibleCount);
-                if (newIndex < 0) newIndex = 0;
-                if (newIndex > maxStart) newIndex = maxStart;
+            // Ограничиваем newIndex в допустимых пределах
+            const maxIndex = chartData.length - 1;
+            newIndex = Math.max(0, Math.min(newIndex, maxIndex));
 
-                if (newIndex !== startIndex) {
-                    startIndex = newIndex;
-                    // Корректируем dragStartIndex и сбрасываем накопленное смещение на остаток
-                    // Остаток = dragAccumulator - indexDelta * candleWidth
-                    dragAccumulator -= indexDelta * candleWidth;
-                    dragStartIndex = startIndex;
-                    drawChart();
-                }
+            if (newIndex !== startIndex) {
+                startIndex = newIndex;
+                drawChart();
             }
-
-            // Обновляем dragStartX для следующего шага? Нет, мы используем накопленное смещение относительно первоначального нажатия,
-            // поэтому не обновляем dragStartX.
         });
 
         window.addEventListener('mouseup', () => {
-            isDragging = false;
-            canvas.style.cursor = 'grab';
-            dragAccumulator = 0; // сброс накопленного смещения
+            if (isDragging) {
+                isDragging = false;
+                canvas.style.cursor = 'grab';
+                // Округляем индекс до ближайшего целого, чтобы свечи встали на место
+                startIndex = Math.round(startIndex);
+                drawChart();
+            }
         });
 
         // Зум
@@ -344,10 +342,6 @@
         window.addEventListener('resize', () => drawChart());
 
         loadData('1h');
-
-        window.addEventListener('load', () => {
-            if (chartData.length > 0) drawChart();
-        });
     </script>
 </body>
 </html>
