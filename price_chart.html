@@ -1,347 +1,72 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON / USDT — плавное перетаскивание</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-            font-family: monospace;
-            background: #000;
+        body { margin: 0; overflow: hidden; background: black; }
+        canvas { display: block; width: 100vw; height: 100vh; background: #333; }
+        #debug { 
+            position: fixed; 
+            top: 10px; 
+            left: 10px; 
+            color: lime; 
+            font-family: monospace; 
+            z-index: 999; 
+            background: rgba(0,0,0,0.7); 
+            padding: 5px;
         }
-        #canvasContainer {
-            width: 100%;
-            height: calc(100% - 60px);
-            position: relative;
-            background: 
-                linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-                radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-            backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-            -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: inset 0 0 30px rgba(0, 255, 136, 0.2);
-        }
-        #chartCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            cursor: grab;
-        }
-        #chartCanvas:active {
-            cursor: grabbing;
-        }
-        .timeframe-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            background: rgba(0, 20, 10, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
-            z-index: 10;
-        }
-        .tf-btn {
-            background: transparent;
-            border: 1px solid rgba(0, 255, 136, 0.5);
-            color: #00ff88;
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-shadow: 0 0 8px #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-        }
-        .tf-btn.active, .tf-btn:hover {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: #00ff88;
-            box-shadow: 0 0 15px #00ff88;
-        }
-        #loading, #error {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #00ff88;
-            display: none;
-            z-index: 20;
-        }
-        #error { color: #ff4d4d; }
     </style>
 </head>
 <body>
-    <div id="canvasContainer">
-        <canvas id="chartCanvas"></canvas>
-        <div id="loading">Загрузка данных...</div>
-        <div id="error"></div>
-    </div>
-    <div class="timeframe-bar">
-        <button class="tf-btn" data-interval="5m">5м</button>
-        <button class="tf-btn" data-interval="15m">15м</button>
-        <button class="tf-btn active" data-interval="1h">1ч</button>
-        <button class="tf-btn" data-interval="4h">4ч</button>
-        <button class="tf-btn" data-interval="1d">1д</button>
-    </div>
-
+    <div id="debug">Нажмите и двигайте мышью</div>
+    <canvas id="canvas"></canvas>
     <script>
-        // ========== НАСТРОЙКИ ГРАФИКА ==========
-        const CANDLE_SETTINGS = {
-            upColor: '#00ff88',
-            downColor: '#ff4d4d',
-            wickColor: '#00ff88',
-            gridColor: 'rgba(0, 255, 136, 0.15)',
-            textColor: '#00ff88',
-        };
-
-        const CHART_SETTINGS = {
-            paddingLeft: 40,
-            paddingRight: 40,
-            paddingTop: 30,
-            paddingBottom: 30,
-            minZoom: 0.5,
-            maxZoom: 3,
-            candleWidthBase: 6,
-        };
-
-        const canvas = document.getElementById('chartCanvas');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const loading = document.getElementById('loading');
-        const errorDiv = document.getElementById('error');
+        const debug = document.getElementById('debug');
 
-        let chartData = [];
-        let currentInterval = '1h';
-        let startIndex = 0;          // дробный индекс первой отображаемой свечи
-        let zoomLevel = 1;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let squareX = 200, squareY = 200;
         let isDragging = false;
-        let dragStartX = 0;
-        let dragStartIndex = 0;      // дробный индекс на момент начала перетаскивания
+        let lastX, lastY;
 
-        // Функция для установки правильных размеров canvas
-        function resizeCanvas() {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'lime';
+            ctx.fillRect(squareX, squareY, 80, 80);
         }
+        draw();
 
-        // Отрисовка с учётом дробного индекса
-        function drawChart() {
-            if (!chartData || chartData.length === 0) return;
-
-            resizeCanvas();
-
-            const width = canvas.width;
-            const height = canvas.height;
-            const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
-
-            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            const visibleCount = Math.floor((width - paddingLeft - paddingRight) / candleWidth);
-            if (visibleCount < 1) return;
-
-            // Целая часть индекса определяет первую свечу, дробная – смещение в пикселях
-            const intStart = Math.floor(startIndex);
-            const fractionalOffset = (startIndex - intStart) * candleWidth; // смещение в пикселях (положительное – вправо)
-
-            // Проверка границ: intStart должно быть в допустимых пределах
-            let safeIntStart = Math.max(0, Math.min(intStart, chartData.length - 1));
-            if (safeIntStart !== intStart) {
-                // Если вышли за границы, корректируем startIndex
-                startIndex = safeIntStart;
-                fractionalOffset = 0;
-            }
-
-            const endIndex = Math.min(safeIntStart + visibleCount + 1, chartData.length); // +1 на случай дробного смещения
-            const visibleData = chartData.slice(safeIntStart, endIndex);
-            if (visibleData.length === 0) return;
-
-            // Вычисляем min/max цены
-            let minPrice = Math.min(...visibleData.map(d => d.low));
-            let maxPrice = Math.max(...visibleData.map(d => d.high));
-            const priceRange = maxPrice - minPrice;
-            minPrice -= priceRange * 0.05;
-            maxPrice += priceRange * 0.05;
-            if (minPrice === maxPrice) {
-                minPrice -= 0.01;
-                maxPrice += 0.01;
-            }
-
-            ctx.clearRect(0, 0, width, height);
-
-            // Сетка (вертикальная) – рисуем с учётом смещения
-            ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i < visibleData.length; i++) {
-                const x = paddingLeft + (i - fractionalOffset / candleWidth) * candleWidth; // смещаем всю сетку
-                if (i % 5 === 0) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, height);
-                    ctx.stroke();
-                }
-            }
-
-            // Горизонтальная сетка
-            for (let i = 0; i <= 5; i++) {
-                const y = paddingTop + (height - paddingTop - paddingBottom) * (i / 5);
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
-                ctx.stroke();
-            }
-
-            // Свечи
-            visibleData.forEach((candle, i) => {
-                // Координата x с учётом смещения
-                const x = paddingLeft + (i - fractionalOffset / candleWidth) * candleWidth;
-                const w = candleWidth - 1;
-
-                const openY = height - paddingBottom - ((candle.open - minPrice) / (maxPrice - minPrice)) * (height - paddingTop - paddingBottom);
-                const closeY = height - paddingBottom - ((candle.close - minPrice) / (maxPrice - minPrice)) * (height - paddingTop - paddingBottom);
-                const highY = height - paddingBottom - ((candle.high - minPrice) / (maxPrice - minPrice)) * (height - paddingTop - paddingBottom);
-                const lowY = height - paddingBottom - ((candle.low - minPrice) / (maxPrice - minPrice)) * (height - paddingTop - paddingBottom);
-
-                const isGreen = candle.close >= candle.open;
-                ctx.fillStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
-                ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
-
-                // Фитиль
-                ctx.beginPath();
-                ctx.moveTo(x + w / 2, highY);
-                ctx.lineTo(x + w / 2, lowY);
-                ctx.stroke();
-
-                // Тело
-                const candleTop = Math.min(openY, closeY);
-                const candleBottom = Math.max(openY, closeY);
-                const candleHeight = candleBottom - candleTop;
-
-                ctx.fillRect(x, candleTop, w, candleHeight);
-            });
-
-            // Шкала цен
-            ctx.fillStyle = CANDLE_SETTINGS.textColor;
-            ctx.font = '12px monospace';
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'middle';
-            for (let i = 0; i <= 5; i++) {
-                const price = minPrice + (maxPrice - minPrice) * (i / 5);
-                const y = paddingTop + (height - paddingTop - paddingBottom) * (1 - i / 5);
-                ctx.fillText(price.toFixed(4), width - 10, y);
-            }
-        }
-
-        // Загрузка данных
-        async function loadData(interval) {
-            loading.style.display = 'block';
-            errorDiv.style.display = 'none';
-
-            const limits = {
-                '5m': 1000,
-                '15m': 1000,
-                '1h': 1000,
-                '4h': 800,
-                '1d': 500
-            };
-            const limit = limits[interval] || 500;
-
-            try {
-                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-
-                chartData = data.map(d => ({
-                    time: parseInt(d[0]),
-                    open: parseFloat(d[1]),
-                    high: parseFloat(d[2]),
-                    low: parseFloat(d[3]),
-                    close: parseFloat(d[4])
-                }));
-
-                startIndex = 0;
-                zoomLevel = 1;
-                loading.style.display = 'none';
-                drawChart();
-            } catch (err) {
-                loading.style.display = 'none';
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = `Ошибка: ${err.message}`;
-            }
-        }
-
-        // --- Плавное перетаскивание с дробным индексом ---
         canvas.addEventListener('mousedown', (e) => {
             isDragging = true;
-            dragStartX = e.clientX;
-            dragStartIndex = startIndex;
-            canvas.style.cursor = 'grabbing';
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - dragStartX;
-            if (Math.abs(dx) < 1) return; // небольшой порог
-
-            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            // Перемещение в пикселях преобразуем в изменение индекса
-            const indexDelta = dx / candleWidth; // дробное
-            let newIndex = dragStartIndex - indexDelta; // при движении вправо (dx>0) индекс уменьшается (идём в прошлое)
-
-            // Ограничиваем newIndex в допустимых пределах
-            const maxIndex = chartData.length - 1;
-            newIndex = Math.max(0, Math.min(newIndex, maxIndex));
-
-            if (newIndex !== startIndex) {
-                startIndex = newIndex;
-                drawChart();
-            }
-        });
-
-        window.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                canvas.style.cursor = 'grab';
-                // Округляем индекс до ближайшего целого, чтобы свечи встали на место
-                startIndex = Math.round(startIndex);
-                drawChart();
-            }
-        });
-
-        // Зум
-        canvas.addEventListener('wheel', (e) => {
+            lastX = e.clientX;
+            lastY = e.clientY;
+            debug.innerText = 'Мышь нажата';
             e.preventDefault();
-            const delta = e.deltaY > 0 ? 0.9 : 1.1;
-            let newZoom = zoomLevel * delta;
-            if (newZoom < CHART_SETTINGS.minZoom) newZoom = CHART_SETTINGS.minZoom;
-            if (newZoom > CHART_SETTINGS.maxZoom) newZoom = CHART_SETTINGS.maxZoom;
-            if (newZoom !== zoomLevel) {
-                zoomLevel = newZoom;
-                drawChart();
-            }
         });
 
-        // Кнопки таймфреймов
-        document.querySelectorAll('.tf-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentInterval = btn.dataset.interval;
-                loadData(currentInterval);
-            });
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            squareX += dx;
+            squareY += dy;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            draw();
+            debug.innerText = `X=${squareX}, Y=${squareY}`;
+            e.preventDefault();
         });
 
-        window.addEventListener('resize', () => drawChart());
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            debug.innerText = 'Отпущено';
+        });
 
-        loadData('1h');
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
     </script>
 </body>
 </html>
