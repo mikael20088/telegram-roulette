@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON / USDT — перетаскивание + последняя свеча</title>
+    <title>TON / USDT — плавное перетаскивание</title>
     <style>
         body {
             margin: 0;
@@ -31,6 +31,7 @@
             height: 100%;
             display: block;
             cursor: grab;
+            touch-action: none;
         }
         #chartCanvas:active {
             cursor: grabbing;
@@ -69,6 +70,25 @@
             border-color: #00ff88;
             box-shadow: 0 0 15px #00ff88;
         }
+        .go-last-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 255, 136, 0.5);
+            color: #00ff88;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-shadow: 0 0 8px #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            font-size: 18px;
+            line-height: 1;
+        }
+        .go-last-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            box-shadow: 0 0 15px #00ff88;
+        }
         #loading, #error {
             position: absolute;
             top: 50%;
@@ -93,7 +113,7 @@
         <button class="tf-btn active" data-interval="1h">1ч</button>
         <button class="tf-btn" data-interval="4h">4ч</button>
         <button class="tf-btn" data-interval="1d">1д</button>
-        <button class="tf-btn" id="gotoLastCandle" title="К последней свече">>>> </button>
+        <button class="go-last-btn" id="goLastBtn">&gt;&gt;&gt;</button>
     </div>
 
     <script>
@@ -120,30 +140,53 @@
         const ctx = canvas.getContext('2d');
         const loading = document.getElementById('loading');
         const errorDiv = document.getElementById('error');
-        const gotoLastBtn = document.getElementById('gotoLastCandle');
+        const goLastBtn = document.getElementById('goLastBtn');
 
         let chartData = [];
         let currentInterval = '1h';
-        let startIndex = 0;
+        let startIndex = 0;               // индекс первой видимой свечи
         let zoomLevel = 1;
+
+        // Количество пустых свечей справа (для визуального отступа)
+        const EXTRA_SPACE = 5;
 
         // Для перетаскивания
         let isDragging = false;
-        let lastMouseX = 0;
-        let dragShift = 0;               // текущее смещение при перетаскивании
-        let totalDragShift = 0;           // накопленное смещение за всё перетаскивание
+        let lastClientX = 0;
+        let dragOffset = 0;                // текущее смещение в пикселях (при перетаскивании)
 
         function resizeCanvas() {
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
         }
 
-        // Функция для вычисления максимально допустимого startIndex
-        function getMaxStartIndex() {
-            if (!chartData.length) return 0;
+        // Количество видимых свечей
+        function getVisibleCount() {
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            const visibleCount = Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
-            return Math.max(0, chartData.length - visibleCount);
+            return Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
+        }
+
+        // Максимальный startIndex (с учётом пустого места справа)
+        function getMaxStart() {
+            const visibleCount = getVisibleCount();
+            // Разрешаем сдвинуть график так, чтобы после последней свечи оставалось место
+            return Math.max(0, chartData.length - visibleCount + EXTRA_SPACE);
+        }
+
+        // Минимальный startIndex
+        function getMinStart() {
+            return 0;
+        }
+
+        // Перейти к последней свече (с отступом)
+        function setToLastCandle() {
+            if (!chartData.length) return;
+            const visibleCount = getVisibleCount();
+            // Хотим, чтобы последняя свеча была не в самом углу, а с небольшим отступом справа
+            // Для этого startIndex должен быть таким, чтобы последняя свеча была левее правого края на EXTRA_SPACE свечей.
+            startIndex = Math.max(0, chartData.length - visibleCount + EXTRA_SPACE);
+            dragOffset = 0;
+            drawChart();
         }
 
         function drawChart() {
@@ -156,18 +199,25 @@
             const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
 
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            const visibleCount = Math.floor((width - paddingLeft - paddingRight) / candleWidth);
+            const visibleCount = getVisibleCount();
             if (visibleCount < 1) return;
 
-            // Корректируем startIndex, чтобы он не выходил за пределы
-            const maxStart = Math.max(0, chartData.length - visibleCount);
+            // Корректируем startIndex
+            const maxStart = getMaxStart();
             if (startIndex > maxStart) startIndex = maxStart;
             if (startIndex < 0) startIndex = 0;
 
-            const endIndex = Math.min(startIndex + visibleCount + 2, chartData.length);
-            const visibleData = chartData.slice(startIndex, endIndex);
+            // Определяем диапазон данных для отрисовки (берем с запасом, чтобы покрыть смещение)
+            const extraCandles = Math.ceil(Math.abs(dragOffset) / candleWidth) + 5;
+            const drawStart = Math.max(0, startIndex - extraCandles);
+            const drawEnd = Math.min(chartData.length, startIndex + visibleCount + extraCandles);
+            const visibleData = chartData.slice(drawStart, drawEnd);
             if (visibleData.length === 0) return;
 
+            // Вычисляем смещение для первой свечи в visibleData
+            const baseX = paddingLeft + (drawStart - startIndex) * candleWidth + dragOffset;
+
+            // Находим min и max цены среди видимых данных
             let minPrice = Math.min(...visibleData.map(d => d.low));
             let maxPrice = Math.max(...visibleData.map(d => d.high));
             const priceRange = maxPrice - minPrice;
@@ -180,12 +230,12 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // Вертикальная сетка со смещением
+            // Вертикальная сетка (рисуем по всем свечам в видимой области, включая пустые места? но мы рисуем только там, где есть данные)
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
             for (let i = 0; i < visibleData.length; i++) {
-                const x = paddingLeft + i * candleWidth + dragShift;
-                if (i % 5 === 0) {
+                const x = baseX + i * candleWidth;
+                if ((drawStart + i) % 5 === 0) {
                     ctx.beginPath();
                     ctx.moveTo(x, 0);
                     ctx.lineTo(x, height);
@@ -204,7 +254,7 @@
 
             // Свечи
             visibleData.forEach((candle, i) => {
-                const x = paddingLeft + i * candleWidth + dragShift;
+                const x = baseX + i * candleWidth;
                 const w = candleWidth - 1;
 
                 const openY = height - paddingBottom - ((candle.open - minPrice) / (maxPrice - minPrice)) * (height - paddingTop - paddingBottom);
@@ -242,6 +292,7 @@
             }
         }
 
+        // Загрузка данных
         async function loadData(interval) {
             loading.style.display = 'block';
             errorDiv.style.display = 'none';
@@ -268,16 +319,9 @@
                     close: parseFloat(d[4])
                 }));
 
-                // Устанавливаем startIndex так, чтобы показывать последние свечи (самые новые)
-                resizeCanvas(); // чтобы знать ширину для visibleCount
-                const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-                const visibleCount = Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
-                startIndex = Math.max(0, chartData.length - visibleCount);
-                dragShift = 0;
-                totalDragShift = 0;
                 zoomLevel = 1;
+                setToLastCandle();
                 loading.style.display = 'none';
-                drawChart();
             } catch (err) {
                 loading.style.display = 'none';
                 errorDiv.style.display = 'block';
@@ -285,75 +329,85 @@
             }
         }
 
-        // --- ПЕРЕТАСКИВАНИЕ (как в тесте с квадратом) ---
-        canvas.addEventListener('mousedown', (e) => {
+        // --- ПЕРЕТАСКИВАНИЕ ---
+        function startDrag(clientX) {
             isDragging = true;
-            lastMouseX = e.clientX;
+            lastClientX = clientX;
             canvas.style.cursor = 'grabbing';
+        }
+
+        function onDrag(clientX) {
+            if (!isDragging) return;
+            const dx = clientX - lastClientX;
+            lastClientX = clientX;
+
+            dragOffset += dx;
+
+            // Ограничиваем dragOffset, чтобы нельзя было уйти за края данных
+            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+            const maxStart = getMaxStart();
+
+            // Максимальное смещение вправо (показываем более старые свечи) соответствует startIndex = 0
+            const maxRightOffset = startIndex * candleWidth;
+            // Максимальное смещение влево (показываем более новые свечи) соответствует startIndex = maxStart
+            const maxLeftOffset = -(maxStart - startIndex) * candleWidth;
+
+            if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
+            if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
+
+            drawChart();
+        }
+
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+
+            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+            const shiftCandles = Math.round(dragOffset / candleWidth);
+
+            if (shiftCandles !== 0) {
+                startIndex -= shiftCandles;
+                // Проверка границ
+                const maxStart = getMaxStart();
+                if (startIndex > maxStart) startIndex = maxStart;
+                if (startIndex < 0) startIndex = 0;
+            }
+
+            // Компенсация остатка
+            dragOffset -= shiftCandles * candleWidth;
+            drawChart();
+        }
+
+        // Мышь
+        canvas.addEventListener('mousedown', (e) => {
+            startDrag(e.clientX);
             e.preventDefault();
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - lastMouseX;
-            dragShift += dx;
-            lastMouseX = e.clientX;
-            totalDragShift += dx;
-            drawChart();
+            onDrag(e.clientX);
             e.preventDefault();
         });
 
         window.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                canvas.style.cursor = 'grab';
-
-                const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-                const shiftCandles = Math.round(totalDragShift / candleWidth);
-                let newStartIndex = startIndex - shiftCandles; // при движении вправо (dragShift>0) смещаемся влево по данным
-
-                const maxStart = getMaxStartIndex();
-                if (newStartIndex < 0) newStartIndex = 0;
-                if (newStartIndex > maxStart) newStartIndex = maxStart;
-
-                startIndex = newStartIndex;
-                dragShift = 0;
-                totalDragShift = 0;
-                drawChart();
-            }
+            endDrag();
         });
 
-        // Touch-события для мобильных
+        // Touch
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            isDragging = true;
-            lastMouseX = e.touches[0].clientX;
+            startDrag(e.touches[0].clientX);
         });
 
         window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
             e.preventDefault();
-            const dx = e.touches[0].clientX - lastMouseX;
-            dragShift += dx;
-            lastMouseX = e.touches[0].clientX;
-            totalDragShift += dx;
-            drawChart();
+            onDrag(e.touches[0].clientX);
         });
 
         window.addEventListener('touchend', (e) => {
-            if (isDragging) {
-                isDragging = false;
-                const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-                const shiftCandles = Math.round(totalDragShift / candleWidth);
-                let newStartIndex = startIndex - shiftCandles;
-                const maxStart = getMaxStartIndex();
-                if (newStartIndex < 0) newStartIndex = 0;
-                if (newStartIndex > maxStart) newStartIndex = maxStart;
-                startIndex = newStartIndex;
-                dragShift = 0;
-                totalDragShift = 0;
-                drawChart();
-            }
+            e.preventDefault();
+            endDrag();
         });
 
         // Зум
@@ -371,7 +425,6 @@
 
         // Кнопки таймфреймов
         document.querySelectorAll('.tf-btn').forEach(btn => {
-            if (btn.id === 'gotoLastCandle') return; // пропускаем специальную кнопку
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -380,14 +433,9 @@
             });
         });
 
-        // Кнопка "к последней свече"
-        gotoLastBtn.addEventListener('click', () => {
-            if (!chartData.length) return;
-            const maxStart = getMaxStartIndex();
-            startIndex = maxStart;
-            dragShift = 0;
-            totalDragShift = 0;
-            drawChart();
+        // Кнопка возврата к последней свече
+        goLastBtn.addEventListener('click', () => {
+            setToLastCandle();
         });
 
         window.addEventListener('resize', () => drawChart());
