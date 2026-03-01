@@ -17,7 +17,7 @@
         .chart-container {
             position: relative;
             width: 100%;
-            height: calc(100% - 50px); /* оставляем место для панели */
+            height: calc(100% - 50px); /* место для панели таймфреймов */
             background: radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.15) 0%, transparent 50%),
                         radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
                         linear-gradient(45deg, rgba(0, 255, 136, 0.05) 0%, rgba(0, 200, 100, 0.02) 25%, rgba(0, 255, 200, 0.03) 50%, rgba(0, 150, 80, 0.01) 75%, rgba(0, 255, 136, 0.05) 100%);
@@ -29,6 +29,7 @@
         #chart {
             width: 100%;
             height: 100%;
+            background: transparent; /* важно: убираем белый фон */
         }
         .timeframe-bar {
             position: absolute;
@@ -79,7 +80,7 @@
     </div>
 
     <script>
-        // Получаем размеры контейнера (убедимся, что они корректны)
+        // Получаем размеры контейнера
         const container = document.querySelector('.chart-container');
         const chartElement = document.getElementById('chart');
 
@@ -88,7 +89,7 @@
             width: container.clientWidth,
             height: container.clientHeight,
             layout: {
-                backgroundColor: 'transparent',
+                backgroundColor: 'transparent', // прозрачный фон
                 textColor: '#00ff88',
                 fontFamily: 'monospace',
             },
