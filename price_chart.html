@@ -1,29 +1,25 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON / USDT</title>
+    <meta charset="utf-8">
+    <title>TON/USDT</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             height: 100vh;
-            overflow: hidden;
             background: #000;
+            overflow: hidden;
             font-family: monospace;
-        }
-        .chart-wrapper {
-            width: 100%;
-            height: calc(100% - 50px);
-            background: #000; /* чёрный фон */
-            position: relative;
-            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: inset 0 0 30px rgba(0, 255, 136, 0.2);
         }
         #chart {
             width: 100%;
-            height: 100%;
+            height: calc(100% - 50px);
+            background: #000; /* запасной фон */
+        }
+        /* Принудительно переопределяем фон canvas, создаваемого библиотекой */
+        #chart canvas {
+            background: #000 !important;
         }
         .timeframe-bar {
             position: absolute;
@@ -53,109 +49,106 @@
             transition: all 0.2s;
             text-shadow: 0 0 8px #00ff88;
             box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-            font-family: monospace;
         }
-        .tf-btn:hover, .tf-btn.active {
+        .tf-btn.active, .tf-btn:hover {
             background: rgba(0, 255, 136, 0.2);
             border-color: #00ff88;
             box-shadow: 0 0 15px #00ff88;
         }
     </style>
-    <!-- Последняя версия библиотеки -->
-    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.0.1/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
-    <div class="chart-wrapper">
-        <div id="chart"></div>
-    </div>
-    <div class="timeframe-bar" id="timeframe-bar">
+    <div id="chart"></div>
+    <div class="timeframe-bar">
         <button class="tf-btn active" data-interval="1h">1ч</button>
         <button class="tf-btn" data-interval="4h">4ч</button>
         <button class="tf-btn" data-interval="1d">1д</button>
     </div>
 
     <script>
-        const wrapper = document.querySelector('.chart-wrapper');
-        const chartElement = document.getElementById('chart');
+        (function() {
+            const chartElement = document.getElementById('chart');
+            const chart = LightweightCharts.createChart(chartElement, {
+                width: chartElement.clientWidth,
+                height: chartElement.clientHeight,
+                layout: {
+                    backgroundColor: '#000000',  // чёрный фон
+                    textColor: '#00ff88',
+                    fontFamily: 'monospace',
+                },
+                grid: {
+                    vertLines: { color: 'rgba(0, 255, 136, 0.15)' },
+                    horzLines: { color: 'rgba(0, 255, 136, 0.15)' },
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                    vertLine: { color: '#00ff88', width: 1, style: 1 },
+                    horzLine: { color: '#00ff88', width: 1, style: 1 },
+                },
+                rightPriceScale: {
+                    borderColor: 'rgba(0, 255, 136, 0.3)',
+                    textColor: '#00ff88',
+                },
+                timeScale: {
+                    borderColor: 'rgba(0, 255, 136, 0.3)',
+                    textColor: '#00ff88',
+                    timeVisible: true,
+                    secondsVisible: false,
+                },
+            });
 
-        // Создаём график с чёрным фоном
-        const chart = LightweightCharts.createChart(chartElement, {
-            width: wrapper.clientWidth,
-            height: wrapper.clientHeight,
-            layout: {
-                backgroundColor: '#000000',  // чёрный фон
-                textColor: '#00ff88',
-                fontFamily: 'monospace',
-            },
-            grid: {
-                vertLines: { color: 'rgba(0, 255, 136, 0.15)' },
-                horzLines: { color: 'rgba(0, 255, 136, 0.15)' },
-            },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal,
-                vertLine: { color: '#00ff88', width: 1, style: 1 },
-                horzLine: { color: '#00ff88', width: 1, style: 1 },
-            },
-            rightPriceScale: {
-                borderColor: 'rgba(0, 255, 136, 0.3)',
-                textColor: '#00ff88',
-            },
-            timeScale: {
-                borderColor: 'rgba(0, 255, 136, 0.3)',
-                textColor: '#00ff88',
-                timeVisible: true,
-                secondsVisible: false,
-            },
-        });
+            const candlestickSeries = chart.addCandlestickSeries({
+                upColor: '#00ff88',
+                downColor: '#ff4d4d',
+                borderDownColor: '#ff4d4d',
+                borderUpColor: '#00ff88',
+                wickDownColor: '#ff4d4d',
+                wickUpColor: '#00ff88',
+            });
 
-        const candlestickSeries = chart.addCandlestickSeries({
-            upColor: '#00ff88',
-            downColor: '#ff4d4d',
-            borderDownColor: '#ff4d4d',
-            borderUpColor: '#00ff88',
-            wickDownColor: '#ff4d4d',
-            wickUpColor: '#00ff88',
-        });
+            let currentInterval = '1h';
 
-        let currentInterval = '1h';
-
-        async function loadData(interval) {
-            const limits = { '1h': 500, '4h': 500, '1d': 365 };
-            const limit = limits[interval] || 500;
-            try {
-                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
-                const data = await response.json();
-                const chartData = data.map(d => ({
-                    time: Math.floor(d[0] / 1000),
-                    open: parseFloat(d[1]),
-                    high: parseFloat(d[2]),
-                    low: parseFloat(d[3]),
-                    close: parseFloat(d[4]),
-                }));
-                candlestickSeries.setData(chartData);
-                chart.timeScale().fitContent();
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
+            async function loadData(interval) {
+                const limits = { '1h': 500, '4h': 500, '1d': 365 };
+                const limit = limits[interval] || 500;
+                try {
+                    const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    const data = await response.json();
+                    const chartData = data.map(d => ({
+                        time: Math.floor(d[0] / 1000),
+                        open: parseFloat(d[1]),
+                        high: parseFloat(d[2]),
+                        low: parseFloat(d[3]),
+                        close: parseFloat(d[4]),
+                    }));
+                    candlestickSeries.setData(chartData);
+                    chart.timeScale().fitContent();
+                } catch (error) {
+                    console.error('Data error:', error);
+                }
             }
-        }
 
-        loadData('1h');
+            loadData(currentInterval);
 
-        document.querySelectorAll('.tf-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentInterval = btn.dataset.interval;
-                loadData(currentInterval);
+            document.querySelectorAll('.tf-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.classList.contains('active')) return;
+                    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentInterval = btn.dataset.interval;
+                    loadData(currentInterval);
+                });
             });
-        });
 
-        window.addEventListener('resize', () => {
-            chart.applyOptions({
-                width: wrapper.clientWidth,
-                height: wrapper.clientHeight,
+            window.addEventListener('resize', () => {
+                chart.applyOptions({
+                    width: chartElement.clientWidth,
+                    height: chartElement.clientHeight,
+                });
             });
-        });
+        })();
     </script>
 </body>
 </html>
