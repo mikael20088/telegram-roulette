@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON / USDT — перетаскивание</title>
+    <title>TON / USDT — перетаскивание + последняя свеча</title>
     <style>
         body {
             margin: 0;
@@ -93,6 +93,7 @@
         <button class="tf-btn active" data-interval="1h">1ч</button>
         <button class="tf-btn" data-interval="4h">4ч</button>
         <button class="tf-btn" data-interval="1d">1д</button>
+        <button class="tf-btn" id="gotoLastCandle" title="К последней свече">>>> </button>
     </div>
 
     <script>
@@ -119,6 +120,7 @@
         const ctx = canvas.getContext('2d');
         const loading = document.getElementById('loading');
         const errorDiv = document.getElementById('error');
+        const gotoLastBtn = document.getElementById('gotoLastCandle');
 
         let chartData = [];
         let currentInterval = '1h';
@@ -136,6 +138,14 @@
             canvas.height = canvas.clientHeight;
         }
 
+        // Функция для вычисления максимально допустимого startIndex
+        function getMaxStartIndex() {
+            if (!chartData.length) return 0;
+            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+            const visibleCount = Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
+            return Math.max(0, chartData.length - visibleCount);
+        }
+
         function drawChart() {
             if (!chartData || chartData.length === 0) return;
 
@@ -148,6 +158,11 @@
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const visibleCount = Math.floor((width - paddingLeft - paddingRight) / candleWidth);
             if (visibleCount < 1) return;
+
+            // Корректируем startIndex, чтобы он не выходил за пределы
+            const maxStart = Math.max(0, chartData.length - visibleCount);
+            if (startIndex > maxStart) startIndex = maxStart;
+            if (startIndex < 0) startIndex = 0;
 
             const endIndex = Math.min(startIndex + visibleCount + 2, chartData.length);
             const visibleData = chartData.slice(startIndex, endIndex);
@@ -253,7 +268,11 @@
                     close: parseFloat(d[4])
                 }));
 
-                startIndex = 0;
+                // Устанавливаем startIndex так, чтобы показывать последние свечи (самые новые)
+                resizeCanvas(); // чтобы знать ширину для visibleCount
+                const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+                const visibleCount = Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
+                startIndex = Math.max(0, chartData.length - visibleCount);
                 dragShift = 0;
                 totalDragShift = 0;
                 zoomLevel = 1;
@@ -293,8 +312,7 @@
                 const shiftCandles = Math.round(totalDragShift / candleWidth);
                 let newStartIndex = startIndex - shiftCandles; // при движении вправо (dragShift>0) смещаемся влево по данным
 
-                const visibleCount = Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
-                const maxStart = Math.max(0, chartData.length - visibleCount);
+                const maxStart = getMaxStartIndex();
                 if (newStartIndex < 0) newStartIndex = 0;
                 if (newStartIndex > maxStart) newStartIndex = maxStart;
 
@@ -328,8 +346,7 @@
                 const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
                 const shiftCandles = Math.round(totalDragShift / candleWidth);
                 let newStartIndex = startIndex - shiftCandles;
-                const visibleCount = Math.floor((canvas.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / candleWidth);
-                const maxStart = Math.max(0, chartData.length - visibleCount);
+                const maxStart = getMaxStartIndex();
                 if (newStartIndex < 0) newStartIndex = 0;
                 if (newStartIndex > maxStart) newStartIndex = maxStart;
                 startIndex = newStartIndex;
@@ -354,12 +371,23 @@
 
         // Кнопки таймфреймов
         document.querySelectorAll('.tf-btn').forEach(btn => {
+            if (btn.id === 'gotoLastCandle') return; // пропускаем специальную кнопку
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentInterval = btn.dataset.interval;
                 loadData(currentInterval);
             });
+        });
+
+        // Кнопка "к последней свече"
+        gotoLastBtn.addEventListener('click', () => {
+            if (!chartData.length) return;
+            const maxStart = getMaxStartIndex();
+            startIndex = maxStart;
+            dragShift = 0;
+            totalDragShift = 0;
+            drawChart();
         });
 
         window.addEventListener('resize', () => drawChart());
