@@ -1,77 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TON / USDT</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             height: 100vh;
-            background: #000;
             overflow: hidden;
-            font-family: monospace;
-            color: #00ff88;
         }
-        #chart {
-            width: 100%;
+
+        .chart-container {
             height: calc(100% - 50px);
-        }
-        #chart canvas {
-            background: #000 !important;
-        }
-        .timeframe-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
             width: 100%;
+            background: #0a0a0a;
+            position: relative;
+        }
+
+        /* Канвас для графика */
+        #chartCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Панель таймфреймов */
+        .timeframe-bar {
             height: 50px;
+            background: #1a1a1a;
+            border-top: 1px solid #2a2a2a;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 15px;
-            background: rgba(0, 20, 10, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
-            z-index: 10;
         }
+
         .tf-btn {
             background: transparent;
-            border: 1px solid rgba(0, 255, 136, 0.5);
+            border: 1px solid #00ff88;
             color: #00ff88;
             padding: 8px 16px;
             border-radius: 20px;
-            font-weight: bold;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            text-shadow: 0 0 8px #00ff88;
+        }
+
+        .tf-btn:hover {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: #00ff88;
             box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
-        .tf-btn.active, .tf-btn:hover {
-            background: rgba(0, 255, 136, 0.2);
+
+        .tf-btn.active {
+            background: #00ff88;
+            color: #000;
             border-color: #00ff88;
-            box-shadow: 0 0 15px #00ff88;
+            font-weight: 600;
         }
-        #debug {
+
+        /* Загрузка и ошибки */
+        #loading {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #ff4d4d;
-            background: rgba(0,0,0,0.8);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 20;
-            max-width: 90%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff88;
+            font-size: 16px;
             display: none;
         }
+
+        #error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff4d4d;
+            font-size: 16px;
+            display: none;
+            text-align: center;
+        }
     </style>
-    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
-    <div id="debug"></div>
-    <div id="chart"></div>
+    <div class="chart-container">
+        <canvas id="chartCanvas"></canvas>
+        <div id="loading">Загрузка данных...</div>
+        <div id="error"></div>
+    </div>
     <div class="timeframe-bar">
         <button class="tf-btn active" data-interval="1h">1ч</button>
         <button class="tf-btn" data-interval="4h">4ч</button>
@@ -79,112 +105,153 @@
     </div>
 
     <script>
-        function showError(msg) {
-            const debug = document.getElementById('debug');
-            debug.style.display = 'block';
-            debug.innerHTML += msg + '<br>';
-            console.error(msg);
+        // Получаем canvas и контекст
+        const canvas = document.getElementById('chartCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Настройки
+        const PADDING = 40; // отступы от краёв
+        let chartData = [];
+        let currentInterval = '1h';
+        let minPrice = 0, maxPrice = 0;
+
+        // Функция загрузки данных с Binance
+        async function loadData(interval) {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            
+            try {
+                const limits = { '1h': 100, '4h': 100, '1d': 60 };
+                const limit = limits[interval];
+                
+                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                chartData = data.map(d => ({
+                    time: parseInt(d[0]),
+                    open: parseFloat(d[1]),
+                    high: parseFloat(d[2]),
+                    low: parseFloat(d[3]),
+                    close: parseFloat(d[4])
+                }));
+                
+                loading.style.display = 'none';
+                drawChart();
+            } catch (err) {
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = `Ошибка загрузки: ${err.message}`;
+            }
         }
 
-        window.addEventListener('load', function() {
-            try {
-                const container = document.getElementById('chart');
-                if (!container) throw new Error('Chart container not found');
+        // Функция отрисовки графика
+        function drawChart() {
+            if (!chartData.length) return;
 
-                // Проверяем размеры
-                if (container.clientWidth === 0 || container.clientHeight === 0) {
-                    showError('Container has zero size');
-                }
-
-                const chart = LightweightCharts.createChart(container, {
-                    width: container.clientWidth,
-                    height: container.clientHeight,
-                    layout: {
-                        backgroundColor: '#000000',
-                        textColor: '#00ff88',
-                        fontFamily: 'monospace',
-                    },
-                    grid: {
-                        vertLines: { color: 'rgba(0, 255, 136, 0.15)' },
-                        horzLines: { color: 'rgba(0, 255, 136, 0.15)' },
-                    },
-                    crosshair: {
-                        mode: LightweightCharts.CrosshairMode.Normal,
-                        vertLine: { color: '#00ff88', width: 1, style: 1 },
-                        horzLine: { color: '#00ff88', width: 1, style: 1 },
-                    },
-                    rightPriceScale: {
-                        borderColor: 'rgba(0, 255, 136, 0.3)',
-                        textColor: '#00ff88',
-                    },
-                    timeScale: {
-                        borderColor: 'rgba(0, 255, 136, 0.3)',
-                        textColor: '#00ff88',
-                        timeVisible: true,
-                        secondsVisible: false,
-                    },
-                });
-
-                const candlestickSeries = chart.addCandlestickSeries({
-                    upColor: '#00ff88',
-                    downColor: '#ff4d4d',
-                    borderDownColor: '#ff4d4d',
-                    borderUpColor: '#00ff88',
-                    wickDownColor: '#ff4d4d',
-                    wickUpColor: '#00ff88',
-                });
-
-                let currentInterval = '1h';
-
-                async function loadData(interval) {
-                    try {
-                        const limits = { '1h': 500, '4h': 500, '1d': 365 };
-                        const limit = limits[interval] || 500;
-                        const url = `https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`;
-                        
-                        showError(`Loading ${url}`);
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                        const data = await response.json();
-                        showError(`Loaded ${data.length} candles`);
-                        
-                        const chartData = data.map(d => ({
-                            time: Math.floor(d[0] / 1000),
-                            open: parseFloat(d[1]),
-                            high: parseFloat(d[2]),
-                            low: parseFloat(d[3]),
-                            close: parseFloat(d[4]),
-                        }));
-                        
-                        candlestickSeries.setData(chartData);
-                        chart.timeScale().fitContent();
-                        showError('Chart updated');
-                    } catch (error) {
-                        showError('Data error: ' + error.message);
-                    }
-                }
-
-                loadData(currentInterval);
-
-                document.querySelectorAll('.tf-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        if (btn.classList.contains('active')) return;
-                        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        currentInterval = btn.dataset.interval;
-                        loadData(currentInterval);
-                    });
-                });
-
-                window.addEventListener('resize', () => {
-                    chart.applyOptions({
-                        width: container.clientWidth,
-                        height: container.clientHeight,
-                    });
-                });
-            } catch (e) {
-                showError('Script error: ' + e.message);
+            // Устанавливаем размер canvas
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Очищаем canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Находим мин и макс цены
+            minPrice = Math.min(...chartData.map(d => d.low));
+            maxPrice = Math.max(...chartData.map(d => d.high));
+            const priceRange = maxPrice - minPrice;
+            
+            // Немного расширяем диапазон (5% отступа сверху и снизу)
+            const paddingPrice = priceRange * 0.05;
+            minPrice -= paddingPrice;
+            maxPrice += paddingPrice;
+            
+            // Ширина свечи
+            const candleWidth = (width - PADDING * 2) / chartData.length;
+            
+            // Рисуем сетку
+            ctx.strokeStyle = '#2a2a2a';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            
+            // Вертикальные линии (по каждой свече)
+            for (let i = 0; i <= chartData.length; i += 5) {
+                const x = PADDING + i * candleWidth;
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
             }
+            
+            // Горизонтальные линии (5 линий)
+            for (let i = 0; i <= 5; i++) {
+                const y = PADDING + (height - PADDING * 2) * (i / 5);
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+            }
+            ctx.stroke();
+
+            // Рисуем свечи
+            chartData.forEach((candle, i) => {
+                const x = PADDING + i * candleWidth;
+                
+                // Вычисляем y координаты
+                const openY = height - PADDING - ((candle.open - minPrice) / (maxPrice - minPrice)) * (height - PADDING * 2);
+                const closeY = height - PADDING - ((candle.close - minPrice) / (maxPrice - minPrice)) * (height - PADDING * 2);
+                const highY = height - PADDING - ((candle.high - minPrice) / (maxPrice - minPrice)) * (height - PADDING * 2);
+                const lowY = height - PADDING - ((candle.low - minPrice) / (maxPrice - minPrice)) * (height - PADDING * 2);
+                
+                // Цвет свечи
+                const isGreen = candle.close >= candle.open;
+                ctx.fillStyle = isGreen ? '#00ff88' : '#ff4d4d';
+                ctx.strokeStyle = isGreen ? '#00ff88' : '#ff4d4d';
+                
+                // Рисуем фитиль
+                ctx.beginPath();
+                ctx.moveTo(x + candleWidth / 2, highY);
+                ctx.lineTo(x + candleWidth / 2, lowY);
+                ctx.stroke();
+                
+                // Рисуем тело свечи
+                const candleTop = Math.min(openY, closeY);
+                const candleBottom = Math.max(openY, closeY);
+                const candleHeight = candleBottom - candleTop;
+                
+                ctx.fillRect(x + 2, candleTop, candleWidth - 4, candleHeight);
+            });
+
+            // Рисуем цены на шкале справа
+            ctx.fillStyle = '#00ff88';
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'right';
+            
+            for (let i = 0; i <= 5; i++) {
+                const price = minPrice + (maxPrice - minPrice) * (i / 5);
+                const y = PADDING + (height - PADDING * 2) * (1 - i / 5);
+                ctx.fillText(price.toFixed(4), width - 10, y - 5);
+            }
+        }
+
+        // Обработчики кнопок таймфреймов
+        document.querySelectorAll('.tf-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentInterval = btn.dataset.interval;
+                loadData(currentInterval);
+            });
+        });
+
+        // Загружаем данные при старте
+        loadData('1h');
+
+        // Перерисовываем при изменении размера окна
+        window.addEventListener('resize', () => {
+            drawChart();
         });
     </script>
 </body>
