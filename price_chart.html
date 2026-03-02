@@ -81,9 +81,10 @@
         #canvasContainer {
             flex: 1;
             position: relative;
+            /* Базовый фон, пятно будет динамически обновляться через JS */
             background: 
                 linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-                radial-gradient(circle at 15% 20%, rgba(120, 255, 120, 0.3) 0%, transparent 12%),
+                radial-gradient(circle at 50% 20%, rgba(120, 255, 120, 0.3) 0%, transparent 12%),
                 radial-gradient(circle at 85% 25%, rgba(0, 255, 136, 0.3) 0%, transparent 15%),
                 radial-gradient(circle at 30% 70%, rgba(0, 255, 136, 0.25) 0%, transparent 12%),
                 radial-gradient(circle at 70% 80%, rgba(120, 255, 120, 0.25) 0%, transparent 15%),
@@ -197,7 +198,7 @@
             downColor: '#ff4d4d',
             wickColor: '#00ff88',
             gridColor: 'rgba(0, 255, 136, 0.15)',
-            textColor: '#00ff88',
+            textColor: '#ffffff',
         };
 
         const CHART_SETTINGS = {
@@ -214,15 +215,12 @@
             gridHorizontalCount: 15,
         };
 
-        // Конфигурация меток времени для каждого интервала
-        // step – через сколько свечей ставить метку (от последней)
-        // pattern – циклический массив типов меток: 'hour', 'day', 'month', 'year'
         const LABEL_CONFIG = {
             '5m':  { step: 12, pattern: ['hour'] },
             '15m': { step: 12, pattern: ['hour'] },
             '1h':  { step: 12, pattern: ['hour', 'day', 'hour', 'month'] },
             '4h':  { step: 12, pattern: ['day', 'month', 'day', 'day'] },
-            '1d':  { step: 12, pattern: ['month', 'day', 'month', 'day', 'year', 'day'] } // паттерн по просьбе пользователя
+            '1d':  { step: 12, pattern: ['month', 'day', 'month', 'day', 'year', 'day'] }
         };
 
         const HIGH_LOW_SETTINGS = {
@@ -247,12 +245,22 @@
             fontSize: 12,
         };
 
+        // Единый интервал обновления 2 секунды для всех
         const REFRESH_INTERVALS = {
-            '5m': 1000,
-            '15m': 1000,
-            '1h': 1000,
+            '5m': 2000,
+            '15m': 2000,
+            '1h': 2000,
             '4h': 2000,
-            '1d': 3000
+            '1d': 2000
+        };
+
+        // Настройки для подвижного пятна
+        const SPOT_SETTINGS = {
+            targetUpdateInterval: 7 * 60 * 1000, // 7 минут
+            smoothingFactor: 1/6, // плавность: за 6 шагов
+            currentX: 50, // текущая позиция в процентах
+            targetX: 50,
+            animationFrame: null,
         };
 
         const canvas = document.getElementById('chartCanvas');
@@ -262,6 +270,7 @@
         const goLastBtn = document.getElementById('goLastBtn');
         const priceDisplay = document.getElementById('priceDisplay');
         const priceChangeDisplay = document.getElementById('priceChangeDisplay');
+        const canvasContainer = document.getElementById('canvasContainer');
 
         let chartData = [];
         let currentInterval = '1h';
@@ -275,6 +284,10 @@
         let limit = 1000;
         let animLastCandle = null;
         let animFrame = null;
+
+        // Глобальные переменные для позиции последней свечи
+        let globalLastCandleX = 0;
+        let globalCanvasWidth = 0;
 
         function resizeCanvas() {
             canvas.width = canvas.clientWidth;
@@ -368,7 +381,6 @@
             return this;
         };
 
-        // Форматирование метки в зависимости от типа
         function formatLabelByType(timestamp, type) {
             const date = new Date(timestamp);
             const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
@@ -385,6 +397,56 @@
                     return date.getFullYear().toString();
                 default:
                     return '';
+            }
+        }
+
+        // Функция для сдвига времени дневных свечей на 23:00 UTC (02:00 МСК)
+        function adjustDailyTime(timestamp) {
+            return timestamp - 3600000; // минус 1 час
+        }
+
+        // Функция обновления фона пятна
+        function updateSpotBackground() {
+            const container = canvasContainer;
+            const baseGrad = 'linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%)';
+            const spotGrad = `radial-gradient(circle at ${SPOT_SETTINGS.currentX}% 20%, rgba(120, 255, 120, 0.3) 0%, transparent 12%)`;
+            const otherSpots = `
+                radial-gradient(circle at 85% 25%, rgba(0, 255, 136, 0.3) 0%, transparent 15%),
+                radial-gradient(circle at 30% 70%, rgba(0, 255, 136, 0.25) 0%, transparent 12%),
+                radial-gradient(circle at 70% 80%, rgba(120, 255, 120, 0.25) 0%, transparent 15%),
+                radial-gradient(circle at 45% 45%, rgba(0, 255, 136, 0.2) 0%, transparent 10%)`;
+
+            container.style.background = `${baseGrad}, ${spotGrad}, ${otherSpots}`;
+            // остальные стили уже есть в CSS
+        }
+
+        // Функция обновления цели пятна (позиции последней свечи)
+        function updateSpotTarget(instant = false) {
+            if (!globalCanvasWidth || globalLastCandleX === 0) return;
+            const targetX = ((globalLastCandleX - CHART_SETTINGS.paddingLeft) / (globalCanvasWidth - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight)) * 100;
+            SPOT_SETTINGS.targetX = Math.max(0, Math.min(100, targetX));
+            if (instant) {
+                SPOT_SETTINGS.currentX = SPOT_SETTINGS.targetX;
+                updateSpotBackground();
+            } else {
+                if (!SPOT_SETTINGS.animationFrame) {
+                    SPOT_SETTINGS.animationFrame = requestAnimationFrame(animateSpot);
+                }
+            }
+        }
+
+        // Анимация пятна
+        function animateSpot() {
+            const dx = SPOT_SETTINGS.targetX - SPOT_SETTINGS.currentX;
+            if (Math.abs(dx) < 0.01) {
+                SPOT_SETTINGS.currentX = SPOT_SETTINGS.targetX;
+                SPOT_SETTINGS.animationFrame = null;
+            } else {
+                SPOT_SETTINGS.currentX += dx * SPOT_SETTINGS.smoothingFactor;
+            }
+            updateSpotBackground();
+            if (SPOT_SETTINGS.animationFrame) {
+                SPOT_SETTINGS.animationFrame = requestAnimationFrame(animateSpot);
             }
         }
 
@@ -461,25 +523,16 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // --- Вертикальные линии (сетка) ---
+            // --- Вертикальные линии (сетка) с равномерным шагом ---
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
-            for (let i = 0; i < visibleData.length; i++) {
-                if (i % gridVerticalStep === 0) {
-                    const x = baseX + i * totalWidthPerCandle + candleWidth / 2;
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, height);
-                    ctx.stroke();
-                }
-            }
-            let x = baseX + visibleData.length * totalWidthPerCandle + candleWidth / 2;
-            while (x < width - paddingRight) {
+            const stepPx = totalWidthPerCandle * gridVerticalStep;
+            const firstLineX = Math.ceil((baseX - paddingLeft) / stepPx) * stepPx + paddingLeft;
+            for (let x = firstLineX; x < width - paddingRight; x += stepPx) {
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, height);
                 ctx.stroke();
-                x += totalWidthPerCandle * gridVerticalStep;
             }
 
             // --- Горизонтальные линии ---
@@ -553,6 +606,10 @@
                     const lastCandleX = baseX + localIdx * totalWidthPerCandle + candleWidth / 2;
                     const lastCandleY = height - paddingBottom - ((lastOriginal.close - minPriceVisible) / (maxPriceVisible - minPriceVisible)) * (height - paddingTop - paddingBottom);
                     drawLastCandleLine(lastCandleX, lastCandleY, lastOriginal.close);
+
+                    // Сохраняем позицию последней свечи для пятна
+                    globalLastCandleX = lastCandleX;
+                    globalCanvasWidth = width;
                 }
             }
 
@@ -576,20 +633,36 @@
                 const globalIndex = drawStart + i;
                 const distFromLast = chartData.length - 1 - globalIndex;
                 if (distFromLast % step === 0) {
+                    let timestamp = visibleData[i].time;
+                    // Для дневного графика корректируем время для меток
+                    if (currentInterval === '1d') {
+                        timestamp = adjustDailyTime(timestamp);
+                    }
                     const patternIndex = Math.floor(distFromLast / step) % pattern.length;
-                    const type = pattern[patternIndex];
-                    const label = formatLabelByType(visibleData[i].time, type);
+                    let type = pattern[patternIndex];
+                    let label = formatLabelByType(timestamp, type);
+                    let skipDueToUniqueness = false;
 
-                    // Проверка на уникальность для месяцев и годов
                     if (type === 'year') {
-                        const year = new Date(visibleData[i].time).getFullYear();
-                        if (seenYears.has(year)) continue;
-                        seenYears.add(year);
+                        const year = new Date(timestamp).getFullYear();
+                        if (seenYears.has(year)) {
+                            skipDueToUniqueness = true;
+                        } else {
+                            seenYears.add(year);
+                        }
                     } else if (type === 'month') {
-                        const date = new Date(visibleData[i].time);
+                        const date = new Date(timestamp);
                         const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-                        if (seenMonths.has(monthKey)) continue;
-                        seenMonths.add(monthKey);
+                        if (seenMonths.has(monthKey)) {
+                            skipDueToUniqueness = true;
+                        } else {
+                            seenMonths.add(monthKey);
+                        }
+                    }
+
+                    if (skipDueToUniqueness) {
+                        type = 'day';
+                        label = formatLabelByType(timestamp, type);
                     }
 
                     if (label) {
@@ -600,7 +673,7 @@
             }
             ctx.restore();
 
-            // --- Шкала цен ---
+            // --- Шкала цен (белая) ---
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
@@ -672,13 +745,23 @@
                 const candlesData = await candlesResponse.json();
                 const tickerData = await tickerResponse.json();
 
-                chartData = candlesData.map(d => ({
+                let rawData = candlesData.map(d => ({
                     time: parseInt(d[0]),
                     open: parseFloat(d[1]),
                     high: parseFloat(d[2]),
                     low: parseFloat(d[3]),
                     close: parseFloat(d[4])
                 }));
+
+                // Если дневной интервал, сдвигаем время на 1 час назад (23:00 UTC)
+                if (interval === '1d') {
+                    rawData = rawData.map(c => ({
+                        ...c,
+                        time: c.time - 3600000
+                    }));
+                }
+
+                chartData = rawData;
 
                 zoomLevel = 1;
                 setToLastCandle();
@@ -726,13 +809,20 @@
                 const newDataRaw = await candlesResponse.json();
                 const tickerData = await tickerResponse.json();
 
-                const newData = newDataRaw.map(d => ({
+                let newData = newDataRaw.map(d => ({
                     time: parseInt(d[0]),
                     open: parseFloat(d[1]),
                     high: parseFloat(d[2]),
                     low: parseFloat(d[3]),
                     close: parseFloat(d[4])
                 }));
+
+                if (currentInterval === '1d') {
+                    newData = newData.map(c => ({
+                        ...c,
+                        time: c.time - 3600000
+                    }));
+                }
 
                 if (newData.length === 0) return;
 
@@ -774,6 +864,9 @@
                 }
 
                 if (!animLastCandle) drawChart();
+
+                // Обновляем цель пятна
+                updateSpotTarget(false);
             } catch (err) {
                 console.warn('Ошибка обновления данных:', err);
             }
@@ -788,6 +881,10 @@
             currentInterval = interval;
             loadData(interval).then(() => {
                 startRefreshTimer(interval);
+                // Устанавливаем пятно мгновенно на последнюю свечу после загрузки
+                setTimeout(() => {
+                    updateSpotTarget(true);
+                }, 100); // небольшая задержка, чтобы canvas успел отрисоваться
             });
         }
 
@@ -833,6 +930,9 @@
 
             dragOffset -= shiftCandles * totalWidthPerCandle;
             drawChart();
+
+            // Обновляем цель пятна после перетаскивания
+            updateSpotTarget(false);
         }
 
         canvas.addEventListener('mousedown', (e) => startDrag(e.clientX));
@@ -851,6 +951,7 @@
             if (newZoom !== zoomLevel) {
                 zoomLevel = newZoom;
                 drawChart();
+                updateSpotTarget(false);
             }
         });
 
@@ -863,7 +964,10 @@
         });
 
         goLastBtn.addEventListener('click', setToLastCandle);
-        window.addEventListener('resize', () => drawChart());
+        window.addEventListener('resize', () => {
+            drawChart();
+            updateSpotTarget(false);
+        });
 
         handleIntervalChange('1h');
     </script>
