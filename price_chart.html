@@ -10,53 +10,45 @@
             padding: 0;
             height: 100vh;
             overflow: hidden;
-            font-family: monospace;
+            font-family: 'Roboto Mono', monospace;
             background: #000;
             color: #00ff88;
             display: flex;
             flex-direction: column;
         }
         .top-panel {
-            height: 50px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
-            background: rgba(0, 20, 10, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            height: 70px;
+            background: #000;
             border-bottom: 1px solid rgba(0, 255, 136, 0.3);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
             z-index: 10;
         }
-        .pair-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #ffffff; /* белый цвет */
-            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+        .pair-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        /* Контейнер для цены и процентов */
-        .price-info {
+        .pair-row {
             display: flex;
             align-items: baseline;
-            gap: 4px; /* минимальный отступ */
+            gap: 4px;
+        }
+        .pair-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
         }
         .current-price {
-            font-size: 20px;
-            font-weight: bold;
-            color: #ffffff; /* белый */
-            background: rgba(0, 0, 0, 0.3);
-            padding: 4px 8px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        .price-change {
-            font-size: 16px;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 18px;
+            font-weight: 400;
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: -0.5px;
+            transition: color 0.1s ease;
         }
         .positive {
             color: #00ff88;
@@ -66,13 +58,36 @@
             color: #ff4d4d;
             text-shadow: 0 0 8px #ff4d4d;
         }
+        .price-change {
+            font-size: 16px;
+            font-weight: 400;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            align-self: flex-start;
+            margin-top: 4px;
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: -0.5px;
+        }
+        .price-change.positive {
+            color: #00ff88;
+            text-shadow: 0 0 8px #00ff88;
+        }
+        .price-change.negative {
+            color: #ff4d4d;
+            text-shadow: 0 0 8px #ff4d4d;
+        }
         #canvasContainer {
             flex: 1;
             position: relative;
             background: 
                 linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-                radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+                radial-gradient(circle at 15% 20%, rgba(120, 255, 120, 0.3) 0%, transparent 12%),
+                radial-gradient(circle at 85% 25%, rgba(0, 255, 136, 0.3) 0%, transparent 15%),
+                radial-gradient(circle at 30% 70%, rgba(0, 255, 136, 0.25) 0%, transparent 12%),
+                radial-gradient(circle at 70% 80%, rgba(120, 255, 120, 0.25) 0%, transparent 15%),
+                radial-gradient(circle at 45% 45%, rgba(0, 255, 136, 0.2) 0%, transparent 10%);
             backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
             -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
             border-bottom: 1px solid rgba(0, 255, 136, 0.3);
@@ -151,9 +166,11 @@
 </head>
 <body>
     <div class="top-panel">
-        <span class="pair-name">TON/USDT</span>
-        <div class="price-info">
-            <span class="current-price" id="priceDisplay">0.0000</span>
+        <div class="pair-info">
+            <div class="pair-row">
+                <span class="pair-name">TON/USDT</span>
+                <span class="current-price" id="priceDisplay">0.0000</span>
+            </div>
             <span class="price-change" id="priceChangeDisplay">+0.00%</span>
         </div>
     </div>
@@ -187,15 +204,27 @@
             paddingLeft: 40,
             paddingRight: 40,
             paddingTop: 30,
-            paddingBottom: 40,
+            paddingBottom: 70,
             minZoom: 0.5,
             maxZoom: 3,
             candleWidthBase: 8,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
+            gridVerticalStep: 4,
+            gridHorizontalCount: 15,
         };
 
-        // Настройки для линий High/Low
+        // Конфигурация меток времени для каждого интервала
+        // step – через сколько свечей ставить метку (от последней)
+        // pattern – циклический массив типов меток: 'hour', 'day', 'month', 'year'
+        const LABEL_CONFIG = {
+            '5m':  { step: 12, pattern: ['hour'] },
+            '15m': { step: 12, pattern: ['hour'] },
+            '1h':  { step: 12, pattern: ['hour', 'day', 'hour', 'month'] },
+            '4h':  { step: 12, pattern: ['day', 'month', 'day', 'day'] },
+            '1d':  { step: 12, pattern: ['month', 'day', 'month', 'day', 'year', 'day'] } // паттерн по просьбе пользователя
+        };
+
         const HIGH_LOW_SETTINGS = {
             enabled: true,
             lineColor: '#ffffff',
@@ -204,7 +233,6 @@
             textColor: '#ffffff',
         };
 
-        // Настройки для линии последней свечи (текущей цены)
         const LAST_CANDLE_LINE_SETTINGS = {
             enabled: true,
             lineColor: '#ffffff',
@@ -213,13 +241,12 @@
             gapLength: 2,
             segmentsCount: 5,
             boxPadding: 6,
-            boxBgColor: 'rgba(20,20,30,0.9)',
-            boxBorderColor: '#00ff88',
-            textColor: '#00ff88',
+            boxBgColor: 'rgba(20,20,30,0.8)',
+            boxBorderColor: '#ffffff',
+            textColor: '#ffffff',
             fontSize: 12,
         };
 
-        // Интервалы обновления в миллисекундах
         const REFRESH_INTERVALS = {
             '5m': 1000,
             '15m': 1000,
@@ -240,21 +267,15 @@
         let currentInterval = '1h';
         let startIndex = 0;
         let zoomLevel = 1;
-
         const EXTRA_SPACE = 15;
-
         let isDragging = false;
         let lastClientX = 0;
         let dragOffset = 0;
-
         let refreshIntervalId = null;
         let limit = 1000;
-
-        // Переменные для анимации последней свечи
-        let animLastCandle = null;        // { oldCandle, newCandle, startTime, duration }
+        let animLastCandle = null;
         let animFrame = null;
 
-        // Функция для установки размера canvas
         function resizeCanvas() {
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
@@ -278,7 +299,12 @@
             drawChart();
         }
 
-        // Функция рисования линии последней свечи
+        function updatePriceColor(candle) {
+            const isGreen = candle.close >= candle.open;
+            priceDisplay.classList.remove('positive', 'negative');
+            priceDisplay.classList.add(isGreen ? 'positive' : 'negative');
+        }
+
         function drawLastCandleLine(x, y, price) {
             const { lineWidth, segmentLength, gapLength, segmentsCount, boxPadding, boxBgColor, boxBorderColor, textColor, fontSize } = LAST_CANDLE_LINE_SETTINGS;
             const totalLineLength = segmentsCount * (segmentLength + gapLength) - gapLength;
@@ -298,7 +324,8 @@
             }
 
             const text = price.toFixed(4);
-            ctx.font = `${fontSize}px monospace`;
+            ctx.font = `${fontSize}px 'Roboto Mono', monospace`;
+            ctx.letterSpacing = '-0.5px';
             const textWidth = ctx.measureText(text).width;
             const boxWidth = textWidth + 2 * boxPadding;
             const boxHeight = fontSize + 2 * boxPadding;
@@ -307,7 +334,7 @@
 
             ctx.fillStyle = boxBgColor;
             ctx.shadowColor = '#000';
-            ctx.shadowBlur = 4;
+            ctx.shadowBlur = 10;
             ctx.beginPath();
             ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 6);
             ctx.fill();
@@ -341,6 +368,26 @@
             return this;
         };
 
+        // Форматирование метки в зависимости от типа
+        function formatLabelByType(timestamp, type) {
+            const date = new Date(timestamp);
+            const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+
+            switch (type) {
+                case 'hour':
+                    const h = date.getHours().toString().padStart(2, '0');
+                    return `${h}:00`;
+                case 'day':
+                    return date.getDate().toString();
+                case 'month':
+                    return monthNames[date.getMonth()];
+                case 'year':
+                    return date.getFullYear().toString();
+                default:
+                    return '';
+            }
+        }
+
         function drawChart() {
             if (!chartData || chartData.length === 0) return;
 
@@ -348,7 +395,7 @@
 
             const width = canvas.width;
             const height = canvas.height;
-            const { paddingLeft, paddingRight, paddingTop, paddingBottom, gapBetweenCandles, minBodyHeight } = CHART_SETTINGS;
+            const { paddingLeft, paddingRight, paddingTop, paddingBottom, gapBetweenCandles, minBodyHeight, gridVerticalStep, gridHorizontalCount } = CHART_SETTINGS;
 
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
@@ -365,7 +412,6 @@
             let visibleData = chartData.slice(drawStart, drawEnd);
             if (visibleData.length === 0) return;
 
-            // Если есть анимация последней свечи, подменяем последний элемент visibleData на интерполированный
             if (animLastCandle) {
                 const now = performance.now();
                 const progress = Math.min((now - animLastCandle.startTime) / animLastCandle.duration, 1);
@@ -394,7 +440,6 @@
 
             const baseX = paddingLeft + (drawStart - startIndex) * totalWidthPerCandle + dragOffset;
 
-            // Модифицируем данные для непрерывности
             const modifiedData = visibleData.map((candle, idx) => {
                 if (idx === 0) return { ...candle };
                 const prevClose = visibleData[idx - 1].close;
@@ -404,7 +449,6 @@
                 };
             });
 
-            // Глобальные минимум и максимум среди видимых свечей (оригинальные значения)
             let minPriceVisible = Math.min(...visibleData.map(d => d.low));
             let maxPriceVisible = Math.max(...visibleData.map(d => d.high));
             const priceRange = maxPriceVisible - minPriceVisible;
@@ -417,29 +461,38 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // Вертикальная сетка
+            // --- Вертикальные линии (сетка) ---
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
             for (let i = 0; i < visibleData.length; i++) {
-                const x = baseX + i * totalWidthPerCandle + candleWidth / 2;
-                if ((drawStart + i) % 5 === 0) {
+                if (i % gridVerticalStep === 0) {
+                    const x = baseX + i * totalWidthPerCandle + candleWidth / 2;
                     ctx.beginPath();
                     ctx.moveTo(x, 0);
                     ctx.lineTo(x, height);
                     ctx.stroke();
                 }
             }
+            let x = baseX + visibleData.length * totalWidthPerCandle + candleWidth / 2;
+            while (x < width - paddingRight) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+                x += totalWidthPerCandle * gridVerticalStep;
+            }
 
-            // Горизонтальная сетка
-            for (let i = 0; i <= 5; i++) {
-                const y = paddingTop + (height - paddingTop - paddingBottom) * (i / 5);
+            // --- Горизонтальные линии ---
+            for (let i = 0; i <= gridHorizontalCount; i++) {
+                const y = paddingTop + (height - paddingTop - paddingBottom) * (i / gridHorizontalCount);
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(width, y);
+                ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
                 ctx.stroke();
             }
 
-            // Свечи
+            // --- Свечи ---
             modifiedData.forEach((candle, i) => {
                 const x = baseX + i * totalWidthPerCandle;
                 const w = candleWidth;
@@ -453,13 +506,11 @@
                 ctx.fillStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
                 ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
 
-                // Фитиль
                 ctx.beginPath();
                 ctx.moveTo(x + w / 2, highY);
                 ctx.lineTo(x + w / 2, lowY);
                 ctx.stroke();
 
-                // Тело свечи
                 const bodyTop = Math.min(openY, closeY);
                 const bodyBottom = Math.max(openY, closeY);
                 const bodyHeight = bodyBottom - bodyTop;
@@ -472,7 +523,7 @@
                 }
             });
 
-            // --- Рисуем линии High/Low ---
+            // --- Линии High/Low ---
             if (HIGH_LOW_SETTINGS.enabled && visibleData.length > 0) {
                 const highPrice = Math.max(...visibleData.map(d => d.high));
                 const lowPrice = Math.min(...visibleData.map(d => d.low));
@@ -493,7 +544,7 @@
                 }
             }
 
-            // --- Рисуем линию последней свечи ---
+            // --- Линия последней свечи ---
             if (LAST_CANDLE_LINE_SETTINGS.enabled && chartData.length > 0) {
                 const lastOriginal = visibleData[visibleData.length - 1];
                 const lastIndex = chartData.length - 1;
@@ -505,11 +556,56 @@
                 }
             }
 
-            // Шкала цен
+            // --- Временные метки снизу ---
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '11px "Roboto Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const labelY = height - paddingBottom / 2;
+
+            const config = LABEL_CONFIG[currentInterval] || { step: 12, pattern: ['hour'] };
+            const step = config.step;
+            const pattern = config.pattern;
+
+            // Наборы для уникальности месяцев и годов
+            let seenMonths = new Set();
+            let seenYears = new Set();
+
+            for (let i = 0; i < visibleData.length; i++) {
+                const globalIndex = drawStart + i;
+                const distFromLast = chartData.length - 1 - globalIndex;
+                if (distFromLast % step === 0) {
+                    const patternIndex = Math.floor(distFromLast / step) % pattern.length;
+                    const type = pattern[patternIndex];
+                    const label = formatLabelByType(visibleData[i].time, type);
+
+                    // Проверка на уникальность для месяцев и годов
+                    if (type === 'year') {
+                        const year = new Date(visibleData[i].time).getFullYear();
+                        if (seenYears.has(year)) continue;
+                        seenYears.add(year);
+                    } else if (type === 'month') {
+                        const date = new Date(visibleData[i].time);
+                        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+                        if (seenMonths.has(monthKey)) continue;
+                        seenMonths.add(monthKey);
+                    }
+
+                    if (label) {
+                        const x = baseX + i * totalWidthPerCandle + candleWidth / 2;
+                        ctx.fillText(label, x, labelY);
+                    }
+                }
+            }
+            ctx.restore();
+
+            // --- Шкала цен ---
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
-            ctx.font = '12px monospace';
+            ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
+            ctx.letterSpacing = '-0.5px';
             for (let i = 0; i <= 5; i++) {
                 const price = minPriceVisible + (maxPriceVisible - minPriceVisible) * (i / 5);
                 const y = paddingTop + (height - paddingTop - paddingBottom) * (1 - i / 5);
@@ -525,10 +621,11 @@
             ctx.strokeStyle = HIGH_LOW_SETTINGS.lineColor;
             ctx.lineWidth = HIGH_LOW_SETTINGS.lineWidth;
             ctx.fillStyle = HIGH_LOW_SETTINGS.textColor;
-            ctx.font = `${HIGH_LOW_SETTINGS.fontSize}px monospace`;
+            ctx.font = `${HIGH_LOW_SETTINGS.fontSize}px "Roboto Mono", monospace`;
             ctx.textBaseline = 'middle';
             ctx.shadowColor = '#000';
             ctx.shadowBlur = 3;
+            ctx.letterSpacing = '-0.5px';
 
             if (x > midX) {
                 const endX = x - lineLength;
@@ -550,7 +647,6 @@
             ctx.restore();
         }
 
-        // Загрузка данных графика и 24hr ticker
         async function loadData(interval) {
             loading.style.display = 'block';
             errorDiv.style.display = 'none';
@@ -565,7 +661,6 @@
             limit = limits[interval] || 500;
 
             try {
-                // Параллельно загружаем свечи и 24hr статистику
                 const [candlesResponse, tickerResponse] = await Promise.all([
                     fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`),
                     fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=TONUSDT')
@@ -588,9 +683,10 @@
                 zoomLevel = 1;
                 setToLastCandle();
 
-                // Обновляем цену и процент
                 if (chartData.length > 0) {
-                    priceDisplay.textContent = chartData[chartData.length - 1].close.toFixed(4);
+                    const lastCandle = chartData[chartData.length - 1];
+                    priceDisplay.textContent = lastCandle.close.toFixed(4);
+                    updatePriceColor(lastCandle);
                 }
                 updatePriceChange(tickerData.priceChangePercent);
 
@@ -602,7 +698,6 @@
             }
         }
 
-        // Обновление отображения процента изменения
         function updatePriceChange(percentStr) {
             const percent = parseFloat(percentStr);
             priceChangeDisplay.textContent = (percent >= 0 ? '+' : '') + percent.toFixed(2) + '%';
@@ -612,17 +707,14 @@
             } else if (percent < 0) {
                 priceChangeDisplay.classList.add('negative');
             } else {
-                // ноль – можно оставить без класса или зелёным
                 priceChangeDisplay.classList.add('positive');
             }
         }
 
-        // Функция обновления в реальном времени
         async function refreshData() {
             if (!currentInterval || chartData.length === 0) return;
 
             try {
-                // Параллельно обновляем свечи и 24hr статистику
                 const [candlesResponse, tickerResponse] = await Promise.all([
                     fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${currentInterval}&limit=${limit}`),
                     fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=TONUSDT')
@@ -648,7 +740,6 @@
                 const lastNew = newData[newData.length - 1];
 
                 if (lastOld.time === lastNew.time) {
-                    // Обновляем последнюю свечу с анимацией
                     const oldCandle = { ...lastOld };
                     const newCandle = { ...lastNew };
                     chartData[chartData.length - 1] = newCandle;
@@ -663,7 +754,6 @@
                     animFrame = requestAnimationFrame(() => drawChart());
 
                 } else if (lastNew.time > lastOld.time) {
-                    // Новая свеча
                     chartData.push(lastNew);
                     if (chartData.length > limit) {
                         chartData.shift();
@@ -671,11 +761,10 @@
                     }
                 }
 
-                // Обновляем цену и процент
                 priceDisplay.textContent = lastNew.close.toFixed(4);
+                updatePriceColor(lastNew);
                 updatePriceChange(tickerData.priceChangePercent);
 
-                // Корректировка позиции
                 const maxStart = getMaxStart();
                 const oldMaxStart = Math.max(0, chartData.length - 1 - getVisibleCount() + EXTRA_SPACE);
                 if (startIndex >= oldMaxStart - 5) {
@@ -702,7 +791,6 @@
             });
         }
 
-        // Перетаскивание
         function startDrag(clientX) {
             isDragging = true;
             lastClientX = clientX;
@@ -747,13 +835,12 @@
             drawChart();
         }
 
-        canvas.addEventListener('mousedown', (e) => { startDrag(e.clientX); e.preventDefault(); });
-        window.addEventListener('mousemove', (e) => { onDrag(e.clientX); e.preventDefault(); });
-        window.addEventListener('mouseup', () => { endDrag(); });
-
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrag(e.touches[0].clientX); });
-        window.addEventListener('touchmove', (e) => { e.preventDefault(); onDrag(e.touches[0].clientX); });
-        window.addEventListener('touchend', (e) => { e.preventDefault(); endDrag(); });
+        canvas.addEventListener('mousedown', (e) => startDrag(e.clientX));
+        window.addEventListener('mousemove', (e) => onDrag(e.clientX));
+        window.addEventListener('mouseup', endDrag);
+        canvas.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX));
+        window.addEventListener('touchmove', (e) => onDrag(e.touches[0].clientX));
+        window.addEventListener('touchend', endDrag);
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
