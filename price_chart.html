@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON / USDT — свечной график</title>
+    <title>TON / USDT — свечной график (бесконечная история)</title>
     <style>
         body {
             margin: 0;
@@ -227,7 +227,6 @@
             rightBoxBgColor: '#333333',
             rightBoxTextColor: '#ffffff',
             rightBoxFontSize: 12,
-            rightBoxWidth: 90,
             rightBoxPadding: 6,
         };
 
@@ -249,6 +248,8 @@
             '1d': 2000
         };
 
+        const INITIAL_LIMIT = 500; // сколько свечей загружаем при старте
+
         const canvas = document.getElementById('chartCanvas');
         const ctx = canvas.getContext('2d');
         const loading = document.getElementById('loading');
@@ -267,9 +268,11 @@
         let lastClientX = 0;
         let dragOffset = 0;
         let refreshIntervalId = null;
-        let limit = 1000;
         let animLastCandle = null;
         let animFrame = null;
+
+        // Флаг для предотвращения множественных запросов при подгрузке истории
+        let isLoadingMore = false;
 
         // Переменные для мультитач-зума
         let pinchActive = false;
@@ -278,13 +281,12 @@
         let centerCandleIndex = null;
 
         // Переменные для перекрестия
-        let crosshairActive = true; // по умолчанию активно (будет показываться после первого касания)
+        let crosshairActive = true;
         let crosshairX = 0;
         let crosshairY = 0;
         let crosshairCandleIndex = -1;
         let crosshairPrice = 0;
 
-        // Храним координаты кнопки перехода к последней свече для обработки кликов
         let firstButtonRect = null;
 
         // Загружаем сохранённый интервал
@@ -492,29 +494,26 @@
             const canvasY = (clientY - rect.top) * scaleY;
 
             const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
-            // Если клик вне области графика — перекрестие не показываем (но можно и оставить, решаем оставить активным, просто линии не рисуем)
             if (canvasX < paddingLeft || canvasX > canvas.width - paddingRight || canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
-                // Можно либо отключить, либо оставить как есть. Оставим активным, но линии будут за пределами — не страшно.
-                // Для эстетики можно оставить как есть.
+                // Выход за границы графика — оставляем перекрестие на последней известной позиции (или можно не обновлять)
+                // Но мы всё равно обновим, просто линии не будут видны за пределами
             }
 
             crosshairActive = true;
-            crosshairY = canvasY; // горизонтальная линия всегда идёт за пальцем
+            crosshairY = canvasY;
 
-            // Определяем индекс ближайшей свечи
             const index = findCandleByX(canvasX);
             if (index !== -1) {
                 crosshairCandleIndex = index;
-                // Вычисляем центр свечи
                 const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
                 const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
                 crosshairX = paddingLeft + (index - startIndex) * totalWidthPerCandle + dragOffset + candleWidth / 2;
             } else {
                 crosshairCandleIndex = -1;
-                crosshairX = canvasX; // если нет свечи, линия идёт точно по X клика
+                crosshairX = canvasX;
             }
 
-            // Определяем цену по Y (как раньше)
+            // Определяем цену по Y
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
             const visibleCount = getVisibleCount();
@@ -537,6 +536,50 @@
             }
 
             drawChart();
+        }
+
+        // Функция для загрузки более старых свечей (бесконечная прокрутка влево)
+        async function loadOlderCandles() {
+            if (isLoadingMore || !chartData.length) return;
+
+            isLoadingMore = true;
+            const oldestCandle = chartData[0];
+            const endTime = oldestCandle.time - 1; // запрашиваем свечи строго старше
+
+            try {
+                const response = await fetch(
+                    `https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${currentInterval}&endTime=${endTime}&limit=500`
+                );
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                if (data.length === 0) {
+                    console.log('Больше нет данных');
+                    return;
+                }
+
+                // Преобразуем в наш формат
+                const olderCandles = data.map(d => ({
+                    time: parseInt(d[0]),
+                    open: parseFloat(d[1]),
+                    high: parseFloat(d[2]),
+                    low: parseFloat(d[3]),
+                    close: parseFloat(d[4])
+                })).reverse(); // Binance возвращает от старого к новому, нам нужно добавить в начало массива, поэтому разворачиваем
+
+                // Добавляем в начало массива
+                chartData = [...olderCandles, ...chartData];
+
+                // Корректируем startIndex, чтобы видимая область не прыгнула
+                startIndex += olderCandles.length;
+
+                // Перерисовываем
+                drawChart();
+            } catch (err) {
+                console.warn('Не удалось загрузить старые свечи:', err);
+            } finally {
+                isLoadingMore = false;
+            }
         }
 
         function drawChart() {
@@ -832,22 +875,29 @@
 
             ctx.save();
 
-            // Вертикальная пунктирная линия
-            ctx.strokeStyle = lineColor;
-            ctx.lineWidth = lineWidth;
-            ctx.setLineDash(dashPattern);
-            ctx.beginPath();
-            ctx.moveTo(crosshairX, paddingTop);
-            ctx.lineTo(crosshairX, height - paddingBottom);
-            ctx.stroke();
+            // Вертикальная пунктирная линия (только если в пределах графика)
+            if (crosshairX >= paddingLeft && crosshairX <= width - paddingRight) {
+                ctx.strokeStyle = lineColor;
+                ctx.lineWidth = lineWidth;
+                ctx.setLineDash(dashPattern);
+                ctx.beginPath();
+                ctx.moveTo(crosshairX, paddingTop);
+                ctx.lineTo(crosshairX, height - paddingBottom);
+                ctx.stroke();
+            }
 
             // Горизонтальная пунктирная линия
-            ctx.beginPath();
-            ctx.moveTo(paddingLeft, crosshairY);
-            ctx.lineTo(width - paddingRight, crosshairY);
-            ctx.stroke();
+            if (crosshairY >= paddingTop && crosshairY <= height - paddingBottom) {
+                ctx.strokeStyle = lineColor;
+                ctx.lineWidth = lineWidth;
+                ctx.setLineDash(dashPattern);
+                ctx.beginPath();
+                ctx.moveTo(paddingLeft, crosshairY);
+                ctx.lineTo(width - paddingRight, crosshairY);
+                ctx.stroke();
+            }
 
-            ctx.setLineDash([]); // сброс
+            ctx.setLineDash([]);
 
             // Правый серый прямоугольник с ценой и процентом
             const lastPrice = chartData.length ? chartData[chartData.length - 1].close : 0;
@@ -864,10 +914,8 @@
             const boxX = width - boxWidth;
             const boxY = crosshairY - boxHeight / 2;
 
-            // Корректировка по вертикали
             const finalBoxY = Math.max(paddingTop, Math.min(boxY, height - paddingBottom - boxHeight));
 
-            // Рисуем прямоугольник
             ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxBgColor;
             ctx.shadowBlur = 6;
             ctx.shadowColor = '#000';
@@ -887,7 +935,7 @@
             ctx.fillStyle = percentChange >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
             ctx.fillText(percentText, boxX + boxWidth / 2, finalBoxY + CROSSHAIR_SETTINGS.rightBoxPadding * 2 + CROSSHAIR_SETTINGS.rightBoxFontSize * 1.5);
 
-            // Если есть свеча, рисуем информационный блок
+            // Информационный блок о свече
             if (crosshairCandleIndex >= 0 && crosshairCandleIndex < chartData.length) {
                 const candle = chartData[crosshairCandleIndex];
                 const time = new Date(candle.time);
@@ -900,6 +948,10 @@
                 const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
                 const range = (candle.high - candle.low).toFixed(4);
                 const rangePercent = ((candle.high - candle.low) / candle.open * 100).toFixed(2);
+
+                // Определяем цвета для Change
+                const changeValue = candle.close - candle.open;
+                const changeColor = changeValue >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
 
                 const lines = [
                     `Time      ${timeStr}`,
@@ -919,12 +971,10 @@
                 let blockX = crosshairX + 15;
                 let blockY = crosshairY - blockHeight - 10;
 
-                // Корректировка, чтобы не вылезать за края
                 if (blockX + blockWidth > width - paddingRight) blockX = crosshairX - blockWidth - 15;
                 if (blockY < paddingTop) blockY = crosshairY + 15;
                 if (blockY + blockHeight > height - paddingBottom) blockY = crosshairY - blockHeight - 10;
 
-                // Фон блока
                 ctx.fillStyle = infoBgColor;
                 ctx.shadowBlur = 8;
                 ctx.beginPath();
@@ -935,7 +985,6 @@
                 ctx.shadowBlur = 0;
                 ctx.stroke();
 
-                // Текст
                 ctx.fillStyle = infoTextColor;
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'top';
@@ -943,29 +992,33 @@
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i];
                     const y = blockY + infoPadding + i * lineHeight;
-                    ctx.fillText(line, blockX + infoPadding, y);
+                    if (i === 5) { // строка Change
+                        // Рисуем "Change" белым
+                        const changeLabel = line.substring(0, 9); // "Change    "
+                        ctx.fillStyle = infoTextColor;
+                        ctx.fillText(changeLabel, blockX + infoPadding, y);
+                        // Рисуем значение и процент цветом
+                        const changeValueStr = line.substring(9);
+                        ctx.fillStyle = changeColor;
+                        ctx.fillText(changeValueStr, blockX + infoPadding + ctx.measureText(changeLabel).width, y);
+                    } else {
+                        ctx.fillStyle = infoTextColor;
+                        ctx.fillText(line, blockX + infoPadding, y);
+                    }
                 }
             }
 
             ctx.restore();
         }
 
+        // Загрузка начальных данных (последние INITIAL_LIMIT свечей)
         async function loadData(interval) {
             loading.style.display = 'block';
             errorDiv.style.display = 'none';
 
-            const limits = {
-                '5m': 1000,
-                '15m': 1000,
-                '1h': 1000,
-                '4h': 800,
-                '1d': 500
-            };
-            limit = limits[interval] || 500;
-
             try {
                 const [candlesResponse, tickerResponse] = await Promise.all([
-                    fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${limit}`),
+                    fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${interval}&limit=${INITIAL_LIMIT}`),
                     fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=TONUSDT')
                 ]);
 
@@ -1028,7 +1081,7 @@
 
             try {
                 const [candlesResponse, tickerResponse] = await Promise.all([
-                    fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${currentInterval}&limit=${limit}`),
+                    fetch(`https://api.binance.com/api/v3/klines?symbol=TONUSDT&interval=${currentInterval}&limit=1`),
                     fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=TONUSDT')
                 ]);
 
@@ -1055,8 +1108,8 @@
 
                 if (newData.length === 0) return;
 
-                const lastOld = chartData[chartData.length - 1];
                 const lastNew = newData[newData.length - 1];
+                const lastOld = chartData[chartData.length - 1];
 
                 if (lastOld.time === lastNew.time) {
                     const oldCandle = { ...lastOld };
@@ -1074,10 +1127,6 @@
 
                 } else if (lastNew.time > lastOld.time) {
                     chartData.push(lastNew);
-                    if (chartData.length > limit) {
-                        chartData.shift();
-                        if (startIndex > 0) startIndex -= 1;
-                    }
                 }
 
                 priceDisplay.textContent = lastNew.close.toFixed(4);
@@ -1105,9 +1154,7 @@
 
         function handleIntervalChange(interval) {
             currentInterval = interval;
-            // Сохраняем в localStorage
             localStorage.setItem('selectedInterval', interval);
-            // Обновляем активный класс на кнопках
             document.querySelectorAll('.tf-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.dataset.interval === interval) {
@@ -1141,6 +1188,11 @@
             if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
             if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
 
+            // Проверяем, не пора ли подгрузить более старые свечи
+            if (dragOffset > maxRightOffset - 100 && !isLoadingMore) {
+                loadOlderCandles();
+            }
+
             drawChart();
         }
 
@@ -1150,7 +1202,6 @@
             canvas.style.cursor = 'crosshair';
         }
 
-        // Обработчик клика для кнопки ">|"
         function handleCanvasClick(e) {
             if (!firstButtonRect) return;
             const rect = canvas.getBoundingClientRect();
@@ -1167,7 +1218,6 @@
             }
         }
 
-        // Обработчики мыши
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
             if (!e.defaultPrevented) {
@@ -1180,10 +1230,6 @@
                 updateCrosshair(e.clientX, e.clientY);
             }
         });
-
-        // Убираем mouseup и mouseleave, чтобы перекрестие не исчезало
-        // canvas.addEventListener('mouseup', () => { crosshairActive = false; drawChart(); });
-        // canvas.addEventListener('mouseleave', () => { crosshairActive = false; drawChart(); });
 
         // Обработчики касаний
         canvas.addEventListener('touchstart', (e) => {
@@ -1255,21 +1301,12 @@
             } else if (isDragging) {
                 endDrag();
             }
-            // Не отключаем перекрестие
         });
 
-        // Вспомогательные функции для зума
         function getPinchDistance(touches) {
             const dx = touches[0].clientX - touches[1].clientX;
             const dy = touches[0].clientY - touches[1].clientY;
             return Math.sqrt(dx * dx + dy * dy);
-        }
-
-        function getPinchCenter(touches) {
-            return {
-                x: (touches[0].clientX + touches[1].clientX) / 2,
-                y: (touches[0].clientY + touches[1].clientY) / 2
-            };
         }
 
         // Колёсико мыши
@@ -1308,7 +1345,7 @@
             }
         });
 
-        // Инициализация кнопок таймфреймов с учётом сохранённого
+        // Инициализация кнопок таймфреймов
         document.querySelectorAll('.tf-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const interval = btn.dataset.interval;
