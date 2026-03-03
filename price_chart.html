@@ -279,7 +279,7 @@
 
         // Переменные для перекрестия
         let crosshairActive = false;
-        let crosshairX = 0;
+        let crosshairX = 0;          // X координата вертикальной линии (центр свечи)
         let crosshairY = 0;
         let crosshairCandleIndex = -1;
         let crosshairPrice = 0;
@@ -462,19 +462,26 @@
             return timestamp - 3600000;
         }
 
-        // Функция для поиска свечи по координате X
-        function findCandleByX(x) {
+        // Функция для поиска ближайшего индекса свечи по координате X (возвращает целое число)
+        function findNearestCandleIndexByX(x) {
             if (!chartData.length) return -1;
-            const { paddingLeft, paddingRight, gapBetweenCandles } = CHART_SETTINGS;
+            const { paddingLeft, gapBetweenCandles } = CHART_SETTINGS;
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
 
             const candleIndexFloat = (x - paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
-            const index = Math.round(candleIndexFloat);
-            if (index >= 0 && index < chartData.length) {
-                return index;
-            }
-            return -1;
+            let index = Math.round(candleIndexFloat);
+            if (index < 0) index = 0;
+            if (index >= chartData.length) index = chartData.length - 1;
+            return index;
+        }
+
+        // Функция для получения X координаты центра свечи по её индексу
+        function getCandleCenterXByIndex(index) {
+            const { paddingLeft, gapBetweenCandles } = CHART_SETTINGS;
+            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+            const totalWidthPerCandle = candleWidth + gapBetweenCandles;
+            return paddingLeft + (index - startIndex) * totalWidthPerCandle + dragOffset + candleWidth / 2;
         }
 
         // Функция обновления перекрестия по координатам мыши/пальца
@@ -486,17 +493,27 @@
             const canvasY = (clientY - rect.top) * scaleY;
 
             const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
-            if (canvasX < paddingLeft || canvasX > canvas.width - paddingRight || canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
+            if (canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
                 crosshairActive = false;
                 drawChart();
                 return;
             }
 
             crosshairActive = true;
-            crosshairX = canvasX;
+
+            // Определяем ближайший индекс свечи по X
+            const index = findNearestCandleIndexByX(canvasX);
+            if (index >= 0 && index < chartData.length) {
+                crosshairCandleIndex = index;
+                crosshairX = getCandleCenterXByIndex(index);
+            } else {
+                crosshairCandleIndex = -1;
+                crosshairX = canvasX; // fallback, но обычно не должно случаться
+            }
+
             crosshairY = canvasY;
 
-            // Определяем видимые свечи так же, как в drawChart
+            // Определяем цену так же, как в drawChart
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
             const visibleCount = getVisibleCount();
@@ -518,7 +535,6 @@
 
             const chartHeight = canvas.height - paddingTop - paddingBottom;
             crosshairPrice = maxPrice - (canvasY - paddingTop) / chartHeight * (maxPrice - minPrice);
-            crosshairCandleIndex = findCandleByX(canvasX);
 
             drawChart();
         }
@@ -670,8 +686,8 @@
                 }
             }
 
-            // Шкала цен
-            const PRICE_SCALE_RIGHT = 20;
+            // Шкала цен — теперь отступ 15 пикселей (было 20)
+            const PRICE_SCALE_RIGHT = 15;
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
