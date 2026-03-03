@@ -469,7 +469,6 @@
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
 
-            // Переводим X в индекс свечи относительно startIndex и dragOffset
             const candleIndexFloat = (x - paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
             const index = Math.round(candleIndexFloat);
             if (index >= 0 && index < chartData.length) {
@@ -478,137 +477,50 @@
             return -1;
         }
 
-        // Функция для получения цены по Y
-        function priceFromY(y, minPrice, maxPrice) {
-            const { paddingTop, paddingBottom } = CHART_SETTINGS;
-            const height = canvas.height;
-            const chartHeight = height - paddingTop - paddingBottom;
-            const price = maxPrice - (y - paddingTop) / chartHeight * (maxPrice - minPrice);
-            return price;
-        }
+        // Функция обновления перекрестия по координатам мыши/пальца
+        function updateCrosshair(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const canvasX = (clientX - rect.left) * scaleX;
+            const canvasY = (clientY - rect.top) * scaleY;
 
-        // Функция отрисовки перекрестия
-        function drawCrosshair() {
-            if (!crosshairActive) return;
-            const width = canvas.width;
-            const height = canvas.height;
             const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
-            const { lineColor, lineWidth, dashPattern, infoBgColor, infoBorderColor, infoTextColor, infoFontSize, infoPadding } = CROSSHAIR_SETTINGS;
-
-            ctx.save();
-
-            // Вертикальная пунктирная линия
-            ctx.strokeStyle = lineColor;
-            ctx.lineWidth = lineWidth;
-            ctx.setLineDash(dashPattern);
-            ctx.beginPath();
-            ctx.moveTo(crosshairX, paddingTop);
-            ctx.lineTo(crosshairX, height - paddingBottom);
-            ctx.stroke();
-
-            // Горизонтальная пунктирная линия
-            ctx.beginPath();
-            ctx.moveTo(paddingLeft, crosshairY);
-            ctx.lineTo(width - paddingRight, crosshairY);
-            ctx.stroke();
-
-            ctx.setLineDash([]); // сброс
-
-            // Правый серый прямоугольник с ценой и процентом
-            const lastPrice = chartData.length ? chartData[chartData.length - 1].close : 0;
-            const percentChange = ((crosshairPrice - lastPrice) / lastPrice * 100).toFixed(2);
-            const percentSign = percentChange >= 0 ? '+' : '';
-            const percentText = `${percentSign}${percentChange}%`;
-            const priceText = crosshairPrice.toFixed(4);
-
-            ctx.font = `${CROSSHAIR_SETTINGS.rightBoxFontSize}px 'Roboto Mono', monospace`;
-            const priceWidth = ctx.measureText(priceText).width;
-            const percentWidth = ctx.measureText(percentText).width;
-            const boxWidth = Math.max(priceWidth, percentWidth) + 2 * CROSSHAIR_SETTINGS.rightBoxPadding;
-            const boxHeight = CROSSHAIR_SETTINGS.rightBoxFontSize * 2 + 3 * CROSSHAIR_SETTINGS.rightBoxPadding;
-            const boxX = width - boxWidth;
-            const boxY = crosshairY - boxHeight / 2;
-
-            // Рисуем прямоугольник
-            ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxBgColor;
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = '#000';
-            ctx.beginPath();
-            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 4);
-            ctx.fill();
-
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1;
-            ctx.shadowBlur = 0;
-            ctx.stroke();
-
-            ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxTextColor;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(priceText, boxX + boxWidth / 2, boxY + CROSSHAIR_SETTINGS.rightBoxPadding + CROSSHAIR_SETTINGS.rightBoxFontSize / 2);
-            ctx.fillStyle = percentChange >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
-            ctx.fillText(percentText, boxX + boxWidth / 2, boxY + CROSSHAIR_SETTINGS.rightBoxPadding * 2 + CROSSHAIR_SETTINGS.rightBoxFontSize * 1.5);
-
-            // Если есть свеча, рисуем информационный блок
-            if (crosshairCandleIndex >= 0 && crosshairCandleIndex < chartData.length) {
-                const candle = chartData[crosshairCandleIndex];
-                const time = new Date(candle.time);
-                const timeStr = `${time.getUTCFullYear()}/${(time.getUTCMonth()+1).toString().padStart(2,'0')}/${time.getUTCDate().toString().padStart(2,'0')} ${time.getUTCHours().toString().padStart(2,'0')}:${time.getUTCMinutes().toString().padStart(2,'0')}`;
-                const open = candle.open.toFixed(4);
-                const high = candle.high.toFixed(4);
-                const low = candle.low.toFixed(4);
-                const close = candle.close.toFixed(4);
-                const change = (candle.close - candle.open).toFixed(4);
-                const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
-                const range = (candle.high - candle.low).toFixed(4);
-                const rangePercent = ((candle.high - candle.low) / candle.open * 100).toFixed(2);
-
-                const lines = [
-                    `Time      ${timeStr}`,
-                    `Open      ${open}`,
-                    `High      ${high}`,
-                    `Low       ${low}`,
-                    `Close     ${close}`,
-                    `Change    ${change} (${changePercent}%)`,
-                    `Range     ${range} (${rangePercent}%)`
-                ];
-
-                ctx.font = `${infoFontSize}px 'Roboto Mono', monospace`;
-                const lineHeight = infoFontSize + 2;
-                const maxWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
-                const blockWidth = maxWidth + 2 * infoPadding;
-                const blockHeight = lines.length * lineHeight + 2 * infoPadding;
-                let blockX = crosshairX + 15;
-                let blockY = crosshairY - blockHeight - 10;
-
-                // Корректировка, чтобы не вылезать за края
-                if (blockX + blockWidth > width - paddingRight) blockX = crosshairX - blockWidth - 15;
-                if (blockY < paddingTop) blockY = crosshairY + 15;
-
-                // Фон блока
-                ctx.fillStyle = infoBgColor;
-                ctx.shadowBlur = 8;
-                ctx.beginPath();
-                ctx.roundRect(blockX, blockY, blockWidth, blockHeight, 6);
-                ctx.fill();
-                ctx.strokeStyle = infoBorderColor;
-                ctx.lineWidth = 1;
-                ctx.shadowBlur = 0;
-                ctx.stroke();
-
-                // Текст
-                ctx.fillStyle = infoTextColor;
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'top';
-                ctx.shadowBlur = 4;
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    const y = blockY + infoPadding + i * lineHeight;
-                    ctx.fillText(line, blockX + infoPadding, y);
-                }
+            if (canvasX < paddingLeft || canvasX > canvas.width - paddingRight || canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
+                crosshairActive = false;
+                drawChart();
+                return;
             }
 
-            ctx.restore();
+            crosshairActive = true;
+            crosshairX = canvasX;
+            crosshairY = canvasY;
+
+            // Определяем видимые свечи так же, как в drawChart
+            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+            const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
+            const visibleCount = getVisibleCount();
+            const extraCandles = Math.ceil(Math.abs(dragOffset) / totalWidthPerCandle) + 5;
+            const drawStart = Math.max(0, startIndex - extraCandles);
+            const drawEnd = Math.min(chartData.length, startIndex + visibleCount + extraCandles);
+            const visibleData = chartData.slice(drawStart, drawEnd);
+            if (visibleData.length === 0) return;
+
+            let minPrice = Math.min(...visibleData.map(d => d.low));
+            let maxPrice = Math.max(...visibleData.map(d => d.high));
+            const priceRange = maxPrice - minPrice;
+            minPrice -= priceRange * 0.05;
+            maxPrice += priceRange * 0.05;
+            if (minPrice === maxPrice) {
+                minPrice -= 0.01;
+                maxPrice += 0.01;
+            }
+
+            const chartHeight = canvas.height - paddingTop - paddingBottom;
+            crosshairPrice = maxPrice - (canvasY - paddingTop) / chartHeight * (maxPrice - minPrice);
+            crosshairCandleIndex = findCandleByX(canvasX);
+
+            drawChart();
         }
 
         function drawChart() {
@@ -894,6 +806,130 @@
             ctx.restore();
         }
 
+        // Функция отрисовки перекрестия
+        function drawCrosshair() {
+            if (!crosshairActive) return;
+            const width = canvas.width;
+            const height = canvas.height;
+            const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
+            const { lineColor, lineWidth, dashPattern, infoBgColor, infoBorderColor, infoTextColor, infoFontSize, infoPadding } = CROSSHAIR_SETTINGS;
+
+            ctx.save();
+
+            // Вертикальная пунктирная линия
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = lineWidth;
+            ctx.setLineDash(dashPattern);
+            ctx.beginPath();
+            ctx.moveTo(crosshairX, paddingTop);
+            ctx.lineTo(crosshairX, height - paddingBottom);
+            ctx.stroke();
+
+            // Горизонтальная пунктирная линия
+            ctx.beginPath();
+            ctx.moveTo(paddingLeft, crosshairY);
+            ctx.lineTo(width - paddingRight, crosshairY);
+            ctx.stroke();
+
+            ctx.setLineDash([]); // сброс
+
+            // Правый серый прямоугольник с ценой и процентом
+            const lastPrice = chartData.length ? chartData[chartData.length - 1].close : 0;
+            const percentChange = ((crosshairPrice - lastPrice) / lastPrice * 100).toFixed(2);
+            const percentSign = percentChange >= 0 ? '+' : '';
+            const percentText = `${percentSign}${percentChange}%`;
+            const priceText = crosshairPrice.toFixed(4);
+
+            ctx.font = `${CROSSHAIR_SETTINGS.rightBoxFontSize}px 'Roboto Mono', monospace`;
+            const priceWidth = ctx.measureText(priceText).width;
+            const percentWidth = ctx.measureText(percentText).width;
+            const boxWidth = Math.max(priceWidth, percentWidth) + 2 * CROSSHAIR_SETTINGS.rightBoxPadding;
+            const boxHeight = CROSSHAIR_SETTINGS.rightBoxFontSize * 2 + 3 * CROSSHAIR_SETTINGS.rightBoxPadding;
+            const boxX = width - boxWidth;
+            const boxY = crosshairY - boxHeight / 2;
+
+            // Рисуем прямоугольник
+            ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxBgColor;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = '#000';
+            ctx.beginPath();
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 4);
+            ctx.fill();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.shadowBlur = 0;
+            ctx.stroke();
+
+            ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxTextColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(priceText, boxX + boxWidth / 2, boxY + CROSSHAIR_SETTINGS.rightBoxPadding + CROSSHAIR_SETTINGS.rightBoxFontSize / 2);
+            ctx.fillStyle = percentChange >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
+            ctx.fillText(percentText, boxX + boxWidth / 2, boxY + CROSSHAIR_SETTINGS.rightBoxPadding * 2 + CROSSHAIR_SETTINGS.rightBoxFontSize * 1.5);
+
+            // Если есть свеча, рисуем информационный блок
+            if (crosshairCandleIndex >= 0 && crosshairCandleIndex < chartData.length) {
+                const candle = chartData[crosshairCandleIndex];
+                const time = new Date(candle.time);
+                const timeStr = `${time.getUTCFullYear()}/${(time.getUTCMonth()+1).toString().padStart(2,'0')}/${time.getUTCDate().toString().padStart(2,'0')} ${time.getUTCHours().toString().padStart(2,'0')}:${time.getUTCMinutes().toString().padStart(2,'0')}`;
+                const open = candle.open.toFixed(4);
+                const high = candle.high.toFixed(4);
+                const low = candle.low.toFixed(4);
+                const close = candle.close.toFixed(4);
+                const change = (candle.close - candle.open).toFixed(4);
+                const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
+                const range = (candle.high - candle.low).toFixed(4);
+                const rangePercent = ((candle.high - candle.low) / candle.open * 100).toFixed(2);
+
+                const lines = [
+                    `Time      ${timeStr}`,
+                    `Open      ${open}`,
+                    `High      ${high}`,
+                    `Low       ${low}`,
+                    `Close     ${close}`,
+                    `Change    ${change} (${changePercent}%)`,
+                    `Range     ${range} (${rangePercent}%)`
+                ];
+
+                ctx.font = `${infoFontSize}px 'Roboto Mono', monospace`;
+                const lineHeight = infoFontSize + 2;
+                const maxWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
+                const blockWidth = maxWidth + 2 * infoPadding;
+                const blockHeight = lines.length * lineHeight + 2 * infoPadding;
+                let blockX = crosshairX + 15;
+                let blockY = crosshairY - blockHeight - 10;
+
+                // Корректировка, чтобы не вылезать за края
+                if (blockX + blockWidth > width - paddingRight) blockX = crosshairX - blockWidth - 15;
+                if (blockY < paddingTop) blockY = crosshairY + 15;
+
+                // Фон блока
+                ctx.fillStyle = infoBgColor;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.roundRect(blockX, blockY, blockWidth, blockHeight, 6);
+                ctx.fill();
+                ctx.strokeStyle = infoBorderColor;
+                ctx.lineWidth = 1;
+                ctx.shadowBlur = 0;
+                ctx.stroke();
+
+                // Текст
+                ctx.fillStyle = infoTextColor;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.shadowBlur = 4;
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const y = blockY + infoPadding + i * lineHeight;
+                    ctx.fillText(line, blockX + infoPadding, y);
+                }
+            }
+
+            ctx.restore();
+        }
+
         async function loadData(interval) {
             loading.style.display = 'block';
             errorDiv.style.display = 'none';
@@ -1102,53 +1138,10 @@
             }
         }
 
-        // Функция обновления перекрестия по координатам мыши/пальца
-        function updateCrosshair(clientX, clientY) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const canvasX = (clientX - rect.left) * scaleX;
-            const canvasY = (clientY - rect.top) * scaleY;
-
-            // Проверяем, что координаты в пределах графика (по горизонтали)
-            const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
-            if (canvasX < paddingLeft || canvasX > canvas.width - paddingRight || canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
-                // Выход за пределы графика — отключаем перекрестие
-                crosshairActive = false;
-                drawChart();
-                return;
-            }
-
-            crosshairActive = true;
-            crosshairX = canvasX;
-            crosshairY = canvasY;
-
-            // Определяем цену
-            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
-            const visibleCount = getVisibleCount();
-            const maxStart = getMaxStart();
-            const drawStart = Math.max(0, startIndex - Math.ceil(Math.abs(dragOffset) / totalWidthPerCandle) - 5);
-            const drawEnd = Math.min(chartData.length, startIndex + visibleCount + 5);
-            const visibleData = chartData.slice(drawStart, drawEnd);
-
-            if (visibleData.length === 0) return;
-
-            const minPriceVisible = Math.min(...visibleData.map(d => d.low)) * 0.95;
-            const maxPriceVisible = Math.max(...visibleData.map(d => d.high)) * 1.05;
-            crosshairPrice = priceFromY(canvasY, minPriceVisible, maxPriceVisible);
-
-            // Определяем индекс свечи
-            crosshairCandleIndex = findCandleByX(canvasX);
-
-            drawChart();
-        }
-
         // Обработчики мыши
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
             if (!e.defaultPrevented) {
-                // Активируем перекрестие
                 updateCrosshair(e.clientX, e.clientY);
             }
         });
@@ -1187,7 +1180,6 @@
             } else if (e.touches.length === 1) {
                 handleCanvasClick(e.touches[0]);
                 if (!e.defaultPrevented) {
-                    // Активируем перекрестие
                     updateCrosshair(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }
