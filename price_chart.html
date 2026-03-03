@@ -278,14 +278,20 @@
         let centerCandleIndex = null;
 
         // Переменные для перекрестия
-        let crosshairActive = false;
-        let crosshairX = 0;          // X координата вертикальной линии (центр свечи)
+        let crosshairActive = true; // теперь активно всегда
+        let crosshairX = 0;
         let crosshairY = 0;
         let crosshairCandleIndex = -1;
         let crosshairPrice = 0;
 
         // Храним координаты кнопки перехода к последней свече для обработки кликов
         let firstButtonRect = null;
+
+        // Чтение сохранённого таймфрейма из localStorage
+        const savedInterval = localStorage.getItem('selectedInterval');
+        if (savedInterval && ['5m','15m','1h','4h','1d'].includes(savedInterval)) {
+            currentInterval = savedInterval;
+        }
 
         function resizeCanvas() {
             canvas.width = canvas.clientWidth;
@@ -462,7 +468,7 @@
             return timestamp - 3600000;
         }
 
-        // Функция для поиска ближайшего индекса свечи по координате X (возвращает целое число)
+        // Функция для поиска ближайшей свечи по координате X (возвращает индекс)
         function findNearestCandleIndexByX(x) {
             if (!chartData.length) return -1;
             const { paddingLeft, gapBetweenCandles } = CHART_SETTINGS;
@@ -470,17 +476,19 @@
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
 
             const candleIndexFloat = (x - paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
-            let index = Math.round(candleIndexFloat);
-            if (index < 0) index = 0;
-            if (index >= chartData.length) index = chartData.length - 1;
-            return index;
+            const index = Math.round(candleIndexFloat);
+            if (index >= 0 && index < chartData.length) {
+                return index;
+            }
+            // Если вышли за пределы, возвращаем -1 (будем использовать raw X)
+            return -1;
         }
 
-        // Функция для получения X координаты центра свечи по её индексу
-        function getCandleCenterXByIndex(index) {
-            const { paddingLeft, gapBetweenCandles } = CHART_SETTINGS;
+        // Функция для получения координаты X центра свечи по индексу
+        function getCandleCenterX(index) {
+            const { paddingLeft } = CHART_SETTINGS;
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
-            const totalWidthPerCandle = candleWidth + gapBetweenCandles;
+            const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
             return paddingLeft + (index - startIndex) * totalWidthPerCandle + dragOffset + candleWidth / 2;
         }
 
@@ -493,27 +501,12 @@
             const canvasY = (clientY - rect.top) * scaleY;
 
             const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
-            if (canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
-                crosshairActive = false;
-                drawChart();
+            if (canvasX < paddingLeft || canvasX > canvas.width - paddingRight || canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
+                // За пределами графика — не обновляем (но перекрестие остаётся)
                 return;
             }
 
-            crosshairActive = true;
-
-            // Определяем ближайший индекс свечи по X
-            const index = findNearestCandleIndexByX(canvasX);
-            if (index >= 0 && index < chartData.length) {
-                crosshairCandleIndex = index;
-                crosshairX = getCandleCenterXByIndex(index);
-            } else {
-                crosshairCandleIndex = -1;
-                crosshairX = canvasX; // fallback, но обычно не должно случаться
-            }
-
-            crosshairY = canvasY;
-
-            // Определяем цену так же, как в drawChart
+            // Определяем видимые свечи так же, как в drawChart
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
             const visibleCount = getVisibleCount();
@@ -535,6 +528,17 @@
 
             const chartHeight = canvas.height - paddingTop - paddingBottom;
             crosshairPrice = maxPrice - (canvasY - paddingTop) / chartHeight * (maxPrice - minPrice);
+
+            // Определяем ближайший индекс свечи
+            const nearestIndex = findNearestCandleIndexByX(canvasX);
+            if (nearestIndex !== -1) {
+                crosshairCandleIndex = nearestIndex;
+                crosshairX = getCandleCenterX(nearestIndex);
+            } else {
+                // Если вне диапазона свечей (например, правее последней), оставляем X как есть (без привязки к свече)
+                crosshairCandleIndex = -1;
+                crosshairX = canvasX;
+            }
 
             drawChart();
         }
@@ -686,8 +690,8 @@
                 }
             }
 
-            // Шкала цен — теперь отступ 15 пикселей (было 20)
-            const PRICE_SCALE_RIGHT = 15;
+            // Шкала цен — отступ 10 пикселей (ещё на 5 правее)
+            const PRICE_SCALE_RIGHT = 10;
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
@@ -998,6 +1002,13 @@
                 }
                 updatePriceChange(tickerData.priceChangePercent);
 
+                // Сбрасываем перекрестие в центр (или оставляем как есть)
+                crosshairActive = true;
+                const rect = canvas.getBoundingClientRect();
+                crosshairX = (rect.left + rect.right) / 2;
+                crosshairY = (rect.top + rect.bottom) / 2;
+                updateCrosshair(rect.left + rect.width/2, rect.top + rect.height/2);
+
                 loading.style.display = 'none';
             } catch (err) {
                 loading.style.display = 'none';
@@ -1101,6 +1112,16 @@
 
         function handleIntervalChange(interval) {
             currentInterval = interval;
+            // Сохраняем в localStorage
+            localStorage.setItem('selectedInterval', interval);
+            // Обновляем активную кнопку
+            document.querySelectorAll('.tf-btn').forEach(btn => {
+                if (btn.dataset.interval === interval) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
             loadData(interval).then(() => {
                 startRefreshTimer(interval);
             });
@@ -1151,13 +1172,23 @@
                 setToLastCandle();
                 e.stopPropagation();
                 e.preventDefault();
+                return true; // клик обработан
             }
+            return false;
+        }
+
+        // Двойной клик/тап для скрытия перекрестия
+        function handleDoubleTap(e) {
+            e.preventDefault();
+            crosshairActive = false;
+            drawChart();
         }
 
         // Обработчики мыши
         canvas.addEventListener('mousedown', (e) => {
-            handleCanvasClick(e);
-            if (!e.defaultPrevented) {
+            const clickedButton = handleCanvasClick(e);
+            if (!clickedButton) {
+                // Обычный клик — обновляем перекрестие
                 updateCrosshair(e.clientX, e.clientY);
             }
         });
@@ -1168,14 +1199,11 @@
             }
         });
 
-        canvas.addEventListener('mouseup', () => {
-            crosshairActive = false;
-            drawChart();
-        });
+        // Двойной клик мышью
+        canvas.addEventListener('dblclick', handleDoubleTap);
 
         canvas.addEventListener('mouseleave', () => {
-            crosshairActive = false;
-            drawChart();
+            // Не убираем перекрестие, просто ничего не делаем
         });
 
         // Обработчики касаний
@@ -1194,8 +1222,8 @@
                 centerCandleIndex = Math.max(0, Math.min(chartData.length - 1, centerCandleIndex));
                 canvas.style.cursor = 'zoom-in';
             } else if (e.touches.length === 1) {
-                handleCanvasClick(e.touches[0]);
-                if (!e.defaultPrevented) {
+                const clickedButton = handleCanvasClick(e.touches[0]);
+                if (!clickedButton) {
                     updateCrosshair(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }
@@ -1239,18 +1267,32 @@
             }
         });
 
+        // Двойной тап
         canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
             if (pinchActive) {
                 pinchActive = false;
                 centerCandleIndex = null;
                 canvas.style.cursor = 'crosshair';
-            } else if (crosshairActive) {
-                crosshairActive = false;
-                drawChart();
+            } else if (e.touches.length === 0 && e.changedTouches.length === 1) {
+                // Если был один палец и отпущен — ничего не делаем (перекрестие остаётся)
             } else if (isDragging) {
                 endDrag();
             }
+        });
+
+        // Обработка двойного тапа
+        let lastTap = 0;
+        canvas.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                // Двойной тап
+                e.preventDefault();
+                crosshairActive = false;
+                drawChart();
+            }
+            lastTap = currentTime;
         });
 
         // Вспомогательные функции для зума
@@ -1303,18 +1345,21 @@
             }
         });
 
+        // Инициализация кнопок таймфрейма с учётом сохранённого
         document.querySelectorAll('.tf-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
                 handleIntervalChange(btn.dataset.interval);
             });
+            if (btn.dataset.interval === currentInterval) {
+                btn.classList.add('active');
+            }
         });
 
         goLastBtn.addEventListener('click', setToLastCandle);
         window.addEventListener('resize', () => drawChart());
 
-        handleIntervalChange('1h');
+        // Загружаем данные с сохранённым интервалом
+        handleIntervalChange(currentInterval);
     </script>
 </body>
 </html>
