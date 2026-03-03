@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON / USDT — свечной график с плавной анимацией свечи</title>
+    <title>TON / USDT — свечной график</title>
     <style>
         body {
             margin: 0;
@@ -23,9 +23,6 @@
             padding: 0 20px;
             height: 70px;
             background: #000;
-            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            z-index: 10;
         }
         .pair-info {
             display: flex;
@@ -64,7 +61,6 @@
             padding: 4px 12px;
             border-radius: 20px;
             background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
             align-self: flex-start;
             margin-top: 4px;
             font-family: 'Roboto Mono', monospace;
@@ -81,18 +77,7 @@
         #canvasContainer {
             flex: 1;
             position: relative;
-            /* Базовый фон, пятно будет динамически обновляться через JS */
-            background: 
-                linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-                radial-gradient(circle at 50% 20%, rgba(120, 255, 120, 0.3) 0%, transparent 12%),
-                radial-gradient(circle at 85% 25%, rgba(0, 255, 136, 0.3) 0%, transparent 15%),
-                radial-gradient(circle at 30% 70%, rgba(0, 255, 136, 0.25) 0%, transparent 12%),
-                radial-gradient(circle at 70% 80%, rgba(120, 255, 120, 0.25) 0%, transparent 15%),
-                radial-gradient(circle at 45% 45%, rgba(0, 255, 136, 0.2) 0%, transparent 10%);
-            backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-            -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: inset 0 0 30px rgba(0, 255, 136, 0.2);
+            background: #000;
         }
         #chartCanvas {
             width: 100%;
@@ -110,16 +95,11 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
-            background: rgba(0, 20, 10, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
-            z-index: 10;
+            background: #000;
         }
         .tf-btn {
             background: transparent;
-            border: 1px solid rgba(0, 255, 136, 0.5);
+            border: none;
             color: #00ff88;
             padding: 8px 18px;
             border-radius: 20px;
@@ -127,16 +107,13 @@
             cursor: pointer;
             transition: all 0.2s;
             text-shadow: 0 0 8px #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
         .tf-btn.active, .tf-btn:hover {
             background: rgba(0, 255, 136, 0.2);
-            border-color: #00ff88;
-            box-shadow: 0 0 15px #00ff88;
         }
         .go-last-btn {
             background: transparent;
-            border: 1px solid rgba(0, 255, 136, 0.5);
+            border: none;
             color: #00ff88;
             padding: 8px 18px;
             border-radius: 20px;
@@ -144,14 +121,11 @@
             cursor: pointer;
             transition: all 0.2s;
             text-shadow: 0 0 8px #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
             font-size: 18px;
             line-height: 1;
         }
         .go-last-btn:hover {
             background: rgba(0, 255, 136, 0.2);
-            border-color: #00ff88;
-            box-shadow: 0 0 15px #00ff88;
         }
         #loading, #error {
             position: absolute;
@@ -197,7 +171,7 @@
             upColor: '#00ff88',
             downColor: '#ff4d4d',
             wickColor: '#00ff88',
-            gridColor: 'rgba(0, 255, 136, 0.15)',
+            gridColor: '#888888',
             textColor: '#ffffff',
         };
 
@@ -208,7 +182,7 @@
             paddingBottom: 70,
             minZoom: 0.5,
             maxZoom: 3,
-            candleWidthBase: 8,
+            candleWidthBase: 16,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
             gridVerticalStep: 4,
@@ -237,7 +211,6 @@
             lineWidth: 1,
             segmentLength: 8,
             gapLength: 2,
-            segmentsCount: 5,
             boxPadding: 6,
             boxBgColor: 'rgba(20,20,30,0.8)',
             boxBorderColor: '#ffffff',
@@ -245,22 +218,23 @@
             fontSize: 12,
         };
 
-        // Единый интервал обновления 2 секунды для всех
+        // Настройки кнопки перехода к последней свече (серая, маленькая)
+        const FIRST_BUTTON_SETTINGS = {
+            width: 30,
+            height: 20,
+            bgColor: '#555555',
+            textColor: '#ffffff',
+            fontSize: 14,
+            text: '>|',
+            gapFromPriceBox: 4,
+        };
+
         const REFRESH_INTERVALS = {
             '5m': 2000,
             '15m': 2000,
             '1h': 2000,
             '4h': 2000,
             '1d': 2000
-        };
-
-        // Настройки для подвижного пятна
-        const SPOT_SETTINGS = {
-            targetUpdateInterval: 7 * 60 * 1000, // 7 минут
-            smoothingFactor: 1/6, // плавность: за 6 шагов
-            currentX: 50, // текущая позиция в процентах
-            targetX: 50,
-            animationFrame: null,
         };
 
         const canvas = document.getElementById('chartCanvas');
@@ -285,9 +259,13 @@
         let animLastCandle = null;
         let animFrame = null;
 
-        // Глобальные переменные для позиции последней свечи
-        let globalLastCandleX = 0;
-        let globalCanvasWidth = 0;
+        // Переменные для мультитач-зума
+        let pinchActive = false;
+        let initialPinchDistance = 0;
+        let initialZoom = 1;
+
+        // Храним координаты кнопки перехода к последней свече для обработки кликов
+        let firstButtonRect = null;
 
         function resizeCanvas() {
             canvas.width = canvas.clientWidth;
@@ -318,33 +296,69 @@
             priceDisplay.classList.add(isGreen ? 'positive' : 'negative');
         }
 
-        function drawLastCandleLine(x, y, price) {
-            const { lineWidth, segmentLength, gapLength, segmentsCount, boxPadding, boxBgColor, boxBorderColor, textColor, fontSize } = LAST_CANDLE_LINE_SETTINGS;
-            const totalLineLength = segmentsCount * (segmentLength + gapLength) - gapLength;
-            const startX = x + 2;
-            const endX = startX + totalLineLength;
+        // Функция отрисовки линии и прямоугольника последней цены
+        function drawLastCandleLine(x, y, price, isLastVisible, showButton) {
+            const { lineWidth, segmentLength, gapLength, boxPadding, boxBgColor, boxBorderColor, textColor, fontSize } = LAST_CANDLE_LINE_SETTINGS;
+            const width = canvas.width;
+            const height = canvas.height;
+            const { paddingBottom } = CHART_SETTINGS;
 
-            ctx.save();
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = lineWidth;
-
-            for (let i = 0; i < segmentsCount; i++) {
-                const segStartX = startX + i * (segmentLength + gapLength);
-                ctx.beginPath();
-                ctx.moveTo(segStartX, y);
-                ctx.lineTo(segStartX + segmentLength, y);
-                ctx.stroke();
-            }
-
+            // Прямоугольник с ценой у правого края (без отступа)
             const text = price.toFixed(4);
             ctx.font = `${fontSize}px 'Roboto Mono', monospace`;
             ctx.letterSpacing = '-0.5px';
             const textWidth = ctx.measureText(text).width;
-            const boxWidth = textWidth + 2 * boxPadding;
-            const boxHeight = fontSize + 2 * boxPadding;
-            const boxX = endX + 2;
-            const boxY = y - boxHeight / 2;
+            let boxWidth = textWidth + 2 * boxPadding;
+            let boxHeight = fontSize + 2 * boxPadding;
+            let boxX = width - boxWidth;                     // касается правого края
+            let boxY = y - boxHeight / 2;
 
+            // Корректируем, чтобы прямоугольник полностью помещался в канвас по вертикали
+            boxY = Math.max(0, Math.min(boxY, height - boxHeight));
+
+            // Корректируем по горизонтали: если прямоугольник вылезает за левый край, смещаем к левому краю и уменьшаем ширину, если нужно
+            if (boxX < 0) {
+                boxX = 0;
+                // Если даже после этого он вылезает за правый край (т.е. boxWidth > width), уменьшаем ширину
+                if (boxX + boxWidth > width) {
+                    boxWidth = width;
+                }
+            } else if (boxX + boxWidth > width) {
+                // Если вылезает за правый край (обычно не должно быть, но на всякий случай)
+                boxWidth = width - boxX;
+            }
+
+            // Рисуем пунктирную линию только если последняя свеча видна
+            if (isLastVisible) {
+                const startX = x; // центр свечи
+                const endX = boxX;
+                const distance = endX - startX;
+                if (distance > 0) {
+                    ctx.save();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = lineWidth;
+                    const totalSegment = segmentLength + gapLength;
+                    const numSegments = Math.floor(distance / totalSegment);
+                    const remainder = distance - numSegments * totalSegment;
+                    for (let i = 0; i < numSegments; i++) {
+                        const segStartX = startX + i * totalSegment;
+                        ctx.beginPath();
+                        ctx.moveTo(segStartX, y);
+                        ctx.lineTo(segStartX + segmentLength, y);
+                        ctx.stroke();
+                    }
+                    if (remainder > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(startX + numSegments * totalSegment, y);
+                        ctx.lineTo(startX + numSegments * totalSegment + Math.min(remainder, segmentLength), y);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+            }
+
+            // Рисуем прямоугольник с ценой
+            ctx.save();
             ctx.fillStyle = boxBgColor;
             ctx.shadowColor = '#000';
             ctx.shadowBlur = 10;
@@ -361,8 +375,49 @@
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.shadowBlur = 4;
-            ctx.fillText(text, boxX + boxPadding, boxY + boxHeight / 2);
+            // Текст тоже обрезаем, если ширина уменьшилась
+            let textX = boxX + boxPadding;
+            if (textX + textWidth > boxX + boxWidth) {
+                // Если текст не помещается, можно уменьшить масштаб, но для простоты просто обрежем
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(boxX, boxY, boxWidth, boxHeight);
+                ctx.clip();
+            }
+            ctx.fillText(text, textX, boxY + boxHeight / 2);
             ctx.restore();
+
+            // --- Рисуем серую кнопку перехода к последней свече слева от прямоугольника (только если нужно) ---
+            if (showButton) {
+                const btnW = FIRST_BUTTON_SETTINGS.width;
+                const btnH = FIRST_BUTTON_SETTINGS.height;
+                let btnX = boxX - btnW - FIRST_BUTTON_SETTINGS.gapFromPriceBox;
+                let btnY = boxY + (boxHeight - btnH) / 2; // выравниваем по вертикали
+
+                // Убедимся, что кнопка не вылезает за левый край
+                if (btnX < 0) btnX = 0;
+
+                ctx.save();
+                ctx.fillStyle = FIRST_BUTTON_SETTINGS.bgColor;
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = '#000';
+                ctx.beginPath();
+                ctx.roundRect(btnX, btnY, btnW, btnH, 4);
+                ctx.fill();
+
+                ctx.fillStyle = FIRST_BUTTON_SETTINGS.textColor;
+                ctx.font = `${FIRST_BUTTON_SETTINGS.fontSize}px 'Roboto Mono', monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowBlur = 0;
+                ctx.fillText(FIRST_BUTTON_SETTINGS.text, btnX + btnW / 2, btnY + btnH / 2);
+                ctx.restore();
+
+                // Сохраняем координаты кнопки
+                firstButtonRect = { x: btnX, y: btnY, w: btnW, h: btnH };
+            } else {
+                firstButtonRect = null; // кнопка не видна
+            }
         }
 
         CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
@@ -400,54 +455,8 @@
             }
         }
 
-        // Функция для сдвига времени дневных свечей на 23:00 UTC (02:00 МСК)
         function adjustDailyTime(timestamp) {
-            return timestamp - 3600000; // минус 1 час
-        }
-
-        // Функция обновления фона пятна
-        function updateSpotBackground() {
-            const container = canvasContainer;
-            const baseGrad = 'linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%)';
-            const spotGrad = `radial-gradient(circle at ${SPOT_SETTINGS.currentX}% 20%, rgba(120, 255, 120, 0.3) 0%, transparent 12%)`;
-            const otherSpots = `
-                radial-gradient(circle at 85% 25%, rgba(0, 255, 136, 0.3) 0%, transparent 15%),
-                radial-gradient(circle at 30% 70%, rgba(0, 255, 136, 0.25) 0%, transparent 12%),
-                radial-gradient(circle at 70% 80%, rgba(120, 255, 120, 0.25) 0%, transparent 15%),
-                radial-gradient(circle at 45% 45%, rgba(0, 255, 136, 0.2) 0%, transparent 10%)`;
-
-            container.style.background = `${baseGrad}, ${spotGrad}, ${otherSpots}`;
-            // остальные стили уже есть в CSS
-        }
-
-        // Функция обновления цели пятна (позиции последней свечи)
-        function updateSpotTarget(instant = false) {
-            if (!globalCanvasWidth || globalLastCandleX === 0) return;
-            const targetX = ((globalLastCandleX - CHART_SETTINGS.paddingLeft) / (globalCanvasWidth - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight)) * 100;
-            SPOT_SETTINGS.targetX = Math.max(0, Math.min(100, targetX));
-            if (instant) {
-                SPOT_SETTINGS.currentX = SPOT_SETTINGS.targetX;
-                updateSpotBackground();
-            } else {
-                if (!SPOT_SETTINGS.animationFrame) {
-                    SPOT_SETTINGS.animationFrame = requestAnimationFrame(animateSpot);
-                }
-            }
-        }
-
-        // Анимация пятна
-        function animateSpot() {
-            const dx = SPOT_SETTINGS.targetX - SPOT_SETTINGS.currentX;
-            if (Math.abs(dx) < 0.01) {
-                SPOT_SETTINGS.currentX = SPOT_SETTINGS.targetX;
-                SPOT_SETTINGS.animationFrame = null;
-            } else {
-                SPOT_SETTINGS.currentX += dx * SPOT_SETTINGS.smoothingFactor;
-            }
-            updateSpotBackground();
-            if (SPOT_SETTINGS.animationFrame) {
-                SPOT_SETTINGS.animationFrame = requestAnimationFrame(animateSpot);
-            }
+            return timestamp - 3600000;
         }
 
         function drawChart() {
@@ -523,7 +532,7 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // --- Вертикальные линии (сетка) с равномерным шагом ---
+            // --- Сетка (вертикальная) ---
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
             const stepPx = totalWidthPerCandle * gridVerticalStep;
@@ -597,19 +606,40 @@
                 }
             }
 
-            // --- Линия последней свечи ---
+            // --- Линия последней свечи и кнопка перехода к последней свече ---
             if (LAST_CANDLE_LINE_SETTINGS.enabled && chartData.length > 0) {
-                const lastOriginal = visibleData[visibleData.length - 1];
                 const lastIndex = chartData.length - 1;
-                if (lastIndex >= drawStart && lastIndex < drawEnd) {
-                    const localIdx = lastIndex - drawStart;
-                    const lastCandleX = baseX + localIdx * totalWidthPerCandle + candleWidth / 2;
-                    const lastCandleY = height - paddingBottom - ((lastOriginal.close - minPriceVisible) / (maxPriceVisible - minPriceVisible)) * (height - paddingTop - paddingBottom);
-                    drawLastCandleLine(lastCandleX, lastCandleY, lastOriginal.close);
 
-                    // Сохраняем позицию последней свечи для пятна
-                    globalLastCandleX = lastCandleX;
-                    globalCanvasWidth = width;
+                // Берём цену последней свечи из visibleData, если она там есть (с учётом интерполяции), иначе из chartData
+                let lastPrice;
+                if (lastIndex >= drawStart && lastIndex < drawEnd) {
+                    // последняя свеча в видимом диапазоне — используем интерполированное значение
+                    lastPrice = visibleData[lastIndex - drawStart].close;
+                } else {
+                    // последняя свеча не видна — используем реальное значение из chartData
+                    lastPrice = chartData[lastIndex].close;
+                }
+
+                // Вычисляем позицию последней свечи (даже если она не в видимом диапазоне)
+                const lastCandleCenterX = paddingLeft + (lastIndex - startIndex) * totalWidthPerCandle + dragOffset + candleWidth / 2;
+                const lastCandleLeft = lastCandleCenterX - candleWidth / 2;
+                const lastCandleRight = lastCandleCenterX + candleWidth / 2;
+
+                // Видима ли последняя свеча? (хотя бы частично)
+                const isLastVisible = (lastCandleRight > paddingLeft && lastCandleLeft < width - paddingRight);
+
+                // Кнопка показывается только если последняя свеча полностью скрыта за правым краем
+                const showButton = (lastCandleLeft > width - paddingRight);
+
+                // Вычисляем Y координату для прямоугольника (используем цену и текущий масштаб)
+                const y = height - paddingBottom - ((lastPrice - minPriceVisible) / (maxPriceVisible - minPriceVisible)) * (height - paddingTop - paddingBottom);
+
+                if (isLastVisible) {
+                    // Если свеча видна, передаём её центр X для линии
+                    drawLastCandleLine(lastCandleCenterX, y, lastPrice, true, showButton);
+                } else {
+                    // Если не видна, линию не рисуем (передаём x=0)
+                    drawLastCandleLine(0, y, lastPrice, false, showButton);
                 }
             }
 
@@ -625,7 +655,6 @@
             const step = config.step;
             const pattern = config.pattern;
 
-            // Наборы для уникальности месяцев и годов
             let seenMonths = new Set();
             let seenYears = new Set();
 
@@ -634,7 +663,6 @@
                 const distFromLast = chartData.length - 1 - globalIndex;
                 if (distFromLast % step === 0) {
                     let timestamp = visibleData[i].time;
-                    // Для дневного графика корректируем время для меток
                     if (currentInterval === '1d') {
                         timestamp = adjustDailyTime(timestamp);
                     }
@@ -673,7 +701,7 @@
             }
             ctx.restore();
 
-            // --- Шкала цен (белая) ---
+            // --- Шкала цен (белая) с отступом paddingRight ---
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
@@ -682,7 +710,7 @@
             for (let i = 0; i <= 5; i++) {
                 const price = minPriceVisible + (maxPriceVisible - minPriceVisible) * (i / 5);
                 const y = paddingTop + (height - paddingTop - paddingBottom) * (1 - i / 5);
-                ctx.fillText(price.toFixed(4), width - 10, y);
+                ctx.fillText(price.toFixed(4), width - paddingRight, y);
             }
         }
 
@@ -753,7 +781,6 @@
                     close: parseFloat(d[4])
                 }));
 
-                // Если дневной интервал, сдвигаем время на 1 час назад (23:00 UTC)
                 if (interval === '1d') {
                     rawData = rawData.map(c => ({
                         ...c,
@@ -763,7 +790,8 @@
 
                 chartData = rawData;
 
-                zoomLevel = 1;
+                // Устанавливаем начальный зум более отдалённым (0.7)
+                zoomLevel = 0.7;
                 setToLastCandle();
 
                 if (chartData.length > 0) {
@@ -864,9 +892,6 @@
                 }
 
                 if (!animLastCandle) drawChart();
-
-                // Обновляем цель пятна
-                updateSpotTarget(false);
             } catch (err) {
                 console.warn('Ошибка обновления данных:', err);
             }
@@ -881,10 +906,6 @@
             currentInterval = interval;
             loadData(interval).then(() => {
                 startRefreshTimer(interval);
-                // Устанавливаем пятно мгновенно на последнюю свечу после загрузки
-                setTimeout(() => {
-                    updateSpotTarget(true);
-                }, 100); // небольшая задержка, чтобы canvas успел отрисоваться
             });
         }
 
@@ -917,31 +938,88 @@
             if (!isDragging) return;
             isDragging = false;
             canvas.style.cursor = 'grab';
-
-            const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
-            const shiftCandles = Math.round(dragOffset / totalWidthPerCandle);
-
-            if (shiftCandles !== 0) {
-                startIndex -= shiftCandles;
-                const maxStart = getMaxStart();
-                if (startIndex > maxStart) startIndex = maxStart;
-                if (startIndex < 0) startIndex = 0;
-            }
-
-            dragOffset -= shiftCandles * totalWidthPerCandle;
-            drawChart();
-
-            // Обновляем цель пятна после перетаскивания
-            updateSpotTarget(false);
+            // Не корректируем startIndex — оставляем точное пиксельное смещение для плавности
         }
 
-        canvas.addEventListener('mousedown', (e) => startDrag(e.clientX));
+        // Обработчик клика на канвасе для кнопки перехода к последней свече
+        function handleCanvasClick(e) {
+            if (!firstButtonRect) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+
+            if (mouseX >= firstButtonRect.x && mouseX <= firstButtonRect.x + firstButtonRect.w &&
+                mouseY >= firstButtonRect.y && mouseY <= firstButtonRect.y + firstButtonRect.h) {
+                setToLastCandle();
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        }
+
+        // Функция для получения расстояния между двумя пальцами
+        function getPinchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Новые обработчики мультитач
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // предотвращаем скролл страницы
+            if (e.touches.length === 2) {
+                pinchActive = true;
+                initialPinchDistance = getPinchDistance(e.touches);
+                initialZoom = zoomLevel;
+                canvas.style.cursor = 'zoom-in';
+            } else if (e.touches.length === 1) {
+                handleCanvasClick(e.touches[0]);
+                if (!e.defaultPrevented) {
+                    startDrag(e.touches[0].clientX);
+                }
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (pinchActive && e.touches.length === 2) {
+                const newDistance = getPinchDistance(e.touches);
+                const scale = newDistance / initialPinchDistance;
+                let newZoom = initialZoom * scale;
+                if (newZoom < CHART_SETTINGS.minZoom) newZoom = CHART_SETTINGS.minZoom;
+                if (newZoom > CHART_SETTINGS.maxZoom) newZoom = CHART_SETTINGS.maxZoom;
+                if (newZoom !== zoomLevel) {
+                    zoomLevel = newZoom;
+                    drawChart();
+                }
+            } else if (!pinchActive && isDragging && e.touches.length === 1) {
+                onDrag(e.touches[0].clientX);
+            }
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (pinchActive) {
+                pinchActive = false;
+                canvas.style.cursor = 'grab';
+            } else if (isDragging) {
+                endDrag();
+            }
+        });
+
+        // Старые обработчики мыши остаются
+        canvas.addEventListener('mousedown', (e) => {
+            handleCanvasClick(e);
+            if (!e.defaultPrevented) {
+                startDrag(e.clientX);
+            }
+        });
+
         window.addEventListener('mousemove', (e) => onDrag(e.clientX));
         window.addEventListener('mouseup', endDrag);
-        canvas.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX));
-        window.addEventListener('touchmove', (e) => onDrag(e.touches[0].clientX));
-        window.addEventListener('touchend', endDrag);
 
+        // Колёсико мыши
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -951,7 +1029,6 @@
             if (newZoom !== zoomLevel) {
                 zoomLevel = newZoom;
                 drawChart();
-                updateSpotTarget(false);
             }
         });
 
@@ -964,10 +1041,7 @@
         });
 
         goLastBtn.addEventListener('click', setToLastCandle);
-        window.addEventListener('resize', () => {
-            drawChart();
-            updateSpotTarget(false);
-        });
+        window.addEventListener('resize', () => drawChart());
 
         handleIntervalChange('1h');
     </script>
