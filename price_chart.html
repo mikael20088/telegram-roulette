@@ -185,8 +185,8 @@
             candleWidthBase: 16,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
-            gridVerticalStep: 4,           // восстановлен шаг 4 (квадратики)
-            gridHorizontalCount: 8,         // 8 горизонтальных линий
+            gridVerticalStep: 4,           // шаг вертикальных линий (через каждые 4 свечи)
+            gridHorizontalCount: 15,        // количество горизонтальных линий (как в начале)
         };
 
         const LABEL_CONFIG = {
@@ -526,7 +526,7 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // --- Вертикальные линии сетки (шаг 4) ---
+            // --- Вертикальные линии сетки (шаг 4 свечи) ---
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
             const stepPx = totalWidthPerCandle * gridVerticalStep;
@@ -538,7 +538,7 @@
                 ctx.stroke();
             }
 
-            // --- Горизонтальные линии сетки (8 линий) ---
+            // --- Горизонтальные линии сетки (15 линий) ---
             for (let i = 0; i <= gridHorizontalCount; i++) {
                 const y = paddingTop + (height - paddingTop - paddingBottom) * (i / gridHorizontalCount);
                 ctx.beginPath();
@@ -600,7 +600,8 @@
                 }
             }
 
-            // --- Шкала цен (белая) — рисуем ДО прямоугольника последней свечи, чтобы он мог перекрыть её ---
+            // --- Шкала цен (белая) — смещена правее (paddingRight = 55) ---
+            const PRICE_SCALE_RIGHT = 55; // увеличили отступ, чтобы цифры были правее
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
@@ -609,7 +610,7 @@
             for (let i = 0; i <= 5; i++) {
                 const price = minPriceVisible + (maxPriceVisible - minPriceVisible) * (i / 5);
                 const y = paddingTop + (height - paddingTop - paddingBottom) * (1 - i / 5);
-                ctx.fillText(price.toFixed(4), width - paddingRight, y);
+                ctx.fillText(price.toFixed(4), width - PRICE_SCALE_RIGHT, y);
             }
 
             // --- Линия последней свечи и кнопка перехода к последней свече ---
