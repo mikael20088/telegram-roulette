@@ -185,8 +185,8 @@
             candleWidthBase: 16,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
-            gridVerticalStep: 2,          // увеличен шаг сетки (было 4)
-            gridHorizontalCount: 8,        // больше горизонтальных линий (было 15)
+            gridVerticalStep: 4,           // восстановлен шаг 4 (квадратики)
+            gridHorizontalCount: 8,         // 8 горизонтальных линий
         };
 
         const LABEL_CONFIG = {
@@ -526,7 +526,7 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // --- Вертикальные линии сетки (более частые) ---
+            // --- Вертикальные линии сетки (шаг 4) ---
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
             const stepPx = totalWidthPerCandle * gridVerticalStep;
