@@ -185,8 +185,8 @@
             candleWidthBase: 16,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
-            gridVerticalStep: 4,           // шаг вертикальных линий (через каждые 4 свечи)
-            gridHorizontalCount: 15,        // количество горизонтальных линий (как в начале)
+            gridVerticalStep: 4,
+            gridHorizontalCount: 15,
         };
 
         const LABEL_CONFIG = {
@@ -263,7 +263,7 @@
         let pinchActive = false;
         let initialPinchDistance = 0;
         let initialZoom = 1;
-        let centerCandleIndex = null; // для сохранения центральной свечи при зуме
+        let centerCandleIndex = null;
 
         // Храним координаты кнопки перехода к последней свече для обработки кликов
         let firstButtonRect = null;
@@ -304,31 +304,26 @@
             const height = canvas.height;
             const { paddingBottom } = CHART_SETTINGS;
 
-            // Прямоугольник с ценой у правого края (без отступа)
             const text = price.toFixed(4);
             ctx.font = `${fontSize}px 'Roboto Mono', monospace`;
             ctx.letterSpacing = '-0.5px';
             const textWidth = ctx.measureText(text).width;
             let boxWidth = textWidth + 2 * boxPadding;
             let boxHeight = fontSize + 2 * boxPadding;
-            let boxX = width - boxWidth;                     // касается правого края
+            let boxX = width - boxWidth;
             let boxY = y - boxHeight / 2;
 
-            // Корректируем, чтобы прямоугольник полностью помещался в канвас по вертикали
             boxY = Math.max(0, Math.min(boxY, height - boxHeight));
 
-            // Корректируем по горизонтали: если прямоугольник вылезает за левый край, смещаем к левому краю
             if (boxX < 0) {
                 boxX = 0;
-                // Если даже после этого он вылезает за правый край (т.е. boxWidth > width), уменьшаем ширину
                 if (boxX + boxWidth > width) {
                     boxWidth = width;
                 }
             }
 
-            // Рисуем пунктирную линию только если последняя свеча видна
             if (isLastVisible) {
-                const startX = x; // центр свечи
+                const startX = x;
                 const endX = boxX;
                 const distance = endX - startX;
                 if (distance > 0) {
@@ -355,7 +350,6 @@
                 }
             }
 
-            // Рисуем прямоугольник с ценой
             ctx.save();
             ctx.fillStyle = boxBgColor;
             ctx.shadowColor = '#000';
@@ -373,7 +367,6 @@
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.shadowBlur = 4;
-            // Текст обрезаем по ширине прямоугольника
             ctx.save();
             ctx.beginPath();
             ctx.rect(boxX, boxY, boxWidth, boxHeight);
@@ -381,14 +374,12 @@
             ctx.fillText(text, boxX + boxPadding, boxY + boxHeight / 2);
             ctx.restore();
 
-            // --- Рисуем серую кнопку перехода к последней свече слева от прямоугольника (только если нужно) ---
             if (showButton) {
                 const btnW = FIRST_BUTTON_SETTINGS.width;
                 const btnH = FIRST_BUTTON_SETTINGS.height;
                 let btnX = boxX - btnW - FIRST_BUTTON_SETTINGS.gapFromPriceBox;
-                let btnY = boxY + (boxHeight - btnH) / 2; // выравниваем по вертикали
+                let btnY = boxY + (boxHeight - btnH) / 2;
 
-                // Убедимся, что кнопка не вылезает за левый край
                 if (btnX < 0) btnX = 0;
 
                 ctx.save();
@@ -407,10 +398,9 @@
                 ctx.fillText(FIRST_BUTTON_SETTINGS.text, btnX + btnW / 2, btnY + btnH / 2);
                 ctx.restore();
 
-                // Сохраняем координаты кнопки
                 firstButtonRect = { x: btnX, y: btnY, w: btnW, h: btnH };
             } else {
-                firstButtonRect = null; // кнопка не видна
+                firstButtonRect = null;
             }
         }
 
@@ -526,7 +516,7 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // --- Вертикальные линии сетки (шаг 4 свечи) ---
+            // Вертикальные линии сетки
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.5;
             const stepPx = totalWidthPerCandle * gridVerticalStep;
@@ -538,7 +528,7 @@
                 ctx.stroke();
             }
 
-            // --- Горизонтальные линии сетки (15 линий) ---
+            // Горизонтальные линии сетки
             for (let i = 0; i <= gridHorizontalCount; i++) {
                 const y = paddingTop + (height - paddingTop - paddingBottom) * (i / gridHorizontalCount);
                 ctx.beginPath();
@@ -548,7 +538,7 @@
                 ctx.stroke();
             }
 
-            // --- Свечи ---
+            // Свечи
             modifiedData.forEach((candle, i) => {
                 const x = baseX + i * totalWidthPerCandle;
                 const w = candleWidth;
@@ -579,7 +569,7 @@
                 }
             });
 
-            // --- Линии High/Low ---
+            // Линии High/Low
             if (HIGH_LOW_SETTINGS.enabled && visibleData.length > 0) {
                 const highPrice = Math.max(...visibleData.map(d => d.high));
                 const lowPrice = Math.min(...visibleData.map(d => d.low));
@@ -600,8 +590,8 @@
                 }
             }
 
-            // --- Шкала цен (белая) — смещена правее (отступ 70 пикселей) ---
-            const PRICE_SCALE_RIGHT = 70; // увеличенный отступ, чтобы цифры были правее
+            // --- Шкала цен — теперь с отступом 20 пикселей от правого края ---
+            const PRICE_SCALE_RIGHT = 20; // Уменьшили, чтобы цифры были ближе к краю
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
@@ -613,44 +603,34 @@
                 ctx.fillText(price.toFixed(4), width - PRICE_SCALE_RIGHT, y);
             }
 
-            // --- Линия последней свечи и кнопка перехода к последней свече ---
+            // Линия последней свечи и кнопка
             if (LAST_CANDLE_LINE_SETTINGS.enabled && chartData.length > 0) {
                 const lastIndex = chartData.length - 1;
 
-                // Берём цену последней свечи из visibleData, если она там есть (с учётом интерполяции), иначе из chartData
                 let lastPrice;
                 if (lastIndex >= drawStart && lastIndex < drawEnd) {
-                    // последняя свеча в видимом диапазоне — используем интерполированное значение
                     lastPrice = visibleData[lastIndex - drawStart].close;
                 } else {
-                    // последняя свеча не видна — используем реальное значение из chartData
                     lastPrice = chartData[lastIndex].close;
                 }
 
-                // Вычисляем позицию последней свечи (даже если она не в видимом диапазоне)
                 const lastCandleCenterX = paddingLeft + (lastIndex - startIndex) * totalWidthPerCandle + dragOffset + candleWidth / 2;
                 const lastCandleLeft = lastCandleCenterX - candleWidth / 2;
                 const lastCandleRight = lastCandleCenterX + candleWidth / 2;
 
-                // Видима ли последняя свеча? (хотя бы частично)
                 const isLastVisible = (lastCandleRight > paddingLeft && lastCandleLeft < width - paddingRight);
-
-                // Кнопка показывается только если последняя свеча полностью скрыта за правым краем
                 const showButton = (lastCandleLeft > width - paddingRight);
 
-                // Вычисляем Y координату для прямоугольника (используем цену и текущий масштаб)
                 const y = height - paddingBottom - ((lastPrice - minPriceVisible) / (maxPriceVisible - minPriceVisible)) * (height - paddingTop - paddingBottom);
 
                 if (isLastVisible) {
-                    // Если свеча видна, передаём её центр X для линии
                     drawLastCandleLine(lastCandleCenterX, y, lastPrice, true, showButton);
                 } else {
-                    // Если не видна, линию не рисуем (передаём x=0)
                     drawLastCandleLine(0, y, lastPrice, false, showButton);
                 }
             }
 
-            // --- Временные метки снизу ---
+            // Временные метки снизу
             ctx.save();
             ctx.fillStyle = '#ffffff';
             ctx.font = '11px "Roboto Mono", monospace';
@@ -785,7 +765,6 @@
 
                 chartData = rawData;
 
-                // Устанавливаем начальный зум более отдалённым (0.7)
                 zoomLevel = 0.7;
                 setToLastCandle();
 
@@ -933,10 +912,8 @@
             if (!isDragging) return;
             isDragging = false;
             canvas.style.cursor = 'grab';
-            // Не корректируем startIndex — оставляем точное пиксельное смещение для плавности
         }
 
-        // Обработчик клика на канвасе для кнопки перехода к последней свече
         function handleCanvasClick(e) {
             if (!firstButtonRect) return;
             const rect = canvas.getBoundingClientRect();
@@ -953,14 +930,12 @@
             }
         }
 
-        // Функция для получения расстояния между двумя пальцами
         function getPinchDistance(touches) {
             const dx = touches[0].clientX - touches[1].clientX;
             const dy = touches[0].clientY - touches[1].clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
 
-        // Функция для получения центра между двумя пальцами
         function getPinchCenter(touches) {
             return {
                 x: (touches[0].clientX + touches[1].clientX) / 2,
@@ -968,23 +943,18 @@
             };
         }
 
-        // Новые обработчики мультитач
         canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // предотвращаем скролл страницы
+            e.preventDefault();
             if (e.touches.length === 2) {
                 pinchActive = true;
                 initialPinchDistance = getPinchDistance(e.touches);
                 initialZoom = zoomLevel;
-                // Запоминаем индекс свечи, находящейся в центре экрана
                 const rect = canvas.getBoundingClientRect();
                 const centerX = (rect.left + rect.right) / 2;
-                const canvasX = (centerX - rect.left) * (canvas.width / rect.width); // координата в канвасе
-                // Находим свечу, ближайшую к этому X
+                const canvasX = (centerX - rect.left) * (canvas.width / rect.width);
                 const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
-                // Индекс свечи относительно startIndex и dragOffset
                 const candleIndexFloat = (canvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
                 centerCandleIndex = Math.round(candleIndexFloat);
-                // Ограничим диапазоном
                 centerCandleIndex = Math.max(0, Math.min(chartData.length - 1, centerCandleIndex));
                 canvas.style.cursor = 'zoom-in';
             } else if (e.touches.length === 1) {
@@ -1004,27 +974,19 @@
                 if (newZoom < CHART_SETTINGS.minZoom) newZoom = CHART_SETTINGS.minZoom;
                 if (newZoom > CHART_SETTINGS.maxZoom) newZoom = CHART_SETTINGS.maxZoom;
                 if (newZoom !== zoomLevel) {
-                    // Сохраняем старый зум для расчёта смещения
                     const oldZoom = zoomLevel;
                     zoomLevel = newZoom;
 
-                    // Корректируем позицию так, чтобы свеча centerCandleIndex осталась в центре
                     if (centerCandleIndex !== null) {
                         const totalWidthPerCandleOld = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
                         const totalWidthPerCandleNew = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
 
-                        // Старая позиция центральной свечи в пикселях
                         const oldCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * totalWidthPerCandleOld + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
-                        // Новая позиция той же свечи при новом зуме, но с теми же startIndex и dragOffset
                         const newCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * totalWidthPerCandleNew + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
 
-                        // На сколько пикселей сместился центр?
                         const deltaX = newCenterX - oldCenterX;
-
-                        // Компенсируем это смещение через dragOffset
                         dragOffset -= deltaX;
 
-                        // Проверяем границы
                         const maxStart = getMaxStart();
                         const maxRightOffset = startIndex * totalWidthPerCandleNew;
                         const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandleNew;
@@ -1050,7 +1012,6 @@
             }
         });
 
-        // Старые обработчики мыши остаются
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
             if (!e.defaultPrevented) {
@@ -1061,7 +1022,6 @@
         window.addEventListener('mousemove', (e) => onDrag(e.clientX));
         window.addEventListener('mouseup', endDrag);
 
-        // Колёсико мыши (теперь тоже с центрированием)
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -1071,7 +1031,6 @@
             if (newZoom !== zoomLevel) {
                 const rect = canvas.getBoundingClientRect();
                 const mouseCanvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
-                // Находим свечу под мышью
                 const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
                 const candleIndexFloat = (mouseCanvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
                 const targetCandle = Math.round(candleIndexFloat);
@@ -1080,7 +1039,6 @@
                 const oldZoom = zoomLevel;
                 zoomLevel = newZoom;
 
-                // Корректируем позицию
                 const totalWidthPerCandleOld = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
                 const totalWidthPerCandleNew = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
 
