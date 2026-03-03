@@ -83,11 +83,8 @@
             width: 100%;
             height: 100%;
             display: block;
-            cursor: grab;
+            cursor: crosshair;
             touch-action: none;
-        }
-        #chartCanvas:active {
-            cursor: grabbing;
         }
         .timeframe-bar {
             height: 50px;
@@ -218,7 +215,22 @@
             fontSize: 12,
         };
 
-        // Настройки кнопки перехода к последней свече (серая, маленькая)
+        const CROSSHAIR_SETTINGS = {
+            lineColor: '#ffffff',
+            lineWidth: 1,
+            dashPattern: [5, 3],
+            infoBgColor: 'rgba(30,30,40,0.9)',
+            infoBorderColor: '#ffffff',
+            infoTextColor: '#ffffff',
+            infoFontSize: 11,
+            infoPadding: 6,
+            rightBoxBgColor: '#333333',
+            rightBoxTextColor: '#ffffff',
+            rightBoxFontSize: 12,
+            rightBoxWidth: 90,
+            rightBoxPadding: 6,
+        };
+
         const FIRST_BUTTON_SETTINGS = {
             width: 30,
             height: 20,
@@ -264,6 +276,13 @@
         let initialPinchDistance = 0;
         let initialZoom = 1;
         let centerCandleIndex = null;
+
+        // Переменные для перекрестия
+        let crosshairActive = false;
+        let crosshairX = 0;
+        let crosshairY = 0;
+        let crosshairCandleIndex = -1;
+        let crosshairPrice = 0;
 
         // Храним координаты кнопки перехода к последней свече для обработки кликов
         let firstButtonRect = null;
@@ -443,6 +462,155 @@
             return timestamp - 3600000;
         }
 
+        // Функция для поиска свечи по координате X
+        function findCandleByX(x) {
+            if (!chartData.length) return -1;
+            const { paddingLeft, paddingRight, gapBetweenCandles } = CHART_SETTINGS;
+            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+            const totalWidthPerCandle = candleWidth + gapBetweenCandles;
+
+            // Переводим X в индекс свечи относительно startIndex и dragOffset
+            const candleIndexFloat = (x - paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
+            const index = Math.round(candleIndexFloat);
+            if (index >= 0 && index < chartData.length) {
+                return index;
+            }
+            return -1;
+        }
+
+        // Функция для получения цены по Y
+        function priceFromY(y, minPrice, maxPrice) {
+            const { paddingTop, paddingBottom } = CHART_SETTINGS;
+            const height = canvas.height;
+            const chartHeight = height - paddingTop - paddingBottom;
+            const price = maxPrice - (y - paddingTop) / chartHeight * (maxPrice - minPrice);
+            return price;
+        }
+
+        // Функция отрисовки перекрестия
+        function drawCrosshair() {
+            if (!crosshairActive) return;
+            const width = canvas.width;
+            const height = canvas.height;
+            const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
+            const { lineColor, lineWidth, dashPattern, infoBgColor, infoBorderColor, infoTextColor, infoFontSize, infoPadding } = CROSSHAIR_SETTINGS;
+
+            ctx.save();
+
+            // Вертикальная пунктирная линия
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = lineWidth;
+            ctx.setLineDash(dashPattern);
+            ctx.beginPath();
+            ctx.moveTo(crosshairX, paddingTop);
+            ctx.lineTo(crosshairX, height - paddingBottom);
+            ctx.stroke();
+
+            // Горизонтальная пунктирная линия
+            ctx.beginPath();
+            ctx.moveTo(paddingLeft, crosshairY);
+            ctx.lineTo(width - paddingRight, crosshairY);
+            ctx.stroke();
+
+            ctx.setLineDash([]); // сброс
+
+            // Правый серый прямоугольник с ценой и процентом
+            const lastPrice = chartData.length ? chartData[chartData.length - 1].close : 0;
+            const percentChange = ((crosshairPrice - lastPrice) / lastPrice * 100).toFixed(2);
+            const percentSign = percentChange >= 0 ? '+' : '';
+            const percentText = `${percentSign}${percentChange}%`;
+            const priceText = crosshairPrice.toFixed(4);
+
+            ctx.font = `${CROSSHAIR_SETTINGS.rightBoxFontSize}px 'Roboto Mono', monospace`;
+            const priceWidth = ctx.measureText(priceText).width;
+            const percentWidth = ctx.measureText(percentText).width;
+            const boxWidth = Math.max(priceWidth, percentWidth) + 2 * CROSSHAIR_SETTINGS.rightBoxPadding;
+            const boxHeight = CROSSHAIR_SETTINGS.rightBoxFontSize * 2 + 3 * CROSSHAIR_SETTINGS.rightBoxPadding;
+            const boxX = width - boxWidth;
+            const boxY = crosshairY - boxHeight / 2;
+
+            // Рисуем прямоугольник
+            ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxBgColor;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = '#000';
+            ctx.beginPath();
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 4);
+            ctx.fill();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.shadowBlur = 0;
+            ctx.stroke();
+
+            ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxTextColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(priceText, boxX + boxWidth / 2, boxY + CROSSHAIR_SETTINGS.rightBoxPadding + CROSSHAIR_SETTINGS.rightBoxFontSize / 2);
+            ctx.fillStyle = percentChange >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
+            ctx.fillText(percentText, boxX + boxWidth / 2, boxY + CROSSHAIR_SETTINGS.rightBoxPadding * 2 + CROSSHAIR_SETTINGS.rightBoxFontSize * 1.5);
+
+            // Если есть свеча, рисуем информационный блок
+            if (crosshairCandleIndex >= 0 && crosshairCandleIndex < chartData.length) {
+                const candle = chartData[crosshairCandleIndex];
+                const time = new Date(candle.time);
+                const timeStr = `${time.getUTCFullYear()}/${(time.getUTCMonth()+1).toString().padStart(2,'0')}/${time.getUTCDate().toString().padStart(2,'0')} ${time.getUTCHours().toString().padStart(2,'0')}:${time.getUTCMinutes().toString().padStart(2,'0')}`;
+                const open = candle.open.toFixed(4);
+                const high = candle.high.toFixed(4);
+                const low = candle.low.toFixed(4);
+                const close = candle.close.toFixed(4);
+                const change = (candle.close - candle.open).toFixed(4);
+                const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
+                const range = (candle.high - candle.low).toFixed(4);
+                const rangePercent = ((candle.high - candle.low) / candle.open * 100).toFixed(2);
+
+                const lines = [
+                    `Time      ${timeStr}`,
+                    `Open      ${open}`,
+                    `High      ${high}`,
+                    `Low       ${low}`,
+                    `Close     ${close}`,
+                    `Change    ${change} (${changePercent}%)`,
+                    `Range     ${range} (${rangePercent}%)`
+                ];
+
+                ctx.font = `${infoFontSize}px 'Roboto Mono', monospace`;
+                const lineHeight = infoFontSize + 2;
+                const maxWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
+                const blockWidth = maxWidth + 2 * infoPadding;
+                const blockHeight = lines.length * lineHeight + 2 * infoPadding;
+                let blockX = crosshairX + 15;
+                let blockY = crosshairY - blockHeight - 10;
+
+                // Корректировка, чтобы не вылезать за края
+                if (blockX + blockWidth > width - paddingRight) blockX = crosshairX - blockWidth - 15;
+                if (blockY < paddingTop) blockY = crosshairY + 15;
+
+                // Фон блока
+                ctx.fillStyle = infoBgColor;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.roundRect(blockX, blockY, blockWidth, blockHeight, 6);
+                ctx.fill();
+                ctx.strokeStyle = infoBorderColor;
+                ctx.lineWidth = 1;
+                ctx.shadowBlur = 0;
+                ctx.stroke();
+
+                // Текст
+                ctx.fillStyle = infoTextColor;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.shadowBlur = 4;
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const y = blockY + infoPadding + i * lineHeight;
+                    ctx.fillText(line, blockX + infoPadding, y);
+                }
+            }
+
+            ctx.restore();
+        }
+
         function drawChart() {
             if (!chartData || chartData.length === 0) return;
 
@@ -590,8 +758,8 @@
                 }
             }
 
-            // --- Шкала цен — теперь с отступом 20 пикселей от правого края ---
-            const PRICE_SCALE_RIGHT = 20; // Уменьшили, чтобы цифры были ближе к краю
+            // Шкала цен
+            const PRICE_SCALE_RIGHT = 20;
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '12px "Roboto Mono", monospace';
             ctx.textAlign = 'right';
@@ -687,6 +855,9 @@
                 }
             }
             ctx.restore();
+
+            // Перекрестие (рисуем последним)
+            drawCrosshair();
         }
 
         function drawPriceLine(x, y, price, canvasWidth, paddingLeft, paddingRight) {
@@ -911,9 +1082,10 @@
         function endDrag() {
             if (!isDragging) return;
             isDragging = false;
-            canvas.style.cursor = 'grab';
+            canvas.style.cursor = 'crosshair';
         }
 
+        // Обработчик клика для кнопки ">|"
         function handleCanvasClick(e) {
             if (!firstButtonRect) return;
             const rect = canvas.getBoundingClientRect();
@@ -930,19 +1102,74 @@
             }
         }
 
-        function getPinchDistance(touches) {
-            const dx = touches[0].clientX - touches[1].clientX;
-            const dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
+        // Функция обновления перекрестия по координатам мыши/пальца
+        function updateCrosshair(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const canvasX = (clientX - rect.left) * scaleX;
+            const canvasY = (clientY - rect.top) * scaleY;
+
+            // Проверяем, что координаты в пределах графика (по горизонтали)
+            const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
+            if (canvasX < paddingLeft || canvasX > canvas.width - paddingRight || canvasY < paddingTop || canvasY > canvas.height - paddingBottom) {
+                // Выход за пределы графика — отключаем перекрестие
+                crosshairActive = false;
+                drawChart();
+                return;
+            }
+
+            crosshairActive = true;
+            crosshairX = canvasX;
+            crosshairY = canvasY;
+
+            // Определяем цену
+            const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
+            const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
+            const visibleCount = getVisibleCount();
+            const maxStart = getMaxStart();
+            const drawStart = Math.max(0, startIndex - Math.ceil(Math.abs(dragOffset) / totalWidthPerCandle) - 5);
+            const drawEnd = Math.min(chartData.length, startIndex + visibleCount + 5);
+            const visibleData = chartData.slice(drawStart, drawEnd);
+
+            if (visibleData.length === 0) return;
+
+            const minPriceVisible = Math.min(...visibleData.map(d => d.low)) * 0.95;
+            const maxPriceVisible = Math.max(...visibleData.map(d => d.high)) * 1.05;
+            crosshairPrice = priceFromY(canvasY, minPriceVisible, maxPriceVisible);
+
+            // Определяем индекс свечи
+            crosshairCandleIndex = findCandleByX(canvasX);
+
+            drawChart();
         }
 
-        function getPinchCenter(touches) {
-            return {
-                x: (touches[0].clientX + touches[1].clientX) / 2,
-                y: (touches[0].clientY + touches[1].clientY) / 2
-            };
-        }
+        // Обработчики мыши
+        canvas.addEventListener('mousedown', (e) => {
+            handleCanvasClick(e);
+            if (!e.defaultPrevented) {
+                // Активируем перекрестие
+                updateCrosshair(e.clientX, e.clientY);
+            }
+        });
 
+        canvas.addEventListener('mousemove', (e) => {
+            if (crosshairActive) {
+                updateCrosshair(e.clientX, e.clientY);
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            crosshairActive = false;
+            drawChart();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            crosshairActive = false;
+            drawChart();
+        });
+
+        // Обработчики касаний
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (e.touches.length === 2) {
@@ -960,7 +1187,8 @@
             } else if (e.touches.length === 1) {
                 handleCanvasClick(e.touches[0]);
                 if (!e.defaultPrevented) {
-                    startDrag(e.touches[0].clientX);
+                    // Активируем перекрестие
+                    updateCrosshair(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }
         });
@@ -996,6 +1224,8 @@
 
                     drawChart();
                 }
+            } else if (!pinchActive && crosshairActive && e.touches.length === 1) {
+                updateCrosshair(e.touches[0].clientX, e.touches[0].clientY);
             } else if (!pinchActive && isDragging && e.touches.length === 1) {
                 onDrag(e.touches[0].clientX);
             }
@@ -1006,22 +1236,30 @@
             if (pinchActive) {
                 pinchActive = false;
                 centerCandleIndex = null;
-                canvas.style.cursor = 'grab';
+                canvas.style.cursor = 'crosshair';
+            } else if (crosshairActive) {
+                crosshairActive = false;
+                drawChart();
             } else if (isDragging) {
                 endDrag();
             }
         });
 
-        canvas.addEventListener('mousedown', (e) => {
-            handleCanvasClick(e);
-            if (!e.defaultPrevented) {
-                startDrag(e.clientX);
-            }
-        });
+        // Вспомогательные функции для зума
+        function getPinchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
 
-        window.addEventListener('mousemove', (e) => onDrag(e.clientX));
-        window.addEventListener('mouseup', endDrag);
+        function getPinchCenter(touches) {
+            return {
+                x: (touches[0].clientX + touches[1].clientX) / 2,
+                y: (touches[0].clientY + touches[1].clientY) / 2
+            };
+        }
 
+        // Колёсико мыши
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
