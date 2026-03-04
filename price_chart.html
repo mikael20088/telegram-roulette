@@ -171,7 +171,7 @@
             downColor: '#ff5252',
             wickColor: '#a0a0b0',
             gridColor: '#2a2a2a',
-            textColor: '#e0e0e0',
+            textColor: '#ffffff',
         };
 
         const CHART_SETTINGS = {
@@ -273,6 +273,10 @@
             // Восстанавливаем настройки после сброса масштаба
             ctx.textBaseline = 'middle';
             ctx.textAlign = 'left';
+            ctx.shadowColor = 'rgba(255,255,255,0.4)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         }
 
         // Остальные переменные
@@ -320,6 +324,13 @@
             currentInterval = savedInterval;
         }
 
+        // Вспомогательная функция форматирования цены с пробелами между тысячами
+        function formatPrice(price) {
+            let parts = price.toFixed(4).split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            return parts.join('.');
+        }
+
         function getVisibleCount() {
             const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
             return Math.floor((canvas.width / window.devicePixelRatio - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight) / totalWidthPerCandle);
@@ -350,9 +361,10 @@
             const height = canvas.height / window.devicePixelRatio;
             const { paddingBottom } = CHART_SETTINGS;
 
-            const text = price.toFixed(4);
-            ctx.font = `${fontSize}px 'JetBrains Mono', 'Roboto Mono', monospace`;
-            ctx.letterSpacing = '-0.3px';
+            const text = formatPrice(price);
+            ctx.font = `500 ${fontSize}px 'JetBrains Mono', 'Roboto Mono', monospace`;
+            ctx.letterSpacing = '-0.02em';
+            ctx.shadowBlur = 4;
             const textWidth = ctx.measureText(text).width;
             let boxWidth = textWidth + 2 * boxPadding;
             let boxHeight = fontSize + 2 * boxPadding;
@@ -376,29 +388,17 @@
                     ctx.save();
                     ctx.strokeStyle = '#f0f0f0';
                     ctx.lineWidth = lineWidth;
-                    const totalSegment = segmentLength + gapLength;
-                    const numSegments = Math.floor(distance / totalSegment);
-                    const remainder = distance - numSegments * totalSegment;
-                    for (let i = 0; i < numSegments; i++) {
-                        const segStartX = startX + i * totalSegment;
-                        ctx.beginPath();
-                        ctx.moveTo(segStartX, y);
-                        ctx.lineTo(segStartX + segmentLength, y);
-                        ctx.stroke();
-                    }
-                    if (remainder > 0) {
-                        ctx.beginPath();
-                        ctx.moveTo(startX + numSegments * totalSegment, y);
-                        ctx.lineTo(startX + numSegments * totalSegment + Math.min(remainder, segmentLength), y);
-                        ctx.stroke();
-                    }
+                    ctx.setLineDash([segmentLength, gapLength]);
+                    ctx.beginPath();
+                    ctx.moveTo(startX, y);
+                    ctx.lineTo(endX, y);
+                    ctx.stroke();
                     ctx.restore();
                 }
             }
 
             ctx.save();
             ctx.fillStyle = boxBgColor;
-            ctx.shadowColor = '#000';
             ctx.shadowBlur = 8;
             ctx.shadowOffsetY = 2;
             ctx.beginPath();
@@ -410,9 +410,9 @@
             ctx.stroke();
 
             ctx.fillStyle = textColor;
+            ctx.shadowBlur = 4;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            ctx.shadowBlur = 4;
             ctx.save();
             ctx.beginPath();
             ctx.rect(boxX, boxY, boxWidth, boxHeight);
@@ -444,7 +444,7 @@
                 ctx.font = `${FIRST_BUTTON_SETTINGS.fontSize}px 'JetBrains Mono', monospace`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.shadowBlur = 0;
+                ctx.shadowBlur = 4;
                 ctx.fillText(FIRST_BUTTON_SETTINGS.text, btnX + btnW / 2, btnY + btnH / 2);
                 ctx.restore();
 
@@ -745,18 +745,18 @@
                 }
             }
 
-            // Шкала цен
+            // Шкала цен — теперь 8 значений для большей детализации
             const PRICE_SCALE_RIGHT = 15;
+            ctx.shadowBlur = 4;
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
-            ctx.font = '12px "JetBrains Mono", "Roboto Mono", monospace';
+            ctx.font = '500 11px "JetBrains Mono", "Roboto Mono", monospace';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
-            ctx.letterSpacing = '-0.3px';
-            ctx.shadowBlur = 0;
-            for (let i = 0; i <= 5; i++) {
-                const price = minPriceVisible + (maxPriceVisible - minPriceVisible) * (i / 5);
-                const y = paddingTop + (height - paddingTop - paddingBottom) * (1 - i / 5);
-                ctx.fillText(price.toFixed(4), width - PRICE_SCALE_RIGHT, y);
+            ctx.letterSpacing = '-0.02em';
+            for (let i = 0; i <= 8; i++) {
+                const price = minPriceVisible + (maxPriceVisible - minPriceVisible) * (i / 8);
+                const y = paddingTop + (height - paddingTop - paddingBottom) * (1 - i / 8);
+                ctx.fillText(formatPrice(price), width - PRICE_SCALE_RIGHT, y);
             }
 
             // Линия последней свечи и кнопка
@@ -792,6 +792,7 @@
             ctx.font = '10px "JetBrains Mono", "Roboto Mono", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 2;
             const labelY = height - paddingBottom / 2;
 
             const config = LABEL_CONFIG[currentInterval] || { step: 12, pattern: ['hour'] };
@@ -858,11 +859,10 @@
             ctx.strokeStyle = HIGH_LOW_SETTINGS.lineColor;
             ctx.lineWidth = HIGH_LOW_SETTINGS.lineWidth;
             ctx.fillStyle = HIGH_LOW_SETTINGS.textColor;
-            ctx.font = `${HIGH_LOW_SETTINGS.fontSize}px "JetBrains Mono", monospace`;
+            ctx.font = `500 ${HIGH_LOW_SETTINGS.fontSize}px "JetBrains Mono", monospace`;
             ctx.textBaseline = 'middle';
-            ctx.shadowColor = '#000';
-            ctx.shadowBlur = 3;
-            ctx.letterSpacing = '-0.3px';
+            ctx.shadowBlur = 4;
+            ctx.letterSpacing = '-0.02em';
 
             if (x > midX) {
                 const endX = x - lineLength;
@@ -871,7 +871,7 @@
                 ctx.lineTo(endX, y);
                 ctx.stroke();
                 ctx.textAlign = 'right';
-                ctx.fillText(price.toFixed(4), endX - 2, y);
+                ctx.fillText(formatPrice(price), endX - 2, y);
             } else {
                 const endX = x + lineLength;
                 ctx.beginPath();
@@ -879,7 +879,7 @@
                 ctx.lineTo(endX, y);
                 ctx.stroke();
                 ctx.textAlign = 'left';
-                ctx.fillText(price.toFixed(4), endX + 2, y);
+                ctx.fillText(formatPrice(price), endX + 2, y);
             }
             ctx.restore();
         }
@@ -911,9 +911,9 @@
             const percentChange = ((crosshairPrice - lastPrice) / lastPrice * 100).toFixed(2);
             const percentSign = percentChange >= 0 ? '+' : '';
             const percentText = `${percentSign}${percentChange}%`;
-            const priceText = crosshairPrice.toFixed(4);
+            const priceText = formatPrice(crosshairPrice);
 
-            ctx.font = `${CROSSHAIR_SETTINGS.rightBoxFontSize}px 'JetBrains Mono', monospace`;
+            ctx.font = `500 ${CROSSHAIR_SETTINGS.rightBoxFontSize}px 'JetBrains Mono', monospace`;
             const priceWidth = ctx.measureText(priceText).width;
             const percentWidth = ctx.measureText(percentText).width;
             const boxWidth = Math.max(priceWidth, percentWidth) + 2 * CROSSHAIR_SETTINGS.rightBoxPadding;
@@ -946,29 +946,39 @@
                 const candle = chartData[crosshairCandleIndex];
                 const time = new Date(candle.time);
                 const timeStr = `${time.getUTCFullYear()}/${(time.getUTCMonth()+1).toString().padStart(2,'0')}/${time.getUTCDate().toString().padStart(2,'0')} ${time.getUTCHours().toString().padStart(2,'0')}:${time.getUTCMinutes().toString().padStart(2,'0')}`;
-                const open = candle.open.toFixed(4);
-                const high = candle.high.toFixed(4);
-                const low = candle.low.toFixed(4);
-                const close = candle.close.toFixed(4);
+                const open = formatPrice(candle.open);
+                const high = formatPrice(candle.high);
+                const low = formatPrice(candle.low);
+                const close = formatPrice(candle.close);
                 const change = (candle.close - candle.open).toFixed(4);
+                const changeFormatted = (candle.close - candle.open) >= 0 ? '+' + change : change;
                 const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
+                const changePercentFormatted = (candle.close - candle.open) >= 0 ? '+' + changePercent : changePercent;
                 const range = (candle.high - candle.low).toFixed(4);
                 const rangePercent = ((candle.high - candle.low) / candle.open * 100).toFixed(2);
 
                 const lines = [
-                    `Time      ${timeStr}`,
-                    `Open      ${open}`,
-                    `High      ${high}`,
-                    `Low       ${low}`,
-                    `Close     ${close}`,
-                    `Change    ${change} (${changePercent}%)`,
-                    `Range     ${range} (${rangePercent}%)`
+                    { label: 'Time', value: timeStr },
+                    { label: 'Open', value: open },
+                    { label: 'High', value: high },
+                    { label: 'Low', value: low },
+                    { label: 'Close', value: close },
+                    { label: 'Change', value: `${changeFormatted} (${changePercentFormatted}%)` },
+                    { label: 'Range', value: `${range} (${rangePercent}%)` }
                 ];
 
                 ctx.font = `${infoFontSize}px 'JetBrains Mono', monospace`;
                 const lineHeight = infoFontSize + 2;
-                const maxWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
-                const blockWidth = maxWidth + 2 * infoPadding;
+                // Измеряем максимальную ширину метки и значения
+                let maxLabelWidth = 0;
+                let maxValueWidth = 0;
+                lines.forEach(line => {
+                    const labelWidth = ctx.measureText(line.label + ' ').width;
+                    const valueWidth = ctx.measureText(line.value).width;
+                    maxLabelWidth = Math.max(maxLabelWidth, labelWidth);
+                    maxValueWidth = Math.max(maxValueWidth, valueWidth);
+                });
+                const blockWidth = maxLabelWidth + maxValueWidth + 3 * infoPadding;
                 const blockHeight = lines.length * lineHeight + 2 * infoPadding;
                 let blockX = crosshairX + 15;
                 let blockY = crosshairY - blockHeight - 10;
@@ -997,16 +1007,14 @@
                     const line = lines[i];
                     const y = blockY + infoPadding + i * lineHeight;
 
-                    if (line.startsWith('Change')) {
-                        ctx.fillStyle = infoTextColor;
-                        ctx.fillText('Change    ', blockX + infoPadding, y);
-                        const changeColor = change >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
-                        ctx.fillStyle = changeColor;
-                        ctx.fillText(`${change} (${changePercent}%)`, blockX + infoPadding + ctx.measureText('Change    ').width, y);
+                    ctx.fillStyle = infoTextColor;
+                    ctx.fillText(line.label + ' ', blockX + infoPadding, y);
+                    if (line.label === 'Change') {
+                        ctx.fillStyle = (candle.close - candle.open) >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
                     } else {
                         ctx.fillStyle = infoTextColor;
-                        ctx.fillText(line, blockX + infoPadding, y);
                     }
+                    ctx.fillText(line.value, blockX + infoPadding + maxLabelWidth, y);
                 }
             }
             ctx.restore();
