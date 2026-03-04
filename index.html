@@ -979,6 +979,7 @@
       font-size: 22px;
       text-shadow: 0 0 10px #00ff88;
     }
+    /* Стили для элементов списка монет */
     .coin-item {
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(0, 255, 136, 0.5);
@@ -987,14 +988,35 @@
       margin-bottom: 10px;
       cursor: pointer;
       transition: 0.2s;
-      color: #00ff88;
-      font-weight: bold;
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .coin-item:hover {
       background: rgba(0, 255, 136, 0.2);
       border-color: #00ff88;
       box-shadow: 0 0 15px #00ff88;
+    }
+    .coin-name {
+      color: #00ff88;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .coin-percent-box {
+      width: 70px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: bold;
+      color: #fff;
+      font-size: 14px;
+      background-color: #2a2a2a; /* fallback */
+    }
+    .positive-bg {
+      background-color: #00e676;
+    }
+    .negative-bg {
+      background-color: #ff5252;
     }
 
     /* Общие стили для модальных окон (пополнение и аккаунт) */
@@ -1399,19 +1421,18 @@
     <iframe id="gameIframe" src="https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm"></iframe>
   </div>
 
-  <!-- Оверлей для списка монет (новый) -->
+  <!-- Оверлей для списка монет (динамический список) -->
   <div class="coin-list-overlay" id="coinListOverlay">
     <div class="coin-list-box">
       <h2>Выберите монету</h2>
-      <div class="coin-item" id="coinTon">TON/USDT</div>
-      <!-- Здесь позже можно добавить другие монеты -->
+      <div id="coinListItems"></div>
     </div>
   </div>
 
-  <!-- Оверлей для Price с iframe -->
+  <!-- Оверлей для Price с iframe (график) -->
   <div class="game-overlay" id="priceOverlay">
     <div class="close-btn" id="priceCloseBtn">×</div>
-    <iframe id="priceIframe" src="price_chart.html"></iframe>
+    <iframe id="priceIframe" src="price_chart.html?symbol=TONUSDT"></iframe>
   </div>
 
   <!-- Модальное окно пополнения TON -->
@@ -1481,7 +1502,7 @@
 </div>
 
 <script>
-  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД ==========
+  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД С ДОБАВЛЕНИЕМ СПИСКА МОНЕТ ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -2202,7 +2223,7 @@
   const priceIframe = document.getElementById('priceIframe');
   const priceCloseBtn = document.getElementById('priceCloseBtn');
   const coinListOverlay = document.getElementById('coinListOverlay');
-  const coinTon = document.getElementById('coinTon');
+  const coinListItems = document.getElementById('coinListItems');
 
   // Парольный экран
   const passwordOverlay = document.getElementById('passwordOverlay');
@@ -2271,16 +2292,11 @@
     gameOverlay.classList.add('active');
   });
 
-  // Price: открываем список монет вместо графика
+  // Price: открываем список монет
   document.getElementById('priceMenuItem').addEventListener('click', () => {
     menuContainer.classList.remove('visible');
+    renderCoinList(); // Загружаем и отображаем список монет
     coinListOverlay.classList.add('active');
-  });
-
-  // Выбор монеты (пока только TON/USDT)
-  coinTon.addEventListener('click', () => {
-    coinListOverlay.classList.remove('active');
-    priceOverlay.classList.add('active');
   });
 
   // Закрытие Angry Birds
@@ -2311,7 +2327,7 @@
     }
   });
 
-  // Закрытие списка монет кликом вне (или по крестику добавим позже)
+  // Закрытие списка монет кликом вне
   coinListOverlay.addEventListener('click', (e) => {
     if (e.target === coinListOverlay) {
       coinListOverlay.classList.remove('active');
@@ -2340,6 +2356,70 @@
       document.getElementById('giftModal').classList.remove('active');
     }
   };
+
+  // ========== ЛОГИКА СПИСКА МОНЕТ ==========
+  // Массив монет (отсортирован по убыванию капитализации)
+  const coins = [
+    { name: "BTC/USDT", symbol: "BTCUSDT", displayName: "BTC" },
+    { name: "ETH/USDT", symbol: "ETHUSDT", displayName: "ETH" },
+    { name: "SOL/USDT", symbol: "SOLUSDT", displayName: "SOL" },
+    { name: "NOT/USDT", symbol: "NOTUSDT", displayName: "NOT" }
+  ];
+
+  // Функция загрузки данных 24hr с Binance для одной монеты
+  async function fetch24hrChange(symbol) {
+    try {
+      const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+      if (!response.ok) throw new Error('Ошибка загрузки');
+      const data = await response.json();
+      return parseFloat(data.priceChangePercent).toFixed(2);
+    } catch (err) {
+      console.warn(`Не удалось загрузить данные для ${symbol}`, err);
+      return null;
+    }
+  }
+
+  // Функция отрисовки списка монет
+  async function renderCoinList() {
+    coinListItems.innerHTML = '<div style="color:#00ff88; text-align:center;">Загрузка...</div>';
+    
+    // Создаём элементы для каждой монеты, но пока без процентов
+    const items = coins.map(coin => {
+      const div = document.createElement('div');
+      div.className = 'coin-item';
+      div.dataset.symbol = coin.symbol;
+      div.innerHTML = `
+        <span class="coin-name">${coin.name}</span>
+        <span class="coin-percent-box" id="percent-${coin.symbol}">—</span>
+      `;
+      div.addEventListener('click', () => {
+        // Открываем график с выбранной монетой
+        coinListOverlay.classList.remove('active');
+        priceIframe.src = `price_chart.html?symbol=${coin.symbol}`;
+        priceOverlay.classList.add('active');
+      });
+      return div;
+    });
+
+    // Очищаем и вставляем элементы
+    coinListItems.innerHTML = '';
+    items.forEach(item => coinListItems.appendChild(item));
+
+    // Загружаем проценты для каждой монеты
+    for (const coin of coins) {
+      const percent = await fetch24hrChange(coin.symbol);
+      const percentBox = document.getElementById(`percent-${coin.symbol}`);
+      if (percentBox) {
+        if (percent !== null) {
+          const num = parseFloat(percent);
+          percentBox.textContent = (num >= 0 ? '+' : '') + num + '%';
+          percentBox.classList.add(num >= 0 ? 'positive-bg' : 'negative-bg');
+        } else {
+          percentBox.textContent = 'N/A';
+        }
+      }
+    }
+  }
 
   // ========== ЛОГИКА TON CONNECT ==========
   (function initTonAndBalance() {
