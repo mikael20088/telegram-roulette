@@ -158,7 +158,7 @@
         .overview-panel {
             position: fixed;
             top: 0;
-            right: -400px; /* скрыта за экраном */
+            right: -400px;
             width: 320px;
             height: 100vh;
             background: #000000;
@@ -243,7 +243,7 @@
         }
         .overview-row .value {
             font-weight: 500;
-            color: #00e676;
+            color: #ffffff;  /* изменено с зелёного на белый */
             text-align: right;
         }
         .note {
@@ -295,26 +295,26 @@
         <div class="overview-content">
             <div class="overview-row">
                 <span>Market Cap</span>
-                <span class="value" id="marketCap">$3,029,093,517</span>
+                <span class="value" id="marketCap">—</span>
             </div>
             <div class="overview-row">
                 <span>FDV</span>
-                <span class="value" id="fdv">$6,367,312,252</span>
+                <span class="value" id="fdv">—</span>
             </div>
             <div class="overview-row">
                 <span>Circulating Supply</span>
-                <span class="value" id="circSupply">2,452,707,301</span>
+                <span class="value" id="circSupply">—</span>
             </div>
             <div class="overview-row">
                 <span>Total Supply</span>
-                <span class="value" id="totalSupply">5,155,718,423</span>
+                <span class="value" id="totalSupply">—</span>
             </div>
             <div class="overview-row">
                 <span>Max. Supply</span>
-                <span class="value" id="maxSupply">∞</span>
+                <span class="value" id="maxSupply">—</span>
             </div>
         </div>
-        <div class="note">Данные обновляются раз в неделю из блокчейна</div>
+        <div class="note">Данные обновляются раз в неделю из CoinGecko</div>
     </div>
 
     <script>
@@ -327,7 +327,7 @@
         if (symbol.includes('USDT')) {
             pairNameElement.textContent = symbol.replace('USDT', '/USDT');
         } else {
-            pairNameElement.textContent = symbol; // на всякий случай
+            pairNameElement.textContent = symbol;
         }
 
         // ========== НАСТРОЙКИ ГРАФИКА ==========
@@ -1409,7 +1409,7 @@
             }
         }
 
-        // Обработчики мыши и касаний (аналогичны предыдущей версии, с учётом DPR)
+        // Обработчики мыши и касаний
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
             if (!e.defaultPrevented) {
@@ -1625,7 +1625,7 @@
 
         // ========== ЛОГИКА OVERVIEW ==========
 
-        // Функция загрузки on-chain данных (имитация, раз в неделю)
+        // Функция загрузки on-chain данных из CoinGecko (раз в неделю)
         async function loadOverviewData() {
             const storageKey = `overview_${symbol}`;
             const stored = localStorage.getItem(storageKey);
@@ -1643,37 +1643,78 @@
                 } catch (e) {}
             }
 
-            // Иначе загружаем свежие данные (здесь нужно подключить реальный блокчейн-API)
-            // Для примера используем статические данные для TON, для других монет — заглушку
-            let data;
-            if (symbol === 'TONUSDT' || symbol === 'TON') {
-                // Реальные данные TON (для примера)
-                data = {
-                    marketCap: '$3,029,093,517',
-                    fdv: '$6,367,312,252',
-                    circSupply: '2,452,707,301',
-                    totalSupply: '5,155,718,423',
-                    maxSupply: '∞'
+            // Определяем идентификатор монеты для CoinGecko
+            let coinId = '';
+            const base = symbol.replace('USDT', '').toLowerCase();
+            // Маппинг популярных монет (можно расширить)
+            const coinMap = {
+                'ton': 'the-open-network',
+                'btc': 'bitcoin',
+                'eth': 'ethereum',
+                'bnb': 'binancecoin',
+                'sol': 'solana',
+                'xrp': 'ripple',
+                'doge': 'dogecoin',
+                'ada': 'cardano',
+                'trx': 'tron',
+                'dot': 'polkadot',
+                'matic': 'matic-network',
+                'ltc': 'litecoin',
+                'bch': 'bitcoin-cash',
+                'xlm': 'stellar',
+                'etc': 'ethereum-classic',
+                'uni': 'uniswap',
+                'link': 'chainlink',
+                'xmr': 'monero',
+                'atom': 'cosmos'
+            };
+            coinId = coinMap[base] || base; // fallback
+
+            try {
+                const response = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
+                if (!response.ok) throw new Error('Coin not found');
+                const coinData = await response.json();
+
+                const marketData = coinData.market_data;
+                const marketCap = marketData.market_cap?.usd;
+                const fdv = marketData.fully_diluted_valuation?.usd;
+                const circSupply = marketData.circulating_supply;
+                const totalSupply = marketData.total_supply;
+                const maxSupply = marketData.max_supply;
+
+                // Форматируем числа с разделителями
+                const formatNumber = (num) => {
+                    if (num === null || num === undefined) return '—';
+                    return '$' + num.toLocaleString('en-US', { maximumFractionDigits: 0 });
                 };
-            } else {
-                // Для других монет можно попытаться получить данные из какого-то API
-                // или показать заглушку
-                data = {
+                const formatSupply = (num) => {
+                    if (num === null || num === undefined) return '—';
+                    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                };
+
+                const data = {
+                    marketCap: marketCap ? formatNumber(marketCap) : '—',
+                    fdv: fdv ? formatNumber(fdv) : '—',
+                    circSupply: circSupply ? formatSupply(circSupply) : '—',
+                    totalSupply: totalSupply ? formatSupply(totalSupply) : '—',
+                    maxSupply: maxSupply ? formatSupply(maxSupply) : (maxSupply === null ? '∞' : '—')
+                };
+
+                localStorage.setItem(storageKey, JSON.stringify({ timestamp: now, data }));
+                updateOverviewUI(data);
+            } catch (err) {
+                console.warn('Не удалось загрузить данные из CoinGecko:', err);
+                // Заглушка на случай ошибки
+                const data = {
                     marketCap: '—',
                     fdv: '—',
                     circSupply: '—',
                     totalSupply: '—',
                     maxSupply: '—'
                 };
+                localStorage.setItem(storageKey, JSON.stringify({ timestamp: now, data }));
+                updateOverviewUI(data);
             }
-
-            // Сохраняем в localStorage
-            localStorage.setItem(storageKey, JSON.stringify({
-                timestamp: now,
-                data: data
-            }));
-
-            updateOverviewUI(data);
         }
 
         function updateOverviewUI(data) {
@@ -1709,10 +1750,6 @@
         overviewBtn.addEventListener('click', showOverview);
         closeOverview.addEventListener('click', hideOverview);
         overlay.addEventListener('click', hideOverview);
-
-        // Также обновляем заголовок при изменении цены (например, каждое обновление графика)
-        // Можно добавить вызов updateOverviewHeader в refreshData, но проще обновлять при открытии.
-        // Для динамики можно подписаться на изменения, но для простоты оставим так.
     </script>
 </body>
 </html>
