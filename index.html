@@ -225,14 +225,14 @@
       background: transparent;
     }
 
-    /* Меню с тремя квадратами */
+    /* Меню с квадратами (уменьшено для четырёх элементов) */
     .menu-container {
       position: absolute;
       top: 35%;
       left: 50%;
       transform: translate(-50%, -50%);
       display: flex;
-      gap: 15px;
+      gap: 10px;
       z-index: 10;
       opacity: 0;
       transition: opacity 0.5s ease;
@@ -243,8 +243,8 @@
       pointer-events: auto;
     }
     .menu-item {
-      width: 110px;
-      height: 110px;
+      width: 90px;
+      height: 90px;
       background: rgba(10, 20, 10, 0.3);
       border-radius: 16px;
       display: flex;
@@ -274,11 +274,11 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
     .menu-item .icon {
-      font-size: 42px;
-      margin-bottom: 8px;
+      font-size: 36px;
+      margin-bottom: 6px;
     }
     .menu-item .label {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: bold;
       color: #fff;
       text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
@@ -1440,6 +1440,12 @@
     <iframe id="priceIframe" src="price_chart.html?symbol=TONUSDT"></iframe>
   </div>
 
+  <!-- НОВЫЙ ОВЕРЛЕЙ ДЛЯ STARS -->
+  <div class="game-overlay" id="starsOverlay">
+    <div class="close-btn" id="starsCloseBtn">×</div>
+    <iframe id="starsIframe" src="stars.html"></iframe>
+  </div>
+
   <!-- Модальное окно пополнения TON -->
   <div class="modal-overlay" id="paymentOverlay"></div>
   <div class="modal-bottom" id="paymentModal">
@@ -2230,6 +2236,11 @@
   const coinListOverlay = document.getElementById('coinListOverlay');
   const coinListItems = document.getElementById('coinListItems');
 
+  // Новые элементы для Stars
+  const starsOverlay = document.getElementById('starsOverlay');
+  const starsIframe = document.getElementById('starsIframe');
+  const starsCloseBtn = document.getElementById('starsCloseBtn');
+
   // Парольный экран
   const passwordOverlay = document.getElementById('passwordOverlay');
   const passwordInput = document.getElementById('passwordInput');
@@ -2245,6 +2256,7 @@
   priceOverlay.classList.remove('active');
   coinListOverlay.classList.remove('active');
   passwordOverlay.classList.remove('active');
+  starsOverlay.classList.remove('active'); // добавили
 
   setTimeout(() => {
     document.getElementById("matrix").style.opacity = "0";
@@ -2304,10 +2316,11 @@
     coinListOverlay.classList.add('active');
   });
 
-  // НОВЫЙ ОБРАБОТЧИК: Stars (пока ничего не делает)
+  // НОВЫЙ ОБРАБОТЧИК: Stars — открываем оверлей с stars.html
   document.getElementById('starsMenuItem').addEventListener('click', () => {
-    console.log('Stars menu clicked — функционал будет добавлен позже');
-    // Здесь можно добавить что‑то позже, например, открыть мини‑игру
+    menuContainer.classList.remove('visible');
+    starsIframe.src = 'stars.html'; // замените на фактический URL, если нужно
+    starsOverlay.classList.add('active');
   });
 
   // Закрытие Angry Birds
@@ -2342,6 +2355,21 @@
   coinListOverlay.addEventListener('click', (e) => {
     if (e.target === coinListOverlay) {
       coinListOverlay.classList.remove('active');
+      menuContainer.classList.add('visible');
+    }
+  });
+
+  // Закрытие Stars
+  starsCloseBtn.addEventListener('click', () => {
+    starsOverlay.classList.remove('active');
+    starsIframe.src = ''; // очищаем src
+    menuContainer.classList.add('visible');
+  });
+
+  starsOverlay.addEventListener('click', (e) => {
+    if (e.target === starsOverlay) {
+      starsOverlay.classList.remove('active');
+      starsIframe.src = '';
       menuContainer.classList.add('visible');
     }
   });
