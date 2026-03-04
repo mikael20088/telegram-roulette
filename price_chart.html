@@ -1623,7 +1623,37 @@
 
         handleIntervalChange(currentInterval);
 
-        // ========== УЛУЧШЕННАЯ ЛОГИКА OVERVIEW (с поиском и запасными API) ==========
+        // ========== УЛУЧШЕННАЯ ЛОГИКА OVERVIEW С ПОДДЕРЖКОЙ TELEGRAM ==========
+
+        // Определяем, открыто ли приложение в Telegram
+        const isTelegram = window.TelegramWebview || navigator.userAgent.includes('Telegram');
+
+        // Функция для проксирования запросов (если нужно)
+        async function fetchWithProxy(url, options = {}) {
+            // Если в Telegram, используем CORS-прокси (например, cors-anywhere)
+            if (isTelegram) {
+                // Можно использовать публичный прокси, но он нестабильный. Лучше свой, но для демо:
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                // Однако herokuapp требует предварительного запроса. Используем другой.
+                // Для простоты добавим несколько прокси с запасом.
+                const proxies = [
+                    'https://api.allorigins.win/raw?url=',
+                    'https://corsproxy.io/?',
+                    'https://thingproxy.freeboard.io/fetch/'
+                ];
+                for (const proxy of proxies) {
+                    try {
+                        const response = await fetch(proxy + encodeURIComponent(url), options);
+                        if (response.ok) return response;
+                    } catch (e) {
+                        console.warn('Proxy failed:', proxy, e);
+                    }
+                }
+                // Если все прокси не сработали, пробуем прямой запрос (может сработать)
+            }
+            // Прямой запрос
+            return fetch(url, options);
+        }
 
         // Функция форматирования чисел
         function formatNumber(num) {
@@ -1643,8 +1673,9 @@
             return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
         }
 
-        // Основная функция загрузки данных (с резервными вариантами)
+        // Основная функция загрузки данных
         async function loadOverviewData() {
+            console.log('Loading overview for', symbol, 'Telegram:', isTelegram);
             const storageKey = `overview_${symbol}`;
             const stored = localStorage.getItem(storageKey);
             const now = Date.now();
@@ -1655,6 +1686,7 @@
                 try {
                     const parsed = JSON.parse(stored);
                     if (now - parsed.timestamp < oneWeek) {
+                        console.log('Using cached data');
                         updateOverviewUI(parsed.data);
                         return;
                     }
@@ -1664,17 +1696,18 @@
             // Пытаемся получить данные (несколько источников)
             let data = null;
 
-            // 1. Пробуем CoinGecko по ID (из маппинга или поиска)
+            // 1. Пробуем CoinGecko по ID (из маппинга)
             data = await tryCoinGeckoById();
 
             // 2. Если не получилось — пробуем поиск по символу
             if (!data) data = await tryCoinGeckoSearch();
 
-            // 3. Если всё ещё нет — пробуем CoinPaprika (запасной API)
+            // 3. Если всё ещё нет — пробуем CoinPaprika
             if (!data) data = await tryCoinPaprika();
 
             // 4. Если ничего не сработало — заглушка
             if (!data) {
+                console.warn('All APIs failed, using fallback');
                 data = {
                     marketCap: '—',
                     fdv: '—',
@@ -2150,7 +2183,7 @@
             if (!coinId) return null;
 
             try {
-                const response = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
+                const response = await fetchWithProxy(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
                 if (!response.ok) return null;
                 const coinData = await response.json();
                 const marketData = coinData.market_data;
@@ -2163,6 +2196,7 @@
                     maxSupply: marketData.max_supply ? formatSupply(marketData.max_supply) : (marketData.max_supply === null ? '∞' : '—')
                 };
             } catch (e) {
+                console.warn('CoinGecko by ID failed:', e);
                 return null;
             }
         }
@@ -2171,7 +2205,7 @@
         async function tryCoinGeckoSearch() {
             const query = symbol.replace('USDT', '');
             try {
-                const response = await fetch(`https://api.coingecko.com/api/v3/search?query=${query}`);
+                const response = await fetchWithProxy(`https://api.coingecko.com/api/v3/search?query=${query}`);
                 if (!response.ok) return null;
                 const searchData = await response.json();
                 if (!searchData.coins || searchData.coins.length === 0) return null;
@@ -2181,7 +2215,7 @@
                 if (!bestMatch || !bestMatch.id) return null;
 
                 // Получаем детальные данные по найденному ID
-                const detailResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${bestMatch.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
+                const detailResponse = await fetchWithProxy(`https://api.coingecko.com/api/v3/coins/${bestMatch.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
                 if (!detailResponse.ok) return null;
                 const coinData = await detailResponse.json();
                 const marketData = coinData.market_data;
@@ -2194,6 +2228,7 @@
                     maxSupply: marketData.max_supply ? formatSupply(marketData.max_supply) : (marketData.max_supply === null ? '∞' : '—')
                 };
             } catch (e) {
+                console.warn('CoinGecko search failed:', e);
                 return null;
             }
         }
@@ -2203,7 +2238,7 @@
             const query = symbol.replace('USDT', '').toLowerCase();
             try {
                 // Сначала ищем по символу
-                const response = await fetch(`https://api.coinpaprika.com/v1/search?q=${query}&c=currencies`);
+                const response = await fetchWithProxy(`https://api.coinpaprika.com/v1/search?q=${query}&c=currencies`);
                 if (!response.ok) return null;
                 const searchData = await response.json();
                 if (!searchData.currencies || searchData.currencies.length === 0) return null;
@@ -2213,7 +2248,7 @@
                 if (!bestMatch || !bestMatch.id) return null;
 
                 // Получаем детальные тикеры
-                const tickerResponse = await fetch(`https://api.coinpaprika.com/v1/tickers/${bestMatch.id}`);
+                const tickerResponse = await fetchWithProxy(`https://api.coinpaprika.com/v1/tickers/${bestMatch.id}`);
                 if (!tickerResponse.ok) return null;
                 const tickerData = await tickerResponse.json();
 
@@ -2236,6 +2271,7 @@
                     maxSupply: maxSupply ? formatSupply(maxSupply) : (maxSupply === null ? '∞' : '—')
                 };
             } catch (e) {
+                console.warn('CoinPaprika failed:', e);
                 return null;
             }
         }
