@@ -1353,7 +1353,7 @@
     </div>
   </div>
 
-  <!-- Меню с тремя квадратами (появляется после анимации) -->
+  <!-- Меню с квадратами (Craft, Angry Birds, Price, Stars) -->
   <div class="menu-container" id="menuContainer">
     <div class="menu-item" id="craftMenuItem">
       <span class="icon">⚒️</span>
@@ -1366,6 +1366,11 @@
     <div class="menu-item" id="priceMenuItem">
       <span class="icon">📈</span>
       <span class="label">Price</span>
+    </div>
+    <!-- Новый пункт Stars вместо Chess -->
+    <div class="menu-item" id="starsMenuItem">
+      <span class="icon">⭐</span>
+      <span class="label">Stars</span>
     </div>
   </div>
 
@@ -1502,7 +1507,7 @@
 </div>
 
 <script>
-  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД С ДОБАВЛЕНИЕМ СПИСКА МОНЕТ ==========
+  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД (кроме удалённых шахмат) ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -2297,6 +2302,12 @@
     menuContainer.classList.remove('visible');
     renderCoinList(); // Загружаем и отображаем список монет
     coinListOverlay.classList.add('active');
+  });
+
+  // НОВЫЙ ОБРАБОТЧИК: Stars (пока ничего не делает)
+  document.getElementById('starsMenuItem').addEventListener('click', () => {
+    console.log('Stars menu clicked — функционал будет добавлен позже');
+    // Здесь можно добавить что‑то позже, например, открыть мини‑игру
   });
 
   // Закрытие Angry Birds
