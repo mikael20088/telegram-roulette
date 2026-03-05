@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>График / USDT — свечной график + Overview + Trade</title>
+    <!-- Подключаем Inter через Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <style>
         /* Общие стили */
         body {
@@ -11,7 +15,7 @@
             padding: 0;
             height: 100vh;
             overflow: hidden;
-            font-family: 'JetBrains Mono', 'Roboto Mono', 'Source Code Pro', monospace;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', 'Source Code Pro', monospace;
             background: #000000;
             color: #e0e0e0;
             display: flex;
@@ -40,11 +44,12 @@
             font-size: 18px;
             font-weight: 500;
             color: #ffffff;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .current-price {
             font-size: 20px;
             font-weight: 400;
-            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             letter-spacing: -0.5px;
             transition: color 0.1s ease;
         }
@@ -62,7 +67,7 @@
             background: rgba(255, 255, 255, 0.05);
             align-self: flex-start;
             margin-top: 2px;
-            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             letter-spacing: -0.3px;
         }
         .price-change.positive {
@@ -85,7 +90,7 @@
             cursor: pointer;
             transition: all 0.15s;
             font-size: 14px;
-            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .trade-btn:hover, .overview-btn:hover {
             background: #3a3a4a;
@@ -122,7 +127,7 @@
             cursor: pointer;
             transition: all 0.15s;
             font-size: 14px;
-            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .tf-btn.active, .tf-btn:hover {
             background: #2a2a3a;
@@ -140,6 +145,7 @@
             transition: all 0.15s;
             font-size: 18px;
             line-height: 1;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .go-last-btn:hover {
             background: #2a2a3a;
@@ -155,6 +161,7 @@
             display: none;
             z-index: 20;
             font-size: 14px;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         #error { color: #ff5252; }
 
@@ -173,7 +180,7 @@
             flex-direction: column;
             padding: 20px;
             box-sizing: border-box;
-            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             overflow: hidden; /* внешняя прокрутка отключена, внутренняя у стакана */
         }
         .trade-panel.visible {
@@ -192,6 +199,7 @@
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 5px;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .trade-price-row {
             display: flex;
@@ -202,9 +210,11 @@
         .trade-price {
             font-size: 22px;
             font-weight: 400;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .trade-change {
             font-size: 16px;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .close-btn {
             position: absolute;
@@ -232,6 +242,7 @@
             color: #a0a0b0;
             margin-bottom: 6px;
             display: block;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .input-field {
             background: #2a2a3a;
@@ -241,7 +252,7 @@
             width: 100%;
             box-sizing: border-box;
             color: #ffffff;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', monospace;
             font-size: 16px;
             margin-bottom: 8px;
         }
@@ -260,6 +271,7 @@
             margin-top: -4px;
             margin-bottom: 12px;
             display: none;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .percent-buttons {
             display: flex;
@@ -277,6 +289,7 @@
             font-size: 14px;
             cursor: pointer;
             transition: 0.15s;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .percent-btn:hover {
             background: #3a3a4a;
@@ -298,7 +311,7 @@
             color: white;
             cursor: pointer;
             transition: opacity 0.15s;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', monospace;
         }
         .buy-btn {
             background: #00e676;
@@ -329,13 +342,14 @@
             border-bottom: 1px solid #2a2a2a;
             margin-bottom: 8px;
             flex-shrink: 0;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .order-row {
             display: flex;
             justify-content: space-between;
             font-size: 13px;
             padding: 4px 0;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', monospace;
             flex-shrink: 0;
         }
         .order-row.ask .price {
@@ -363,6 +377,7 @@
             font-size: 18px;
             color: #00e676;
             flex-shrink: 0;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
 
         /* Панель Overview (без изменений) */
@@ -381,7 +396,7 @@
             flex-direction: column;
             padding: 20px;
             box-sizing: border-box;
-            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             overflow-y: auto;
         }
         .overview-panel.visible {
@@ -412,6 +427,7 @@
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 5px;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .overview-price-row {
             display: flex;
@@ -422,9 +438,11 @@
         .overview-price {
             font-size: 22px;
             font-weight: 400;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .overview-change {
             font-size: 16px;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .overview-content {
             flex: 1;
@@ -436,17 +454,20 @@
             font-size: 14px;
             border-bottom: 1px dashed #333;
             padding-bottom: 5px;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .overview-row .value {
             font-weight: 500;
             color: #ffffff;
             text-align: right;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
         .note {
             margin-top: 20px;
             font-size: 11px;
             color: #777;
             text-align: center;
+            font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
     </style>
 </head>
@@ -836,7 +857,7 @@
             const { paddingBottom } = CHART_SETTINGS;
 
             const text = formatPrice(price);
-            ctx.font = `500 ${fontSize}px 'JetBrains Mono', 'Roboto Mono', monospace`;
+            ctx.font = `500 ${fontSize}px 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace`;
             ctx.letterSpacing = '-0.02em';
             ctx.shadowBlur = 0;
             const textWidth = ctx.measureText(text).width;
@@ -913,7 +934,7 @@
                 ctx.stroke();
 
                 ctx.fillStyle = FIRST_BUTTON_SETTINGS.textColor;
-                ctx.font = `${FIRST_BUTTON_SETTINGS.fontSize}px 'JetBrains Mono', monospace`;
+                ctx.font = `${FIRST_BUTTON_SETTINGS.fontSize}px 'Inter', 'JetBrains Mono', monospace`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.shadowBlur = 0;
@@ -1192,7 +1213,7 @@
             const PRICE_SCALE_RIGHT = 15;
             ctx.shadowBlur = 0;
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
-            ctx.font = '500 11px "JetBrains Mono", "Roboto Mono", monospace';
+            ctx.font = '500 11px "Inter", "JetBrains Mono", "Roboto Mono", monospace';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
             ctx.letterSpacing = '-0.02em';
@@ -1227,7 +1248,7 @@
             // Временные метки снизу
             ctx.save();
             ctx.fillStyle = '#a0a0b0';
-            ctx.font = '10px "JetBrains Mono", "Roboto Mono", monospace';
+            ctx.font = '10px "Inter", "JetBrains Mono", "Roboto Mono", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.shadowBlur = 0;
@@ -1290,7 +1311,7 @@
             ctx.strokeStyle = HIGH_LOW_SETTINGS.lineColor;
             ctx.lineWidth = HIGH_LOW_SETTINGS.lineWidth;
             ctx.fillStyle = HIGH_LOW_SETTINGS.textColor;
-            ctx.font = `500 ${HIGH_LOW_SETTINGS.fontSize}px "JetBrains Mono", monospace`;
+            ctx.font = `500 ${HIGH_LOW_SETTINGS.fontSize}px "Inter", "JetBrains Mono", monospace`;
             ctx.textBaseline = 'middle';
             ctx.shadowBlur = 0;
             ctx.letterSpacing = '-0.02em';
@@ -1340,7 +1361,7 @@
             const percentSign = percentChange >= 0 ? '+' : '';
             const percentText = `${percentSign}${percentChange}%`;
             const priceText = formatPrice(crosshairPrice);
-            ctx.font = `500 ${CROSSHAIR_SETTINGS.rightBoxFontSize}px 'JetBrains Mono', monospace`;
+            ctx.font = `500 ${CROSSHAIR_SETTINGS.rightBoxFontSize}px 'Inter', 'JetBrains Mono', monospace`;
             const priceWidth = ctx.measureText(priceText).width;
             const percentWidth = ctx.measureText(percentText).width;
             const boxWidth = Math.max(priceWidth, percentWidth) + 2 * CROSSHAIR_SETTINGS.rightBoxPadding;
@@ -1389,7 +1410,7 @@
                     { label: 'Change', value: `${changeFormatted} (${changePercentFormatted}%)` },
                     { label: 'Range', value: `${range} (${rangePercent}%)` }
                 ];
-                ctx.font = `${infoFontSize}px 'JetBrains Mono', monospace`;
+                ctx.font = `${infoFontSize}px 'Inter', 'JetBrains Mono', monospace`;
                 const lineHeight = infoFontSize + 2;
                 let maxLabelWidth = 0;
                 let maxValueWidth = 0;
