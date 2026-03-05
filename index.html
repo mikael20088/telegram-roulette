@@ -1386,14 +1386,14 @@
     </div>
     <div class="menu-item" id="priceMenuItem">
       <div class="menu-icon">
-        <img src="videos/Price.png" alt="Price">
+        <img src="/videos/Price.png" alt="Price">
       </div>
       <span class="menu-label">Price</span>
     </div>
     <!-- Новый пункт Stars вместо Chess -->
     <div class="menu-item" id="starsMenuItem">
       <div class="menu-icon">
-        <img src="videos/Stars.png" alt="Stars">
+        <img src="/videos/Stars.png" alt="Stars">
       </div>
       <span class="menu-label">Stars</span>
     </div>
@@ -1448,7 +1448,7 @@
   <!-- Оверлей для Angry Birds -->
   <div class="game-overlay" id="gameOverlay">
     <div class="close-btn" id="gameCloseBtn">×</div>
-    <iframe id="gameIframe" src="https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm"></iframe>
+    <iframe id="gameIframe" src="/angry/AngryBirdsGame.htm"></iframe>
   </div>
 
   <!-- Оверлей для списка монет (динамический список) -->
@@ -1462,13 +1462,13 @@
   <!-- Оверлей для Price с iframe (график) -->
   <div class="game-overlay" id="priceOverlay">
     <div class="close-btn" id="priceCloseBtn">×</div>
-    <iframe id="priceIframe" src="price_chart.html?symbol=TONUSDT"></iframe>
+    <iframe id="priceIframe" src="/price_chart.html?symbol=TONUSDT"></iframe>
   </div>
 
   <!-- НОВЫЙ ОВЕРЛЕЙ ДЛЯ STARS -->
   <div class="game-overlay" id="starsOverlay">
     <div class="close-btn" id="starsCloseBtn">×</div>
-    <iframe id="starsIframe" src="stars.html"></iframe>
+    <iframe id="starsIframe" src="/stars.html"></iframe>
   </div>
 
   <!-- Модальное окно пополнения TON -->
@@ -1538,7 +1538,9 @@
 </div>
 
 <script>
-  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД (кроме удалённых шахмат) ==========
+  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД (с исправлением путей) ==========
+  const BASE_URL = window.location.origin + '/'; // абсолютный базовый путь
+
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -1580,7 +1582,7 @@
     const encodedName = encodeURIComponent(baseName);
     const video = document.createElement('video');
     video.className = 'gift-img hidden-video';
-    video.src = `videos/${encodedName}.mp4`;
+    video.src = BASE_URL + `videos/${encodedName}.mp4`;
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
@@ -1614,7 +1616,7 @@
       const baseName = fileMap[gift.name] || gift.name;
       const encodedName = encodeURIComponent(baseName);
       const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
+      video.src = BASE_URL + `videos/${encodedName}.mp4`;
       video.muted = true;
       video.loop = true;
       video.autoplay = true;
@@ -1643,7 +1645,7 @@
       const baseName = fileMap[gift.name] || gift.name;
       const encodedName = encodeURIComponent(baseName);
       const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
+      video.src = BASE_URL + `videos/${encodedName}.mp4`;
       video.muted = true;
       video.loop = true;
       video.autoplay = true;
@@ -1672,7 +1674,7 @@
       const baseName = fileMap[gift.name] || gift.name;
       const encodedName = encodeURIComponent(baseName);
       const video = document.createElement('video');
-      video.src = `videos/${encodedName}.mp4`;
+      video.src = BASE_URL + `videos/${encodedName}.mp4`;
       video.muted = true;
       video.loop = true;
       video.autoplay = true;
@@ -1769,7 +1771,7 @@
     const encodedName = encodeURIComponent(baseName);
 
     const img = new Image();
-    img.src = `videos/${encodedName}.png`;
+    img.src = BASE_URL + `videos/${encodedName}.png`;
     img.alt = gift.name;
     img.onerror = () => {
       container.innerHTML = '';
@@ -1805,7 +1807,7 @@
     const tryCreateVideo = () => {
       const video = document.createElement('video');
       video.className = 'gift-img';
-      video.src = `videos/${encodedName}.mp4`;
+      video.src = BASE_URL + `videos/${encodedName}.mp4`;
       video.muted = true;
       video.loop = true;
       video.autoplay = true;
@@ -1826,7 +1828,7 @@
           emoji.textContent = gift.emoji;
           container.appendChild(emoji);
         };
-        img.src = `videos/${encodedName}.png`;
+        img.src = BASE_URL + `videos/${encodedName}.png`;
       };
 
       video.oncanplay = () => video.play().catch(() => {});
@@ -1838,7 +1840,7 @@
     } else {
       const img = new Image();
       img.className = 'gift-img';
-      img.src = `videos/${encodedName}.png`;
+      img.src = BASE_URL + `videos/${encodedName}.png`;
       img.alt = gift.name;
       img.onerror = () => {
         container.innerHTML = '';
@@ -2330,7 +2332,7 @@
 
   document.getElementById('angryMenuItem').addEventListener('click', () => {
     menuContainer.classList.remove('visible');
-    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
+    gameIframe.src = BASE_URL + 'angry/AngryBirdsGame.htm';
     gameOverlay.classList.add('active');
   });
 
@@ -2344,7 +2346,7 @@
   // НОВЫЙ ОБРАБОТЧИК: Stars — открываем оверлей с stars.html
   document.getElementById('starsMenuItem').addEventListener('click', () => {
     menuContainer.classList.remove('visible');
-    starsIframe.src = 'stars.html'; // замените на фактический URL, если нужно
+    starsIframe.src = BASE_URL + 'stars.html';
     starsOverlay.classList.add('active');
   });
 
@@ -2387,7 +2389,7 @@
   // Закрытие Stars
   starsCloseBtn.addEventListener('click', () => {
     starsOverlay.classList.remove('active');
-    starsIframe.src = ''; // очищаем src
+    starsIframe.src = '';
     menuContainer.classList.add('visible');
   });
 
@@ -2463,7 +2465,7 @@
       div.addEventListener('click', () => {
         // Открываем график с выбранной монетой
         coinListOverlay.classList.remove('active');
-        priceIframe.src = `price_chart.html?symbol=${coin.symbol}`;
+        priceIframe.src = BASE_URL + `price_chart.html?symbol=${coin.symbol}`;
         priceOverlay.classList.add('active');
       });
       return div;
@@ -2701,7 +2703,7 @@
     });
 
     function initTonConnect() {
-      const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
+      const manifestUrl = BASE_URL + 'tonconnect-manifest.json';
       try {
         tonConnectUI = new TonConnectUI({
           manifestUrl: manifestUrl,
@@ -2811,10 +2813,10 @@
     gifts.forEach(function(name) {
       var baseName = fileMap[name] || name;
       var img = new Image();
-      img.src = 'videos/' + encodeURIComponent(baseName) + '.png';
+      img.src = BASE_URL + 'videos/' + encodeURIComponent(baseName) + '.png';
     });
   })();
 </script>
 
 </body>
-</html>ы
+</html>
