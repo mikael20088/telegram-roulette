@@ -2560,6 +2560,17 @@
       balanceSpan.textContent = currentBalance.toFixed(2);
     }
 
+    // ===== НОВАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ БАЛАНСА В IFRAME STARS =====
+    function updateStarsBalance() {
+      const starsIframe = document.getElementById('starsIframe');
+      if (starsIframe && starsIframe.contentWindow) {
+        starsIframe.contentWindow.postMessage({
+          type: 'UPDATE_BALANCE',
+          balance: currentBalance
+        }, '*');
+      }
+    }
+
     function updateUsdEquivalent() {
       let amount = parseFloat(amountInput.value) || 0;
       let usd = amount * tonUsdRate;
@@ -2747,6 +2758,7 @@
             console.log('Transaction sent', result);
             currentBalance += selectedAmount;
             updateBalanceDisplay();
+            updateStarsBalance(); // <-- ОТПРАВЛЯЕМ ОБНОВЛЁННЫЙ БАЛАНС В STARS
             alert('Оплата успешно отправлена!');
             closePaymentModal();
           } catch (e) {
@@ -2795,7 +2807,21 @@
     updatePayButton();
     updateBalanceDisplay();
     updateUsdEquivalent();
+
+    // Отправляем начальный баланс в Stars после загрузки iframe
+    setTimeout(updateStarsBalance, 1500);
   })();
+
+  // ===== НОВЫЙ ОБРАБОТЧИК СООБЩЕНИЙ ОТ IFRAME STARS =====
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'OPEN_PAYMENT_MODAL') {
+      // Эмулируем клик по панели баланса, чтобы открыть модальное окно пополнения
+      const balancePanel = document.getElementById('balancePanel');
+      if (balancePanel) {
+        balancePanel.click();
+      }
+    }
+  });
 </script>
 
 <!-- Предзагрузка изображений для четырёх подарков -->
@@ -2817,4 +2843,4 @@
 </script>
 
 </body>
-</html>ы
+</html>
