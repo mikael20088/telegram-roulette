@@ -343,7 +343,7 @@
             paddingRight: 45,
             paddingTop: 25,
             paddingBottom: 70,
-            minZoom: 0.3,
+            minZoom: 0.15,          // уменьшено для возможности отдалить до 80 свечей
             maxZoom: 3,
             candleWidthBase: 16,
             gapBetweenCandles: 2,
@@ -554,7 +554,7 @@
         function adjustZoomToTarget(interval) {
             const targetCount = TARGET_VISIBLE_COUNT[interval] || 40;
             const rect = canvasContainer.getBoundingClientRect();
-            if (rect.width === 0) return; // контейнер ещё не отрисован
+            if (rect.width === 0) return; // контейнер ещё не отрисован, ничего не делаем
             
             const availableWidth = rect.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight;
             if (availableWidth <= 0) return;
@@ -1812,4 +1812,4 @@
         overlay.addEventListener('click', hideOverview);
     </script>
 </body>
-</html>ы
+</html>
