@@ -157,18 +157,17 @@
         }
         #error { color: #ff5252; }
 
-        /* Стили для панели Trade (стакан) */
+        /* Панель Trade на весь экран */
         .trade-panel {
             position: fixed;
             top: 0;
-            left: -400px;
-            width: 320px;
+            left: -100%;
+            width: 100%;
             height: 100vh;
             background: #000000;
             color: #ffffff;
             z-index: 200;
             transition: left 0.3s ease;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
             padding: 20px;
@@ -221,11 +220,90 @@
             color: #ff5252;
         }
 
-        /* Таблица стакана */
-        .order-book {
-            flex: 1;
+        /* Новые элементы ввода ордера */
+        .order-entry {
+            margin-bottom: 30px;
+        }
+        .input-label {
+            font-size: 14px;
+            color: #a0a0b0;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .input-field {
+            background: #2a2a3a;
+            border: 1px solid #4a4a5a;
+            border-radius: 12px;
+            padding: 12px 16px;
+            width: 100%;
+            box-sizing: border-box;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #00e676;
+        }
+        .input-field[readonly] {
+            background: #1e1e2e;
+            color: #a0a0b0;
+            cursor: default;
+        }
+        .percent-buttons {
             display: flex;
-            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0 20px;
+        }
+        .percent-btn {
+            background: #2a2a3a;
+            border: 1px solid #4a4a5a;
+            color: #ffffff;
+            border-radius: 20px;
+            padding: 8px 0;
+            flex: 1;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .percent-btn:hover {
+            background: #3a3a4a;
+            border-color: #00e676;
+        }
+        .action-buttons-trade {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .buy-btn, .sell-btn {
+            flex: 1;
+            padding: 14px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .buy-btn {
+            background: #00e676;
+        }
+        .sell-btn {
+            background: #ff5252;
+        }
+        .buy-btn:hover, .sell-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Стакан */
+        .order-book {
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 16px;
         }
         .order-book-header {
             display: flex;
@@ -269,7 +347,7 @@
             color: #00e676;
         }
 
-        /* Стили для панели Overview (без изменений) */
+        /* Панель Overview (без изменений) */
         .overview-panel {
             position: fixed;
             top: 0;
@@ -384,21 +462,45 @@
         <button class="go-last-btn" id="goLastBtn">→|</button>
     </div>
 
-    <!-- Панель Trade (стакан) -->
+    <!-- Панель Trade (на весь экран) -->
     <div class="overlay" id="tradeOverlay"></div>
     <div class="trade-panel" id="tradePanel">
         <div class="trade-header">
-            <span class="trade-symbol" id="tradeSymbol">BTC/USDT</span>
+            <span class="trade-symbol" id="tradeSymbol">TON/USDT</span>
             <div class="trade-price-row">
                 <span class="trade-price" id="tradePrice">0.0000</span>
                 <span class="trade-change" id="tradeChange">+0.00%</span>
             </div>
             <button class="close-btn" id="closeTrade">&times;</button>
         </div>
+
+        <!-- Новые элементы управления ордером -->
+        <div class="order-entry">
+            <div class="input-label">Цена ордера</div>
+            <input type="number" id="orderPrice" class="input-field" placeholder="0.00" step="any" value="0.00">
+
+            <div class="input-label">Заполнить по Кол - ву ▼</div>
+            <input type="number" id="orderAmount" class="input-field" readonly value="0.00">
+
+            <div class="percent-buttons">
+                <div class="percent-btn" data-percent="10">10%</div>
+                <div class="percent-btn" data-percent="25">25%</div>
+                <div class="percent-btn" data-percent="50">50%</div>
+                <div class="percent-btn" data-percent="75">75%</div>
+                <div class="percent-btn" data-percent="100">100%</div>
+            </div>
+
+            <div class="action-buttons-trade">
+                <button class="buy-btn" id="buyBtn">BUY</button>
+                <button class="sell-btn" id="sellBtn">SELL</button>
+            </div>
+        </div>
+
+        <!-- Стакан ордеров -->
         <div class="order-book">
             <div class="order-book-header">
                 <span>Цена (USDT)</span>
-                <span>Кол-во (BTC)</span>
+                <span>Кол-во (TON)</span>
                 <span>Сумма</span>
             </div>
             <!-- Asks (продажи) -->
@@ -410,7 +512,7 @@
         </div>
     </div>
 
-    <!-- Панель Overview -->
+    <!-- Панель Overview (без изменений) -->
     <div class="overlay" id="overlay"></div>
     <div class="overview-panel" id="overviewPanel">
         <div class="overview-header">
@@ -586,6 +688,82 @@
         const asksContainer = document.getElementById('asksContainer');
         const bidsContainer = document.getElementById('bidsContainer');
         const marketPriceSpan = document.getElementById('marketPrice');
+        const orderPriceInput = document.getElementById('orderPrice');
+        const orderAmountInput = document.getElementById('orderAmount');
+        const percentBtns = document.querySelectorAll('.percent-btn');
+        const buyBtn = document.getElementById('buyBtn');
+        const sellBtn = document.getElementById('sellBtn');
+
+        // Хранилище ордеров (заглушка, без сервера)
+        let orderBook = {
+            asks: [], // продажи (красные) - сортировка по возрастанию цены
+            bids: []  // покупки (зелёные) - сортировка по убыванию цены
+        };
+
+        // Функция обновления отображения стакана
+        function renderOrderBook() {
+            asksContainer.innerHTML = '';
+            bidsContainer.innerHTML = '';
+
+            // Отображаем asks (продажи) - до 10 строк
+            orderBook.asks.slice(0, 10).forEach(ask => {
+                const row = document.createElement('div');
+                row.className = 'order-row ask';
+                row.innerHTML = `<span class="price">${ask.price}</span><span class="amount">${ask.amount}</span><span class="total">${ask.total}</span>`;
+                asksContainer.appendChild(row);
+            });
+
+            // Отображаем bids (покупки) - до 10 строк
+            orderBook.bids.slice(0, 10).forEach(bid => {
+                const row = document.createElement('div');
+                row.className = 'order-row bid';
+                row.innerHTML = `<span class="price">${bid.price}</span><span class="amount">${bid.amount}</span><span class="total">${bid.total}</span>`;
+                bidsContainer.appendChild(row);
+            });
+        }
+
+        // Функция добавления ордера
+        function addOrder(type, price, amount) {
+            if (!price || !amount || parseFloat(price) <= 0 || parseFloat(amount) <= 0) {
+                alert('Введите корректную цену и количество');
+                return;
+            }
+            price = parseFloat(price).toFixed(2);
+            amount = parseFloat(amount).toFixed(4);
+            const total = (parseFloat(price) * parseFloat(amount)).toFixed(2);
+            const order = { price, amount, total };
+
+            if (type === 'sell') {
+                orderBook.asks.push(order);
+                // Сортировка asks по возрастанию цены (низкие сверху)
+                orderBook.asks.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            } else {
+                orderBook.bids.push(order);
+                // Сортировка bids по убыванию цены (высокие сверху)
+                orderBook.bids.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            }
+            renderOrderBook();
+        }
+
+        // Обработчики для кнопок процентов (используем условный баланс 100 TON для простоты)
+        percentBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const percent = parseInt(btn.dataset.percent);
+                // Для демонстрации: количество = процент от 100 (как будто баланс 100 TON)
+                const amount = percent; // можно также использовать текущую цену, но для простоты так
+                orderAmountInput.value = amount.toFixed(4);
+            });
+        });
+
+        // Кнопка BUY
+        buyBtn.addEventListener('click', () => {
+            addOrder('buy', orderPriceInput.value, orderAmountInput.value);
+        });
+
+        // Кнопка SELL
+        sellBtn.addEventListener('click', () => {
+            addOrder('sell', orderPriceInput.value, orderAmountInput.value);
+        });
 
         // Учёт devicePixelRatio для чёткости
         function resizeCanvas() {
@@ -603,7 +781,7 @@
             ctx.shadowBlur = 0;
         }
 
-        // Остальные переменные
+        // Остальные переменные графика
         let chartData = [];
         let currentInterval = '1h';
         let startIndex = 0;
@@ -1677,13 +1855,6 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
 
-        function getPinchCenter(touches) {
-            return {
-                x: (touches[0].clientX + touches[1].clientX) / 2,
-                y: (touches[0].clientY + touches[1].clientY) / 2
-            };
-        }
-
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             crosshairVisible = false;
@@ -1738,43 +1909,9 @@
             marketPriceSpan.textContent = priceDisplay.textContent;
         }
 
-        function generateOrderBook(basePrice) {
-            const numericPrice = parseFloat(basePrice) || 50000;
-            const asks = [];
-            const bids = [];
-            for (let i = 1; i <= 10; i++) {
-                let askPrice = numericPrice + i * 10;
-                let askAmount = (Math.random() * 2 + 0.1).toFixed(4);
-                asks.push({ price: askPrice.toFixed(2), amount: askAmount, total: (askPrice * askAmount).toFixed(2) });
-                let bidPrice = numericPrice - i * 10;
-                let bidAmount = (Math.random() * 2 + 0.1).toFixed(4);
-                bids.push({ price: bidPrice.toFixed(2), amount: bidAmount, total: (bidPrice * bidAmount).toFixed(2) });
-            }
-            return { asks, bids };
-        }
-
-        function renderOrderBook() {
-            const basePrice = priceDisplay.textContent;
-            const { asks, bids } = generateOrderBook(basePrice);
-            asksContainer.innerHTML = '';
-            bidsContainer.innerHTML = '';
-            asks.forEach(ask => {
-                const row = document.createElement('div');
-                row.className = 'order-row ask';
-                row.innerHTML = `<span class="price">${ask.price}</span><span class="amount">${ask.amount}</span><span class="total">${ask.total}</span>`;
-                asksContainer.appendChild(row);
-            });
-            bids.forEach(bid => {
-                const row = document.createElement('div');
-                row.className = 'order-row bid';
-                row.innerHTML = `<span class="price">${bid.price}</span><span class="amount">${bid.amount}</span><span class="total">${bid.total}</span>`;
-                bidsContainer.appendChild(row);
-            });
-        }
-
         function showTrade() {
             updateTradePanel();
-            renderOrderBook();
+            renderOrderBook(); // отображаем текущий стакан (пустой или с ордерами)
             tradePanel.classList.add('visible');
             tradeOverlay.classList.add('visible');
         }
