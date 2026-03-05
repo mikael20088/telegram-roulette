@@ -2,9 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>График / USDT — свечной график + Overview + Trade</title>
     <style>
+        /* Общие стили */
         body {
             margin: 0;
             padding: 0;
@@ -173,7 +174,7 @@
             padding: 20px;
             box-sizing: border-box;
             font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
-            overflow-y: auto;
+            overflow: hidden; /* внешняя прокрутка отключена, внутренняя у стакана */
         }
         .trade-panel.visible {
             left: 0;
@@ -185,6 +186,7 @@
             padding-bottom: 15px;
             margin-bottom: 20px;
             position: relative;
+            flex-shrink: 0;
         }
         .trade-symbol {
             font-size: 24px;
@@ -220,9 +222,10 @@
             color: #ff5252;
         }
 
-        /* Новые элементы ввода ордера */
+        /* Элементы ввода ордера */
         .order-entry {
-            margin-bottom: 30px;
+            flex-shrink: 0;
+            margin-bottom: 20px;
         }
         .input-label {
             font-size: 14px;
@@ -240,7 +243,7 @@
             color: #ffffff;
             font-family: 'JetBrains Mono', monospace;
             font-size: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
         .input-field:focus {
             outline: none;
@@ -251,10 +254,17 @@
             color: #a0a0b0;
             cursor: default;
         }
+        .wallet-warning {
+            color: #ff5252;
+            font-size: 12px;
+            margin-top: -4px;
+            margin-bottom: 12px;
+            display: none;
+        }
         .percent-buttons {
             display: flex;
             gap: 8px;
-            margin: 12px 0 20px;
+            margin: 12px 0 8px;
         }
         .percent-btn {
             background: #2a2a3a;
@@ -275,7 +285,8 @@
         .action-buttons-trade {
             display: flex;
             gap: 12px;
-            margin: 20px 0;
+            margin: 16px 0 20px;
+            flex-shrink: 0;
         }
         .buy-btn, .sell-btn {
             flex: 1;
@@ -299,9 +310,13 @@
             opacity: 0.8;
         }
 
-        /* Стакан */
+        /* Стакан с прокруткой */
         .order-book {
-            margin-top: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* важно для flex child */
+            overflow-y: auto;
             border-top: 1px solid #333;
             padding-top: 16px;
         }
@@ -313,6 +328,7 @@
             font-size: 12px;
             border-bottom: 1px solid #2a2a2a;
             margin-bottom: 8px;
+            flex-shrink: 0;
         }
         .order-row {
             display: flex;
@@ -320,6 +336,7 @@
             font-size: 13px;
             padding: 4px 0;
             font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
         }
         .order-row.ask .price {
             color: #ff5252;
@@ -345,6 +362,7 @@
             font-weight: bold;
             font-size: 18px;
             color: #00e676;
+            flex-shrink: 0;
         }
 
         /* Панель Overview (без изменений) */
@@ -474,13 +492,14 @@
             <button class="close-btn" id="closeTrade">&times;</button>
         </div>
 
-        <!-- Новые элементы управления ордером -->
+        <!-- Элементы ввода ордера -->
         <div class="order-entry">
             <div class="input-label">Цена ордера</div>
             <input type="number" id="orderPrice" class="input-field" placeholder="0.00" step="any" value="0.00">
 
-            <div class="input-label">Заполнить по Кол - ву ▼</div>
+            <div class="input-label">Заполнить по Кол-во ▼</div>
             <input type="number" id="orderAmount" class="input-field" readonly value="0.00">
+            <div class="wallet-warning" id="walletWarning">Подключите кошелек</div>
 
             <div class="percent-buttons">
                 <div class="percent-btn" data-percent="10">10%</div>
@@ -496,7 +515,7 @@
             </div>
         </div>
 
-        <!-- Стакан ордеров -->
+        <!-- Стакан ордеров (прокручиваемый) -->
         <div class="order-book">
             <div class="order-book-header">
                 <span>Цена (USDT)</span>
@@ -512,7 +531,7 @@
         </div>
     </div>
 
-    <!-- Панель Overview (без изменений) -->
+    <!-- Панель Overview -->
     <div class="overlay" id="overlay"></div>
     <div class="overview-panel" id="overviewPanel">
         <div class="overview-header">
@@ -654,6 +673,7 @@
             '1d': 60
         };
 
+        // ========== ЭЛЕМЕНТЫ DOM ==========
         const canvas = document.getElementById('chartCanvas');
         const ctx = canvas.getContext('2d');
         const loading = document.getElementById('loading');
@@ -690,82 +710,54 @@
         const marketPriceSpan = document.getElementById('marketPrice');
         const orderPriceInput = document.getElementById('orderPrice');
         const orderAmountInput = document.getElementById('orderAmount');
+        const walletWarning = document.getElementById('walletWarning');
         const percentBtns = document.querySelectorAll('.percent-btn');
         const buyBtn = document.getElementById('buyBtn');
         const sellBtn = document.getElementById('sellBtn');
 
-        // Хранилище ордеров (заглушка, без сервера)
+        // ========== ПЕРЕМЕННЫЕ СОСТОЯНИЯ ГРАФИКА ==========
+        let chartData = [];
+        let currentInterval = '1h';
+        let startIndex = 0;
+        let zoomLevel = 1;
+        const EXTRA_SPACE = 15;
+        const INITIAL_EXTRA_SPACE = 7;
+        let isDragging = false;
+        let lastClientX = 0;
+        let lastClientY = 0;
+        let dragOffset = 0;
+        let refreshIntervalId = null;
+        let animLastCandle = null;
+        let animFrame = null;
+        let pinchActive = false;
+        let initialPinchDistance = 0;
+        let initialZoom = 1;
+        let centerCandleIndex = null;
+        let crosshairVisible = false;
+        let crosshairX = 0;
+        let crosshairY = 0;
+        let crosshairCandleIndex = -1;
+        let crosshairPrice = 0;
+        let touchStartTime = 0;
+        let touchStartX = 0, touchStartY = 0;
+        const TAP_DELAY = 200;
+        const TAP_DISTANCE = 10;
+        let isLoadingMore = false;
+        let firstButtonRect = null;
+
+        const savedInterval = localStorage.getItem('selectedInterval');
+        if (savedInterval && ['5m','15m','1h','4h','1d'].includes(savedInterval)) {
+            currentInterval = savedInterval;
+        }
+
+        // ========== ПЕРЕМЕННЫЕ TRADE ==========
+        let isWalletConnected = false; // Для демонстрации считаем, что кошелька нет
         let orderBook = {
             asks: [], // продажи (красные) - сортировка по возрастанию цены
             bids: []  // покупки (зелёные) - сортировка по убыванию цены
         };
 
-        // Функция обновления отображения стакана
-        function renderOrderBook() {
-            asksContainer.innerHTML = '';
-            bidsContainer.innerHTML = '';
-
-            // Отображаем asks (продажи) - до 10 строк
-            orderBook.asks.slice(0, 10).forEach(ask => {
-                const row = document.createElement('div');
-                row.className = 'order-row ask';
-                row.innerHTML = `<span class="price">${ask.price}</span><span class="amount">${ask.amount}</span><span class="total">${ask.total}</span>`;
-                asksContainer.appendChild(row);
-            });
-
-            // Отображаем bids (покупки) - до 10 строк
-            orderBook.bids.slice(0, 10).forEach(bid => {
-                const row = document.createElement('div');
-                row.className = 'order-row bid';
-                row.innerHTML = `<span class="price">${bid.price}</span><span class="amount">${bid.amount}</span><span class="total">${bid.total}</span>`;
-                bidsContainer.appendChild(row);
-            });
-        }
-
-        // Функция добавления ордера
-        function addOrder(type, price, amount) {
-            if (!price || !amount || parseFloat(price) <= 0 || parseFloat(amount) <= 0) {
-                alert('Введите корректную цену и количество');
-                return;
-            }
-            price = parseFloat(price).toFixed(2);
-            amount = parseFloat(amount).toFixed(4);
-            const total = (parseFloat(price) * parseFloat(amount)).toFixed(2);
-            const order = { price, amount, total };
-
-            if (type === 'sell') {
-                orderBook.asks.push(order);
-                // Сортировка asks по возрастанию цены (низкие сверху)
-                orderBook.asks.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-            } else {
-                orderBook.bids.push(order);
-                // Сортировка bids по убыванию цены (высокие сверху)
-                orderBook.bids.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-            }
-            renderOrderBook();
-        }
-
-        // Обработчики для кнопок процентов (используем условный баланс 100 TON для простоты)
-        percentBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const percent = parseInt(btn.dataset.percent);
-                // Для демонстрации: количество = процент от 100 (как будто баланс 100 TON)
-                const amount = percent; // можно также использовать текущую цену, но для простоты так
-                orderAmountInput.value = amount.toFixed(4);
-            });
-        });
-
-        // Кнопка BUY
-        buyBtn.addEventListener('click', () => {
-            addOrder('buy', orderPriceInput.value, orderAmountInput.value);
-        });
-
-        // Кнопка SELL
-        sellBtn.addEventListener('click', () => {
-            addOrder('sell', orderPriceInput.value, orderAmountInput.value);
-        });
-
-        // Учёт devicePixelRatio для чёткости
+        // ========== ФУНКЦИИ ГРАФИКА ==========
         function resizeCanvas() {
             const dpr = window.devicePixelRatio || 1;
             const rect = canvasContainer.getBoundingClientRect();
@@ -781,46 +773,6 @@
             ctx.shadowBlur = 0;
         }
 
-        // Остальные переменные графика
-        let chartData = [];
-        let currentInterval = '1h';
-        let startIndex = 0;
-        let zoomLevel = 1;
-        const EXTRA_SPACE = 15;
-        const INITIAL_EXTRA_SPACE = 7;
-        let isDragging = false;
-        let lastClientX = 0;
-        let lastClientY = 0;
-        let dragOffset = 0;
-        let refreshIntervalId = null;
-        let animLastCandle = null;
-        let animFrame = null;
-
-        let pinchActive = false;
-        let initialPinchDistance = 0;
-        let initialZoom = 1;
-        let centerCandleIndex = null;
-
-        let crosshairVisible = false;
-        let crosshairX = 0;
-        let crosshairY = 0;
-        let crosshairCandleIndex = -1;
-        let crosshairPrice = 0;
-
-        let touchStartTime = 0;
-        let touchStartX = 0, touchStartY = 0;
-        const TAP_DELAY = 200;
-        const TAP_DISTANCE = 10;
-
-        let isLoadingMore = false;
-        let firstButtonRect = null;
-
-        const savedInterval = localStorage.getItem('selectedInterval');
-        if (savedInterval && ['5m','15m','1h','4h','1d'].includes(savedInterval)) {
-            currentInterval = savedInterval;
-        }
-
-        // ========== ФУНКЦИИ ГРАФИКА ==========
         function formatPrice(price) {
             if (price === undefined || price === null) return '0.00';
             if (price < 0.000001) {
@@ -1099,6 +1051,7 @@
             }
         }
 
+        // ========== ОСНОВНАЯ ФУНКЦИЯ ОТРИСОВКИ ==========
         function drawChart() {
             if (!chartData || chartData.length === 0) return;
             resizeCanvas();
@@ -1482,7 +1435,7 @@
             ctx.restore();
         }
 
-        // Загрузка данных и вспомогательные функции
+        // ========== ЗАГРУЗКА ДАННЫХ ГРАФИКА ==========
         async function loadData(interval) {
             loading.style.display = 'block';
             errorDiv.style.display = 'none';
@@ -1526,7 +1479,6 @@
                 }
                 updatePriceChange(tickerData.priceChangePercent);
 
-                // Обновляем Trade панель, если она открыта
                 if (tradePanel.classList.contains('visible')) {
                     updateTradePanel();
                     renderOrderBook();
@@ -1615,8 +1567,7 @@
                 updatePriceChange(tickerData.priceChangePercent);
 
                 const maxStart = getMaxStart();
-                const oldMaxStart = Math.max(0, chartData.length - 1 - getVisibleCount() + EXTRA_SPACE);
-                if (startIndex >= oldMaxStart - 5) {
+                if (startIndex >= maxStart - 5) {
                     startIndex = Math.max(0, chartData.length - getVisibleCount() + EXTRA_SPACE);
                 } else {
                     if (startIndex > maxStart) startIndex = maxStart;
@@ -1625,7 +1576,6 @@
                 crosshairVisible = false;
                 if (!animLastCandle) drawChart();
 
-                // Обновляем Trade панель, если она открыта
                 if (tradePanel.classList.contains('visible')) {
                     updateTradePanel();
                     renderOrderBook();
@@ -1654,54 +1604,7 @@
             });
         }
 
-        function startDrag(clientX, clientY) {
-            isDragging = true;
-            lastClientX = clientX;
-            lastClientY = clientY;
-            canvas.style.cursor = 'grabbing';
-        }
-
-        function onDrag(clientX, clientY) {
-            if (!isDragging) return;
-            const dx = clientX - lastClientX;
-            lastClientX = clientX;
-            lastClientY = clientY;
-            dragOffset += dx;
-            const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
-            const maxStart = getMaxStart();
-            const maxRightOffset = startIndex * totalWidthPerCandle;
-            const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandle;
-            if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
-            if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
-            const leftEdge = CHART_SETTINGS.paddingLeft + dragOffset;
-            if (leftEdge > CHART_SETTINGS.paddingLeft - 50 && !isLoadingMore && startIndex > 0) {
-                loadOlderCandles();
-            }
-            drawChart();
-        }
-
-        function endDrag() {
-            if (!isDragging) return;
-            isDragging = false;
-            canvas.style.cursor = 'crosshair';
-        }
-
-        function handleCanvasClick(e) {
-            if (!firstButtonRect) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width / window.devicePixelRatio;
-            const scaleY = canvas.height / rect.height / window.devicePixelRatio;
-            const mouseX = (e.clientX - rect.left) * scaleX;
-            const mouseY = (e.clientY - rect.top) * scaleY;
-            if (mouseX >= firstButtonRect.x && mouseX <= firstButtonRect.x + firstButtonRect.w &&
-                mouseY >= firstButtonRect.y && mouseY <= firstButtonRect.y + firstButtonRect.h) {
-                setToLastCandle();
-                e.stopPropagation();
-                e.preventDefault();
-            }
-        }
-
-        // Обработчики мыши и касаний
+        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ГРАФИКА ==========
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
             if (!e.defaultPrevented) {
@@ -1849,12 +1752,6 @@
             }
         });
 
-        function getPinchDistance(touches) {
-            const dx = touches[0].clientX - touches[1].clientX;
-            const dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             crosshairVisible = false;
@@ -1886,6 +1783,59 @@
             }
         });
 
+        function startDrag(clientX, clientY) {
+            isDragging = true;
+            lastClientX = clientX;
+            lastClientY = clientY;
+            canvas.style.cursor = 'grabbing';
+        }
+
+        function onDrag(clientX, clientY) {
+            if (!isDragging) return;
+            const dx = clientX - lastClientX;
+            lastClientX = clientX;
+            lastClientY = clientY;
+            dragOffset += dx;
+            const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
+            const maxStart = getMaxStart();
+            const maxRightOffset = startIndex * totalWidthPerCandle;
+            const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandle;
+            if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
+            if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
+            const leftEdge = CHART_SETTINGS.paddingLeft + dragOffset;
+            if (leftEdge > CHART_SETTINGS.paddingLeft - 50 && !isLoadingMore && startIndex > 0) {
+                loadOlderCandles();
+            }
+            drawChart();
+        }
+
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+            canvas.style.cursor = 'crosshair';
+        }
+
+        function handleCanvasClick(e) {
+            if (!firstButtonRect) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width / window.devicePixelRatio;
+            const scaleY = canvas.height / rect.height / window.devicePixelRatio;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+            if (mouseX >= firstButtonRect.x && mouseX <= firstButtonRect.x + firstButtonRect.w &&
+                mouseY >= firstButtonRect.y && mouseY <= firstButtonRect.y + firstButtonRect.h) {
+                setToLastCandle();
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        }
+
+        function getPinchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
         document.querySelectorAll('.tf-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const interval = btn.dataset.interval;
@@ -1900,6 +1850,68 @@
         window.addEventListener('resize', () => drawChart());
 
         // ========== ЛОГИКА TRADE ==========
+        function renderOrderBook() {
+            asksContainer.innerHTML = '';
+            bidsContainer.innerHTML = '';
+
+            orderBook.asks.forEach(ask => {
+                const row = document.createElement('div');
+                row.className = 'order-row ask';
+                row.innerHTML = `<span class="price">${ask.price}</span><span class="amount">${ask.amount}</span><span class="total">${ask.total}</span>`;
+                asksContainer.appendChild(row);
+            });
+
+            orderBook.bids.forEach(bid => {
+                const row = document.createElement('div');
+                row.className = 'order-row bid';
+                row.innerHTML = `<span class="price">${bid.price}</span><span class="amount">${bid.amount}</span><span class="total">${bid.total}</span>`;
+                bidsContainer.appendChild(row);
+            });
+        }
+
+        function addOrder(type, price, amount) {
+            if (!price || !amount || parseFloat(price) <= 0 || parseFloat(amount) <= 0) {
+                alert('Введите корректную цену и количество');
+                return;
+            }
+            price = parseFloat(price).toFixed(2);
+            amount = parseFloat(amount).toFixed(4);
+            const total = (parseFloat(price) * parseFloat(amount)).toFixed(2);
+            const order = { price, amount, total };
+
+            if (type === 'sell') {
+                orderBook.asks.push(order);
+                orderBook.asks.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            } else {
+                orderBook.bids.push(order);
+                orderBook.bids.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            }
+            renderOrderBook();
+        }
+
+        percentBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!isWalletConnected) {
+                    walletWarning.style.display = 'block';
+                    orderAmountInput.value = '';
+                    return;
+                }
+                walletWarning.style.display = 'none';
+                const percent = parseInt(btn.dataset.percent);
+                // Для демонстрации используем фиктивный баланс 100 TON
+                const amount = (percent / 100) * 100;
+                orderAmountInput.value = amount.toFixed(4);
+            });
+        });
+
+        buyBtn.addEventListener('click', () => {
+            addOrder('buy', orderPriceInput.value, orderAmountInput.value);
+        });
+
+        sellBtn.addEventListener('click', () => {
+            addOrder('sell', orderPriceInput.value, orderAmountInput.value);
+        });
+
         function updateTradePanel() {
             const pair = pairNameElement.textContent;
             tradeSymbol.textContent = pair;
@@ -1911,7 +1923,7 @@
 
         function showTrade() {
             updateTradePanel();
-            renderOrderBook(); // отображаем текущий стакан (пустой или с ордерами)
+            renderOrderBook();
             tradePanel.classList.add('visible');
             tradeOverlay.classList.add('visible');
         }
@@ -1950,7 +1962,6 @@
         closeOverview.addEventListener('click', hideOverview);
         overlay.addEventListener('click', hideOverview);
 
-        // ========== ЛОГИКА OVERVIEW (данные) ==========
         const SUPPLY_CACHE_KEY = 'crypto_supply_cache';
         const SUPPLY_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000;
 
@@ -2047,7 +2058,7 @@
             maxSupplyEl.textContent = data.maxSupply;
         }
 
-        // Инициализация
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
         handleIntervalChange(currentInterval);
     </script>
 </body>
