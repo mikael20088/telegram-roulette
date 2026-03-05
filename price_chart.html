@@ -11,7 +11,7 @@
             height: 100vh;
             overflow: hidden;
             font-family: 'JetBrains Mono', 'Roboto Mono', 'Source Code Pro', monospace;
-            background: #0b0b0f;
+            background: #000000;
             color: #e0e0e0;
             display: flex;
             flex-direction: column;
@@ -22,7 +22,7 @@
             justify-content: space-between;
             padding: 0 24px;
             height: 64px;
-            background: #0b0b0f;
+            background: #000000;
             border-bottom: 1px solid #2a2a2a;
         }
         .pair-info {
@@ -90,7 +90,7 @@
         #canvasContainer {
             flex: 1;
             position: relative;
-            background: #0b0b0f;
+            background: #000000;
         }
         #chartCanvas {
             width: 100%;
@@ -105,7 +105,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            background: #0b0b0f;
+            background: #000000;
             border-top: 1px solid #2a2a2a;
         }
         .tf-btn {
@@ -243,7 +243,7 @@
         }
         .overview-row .value {
             font-weight: 500;
-            color: #ffffff; /* белый цвет */
+            color: #ffffff;
             text-align: right;
         }
         .note {
@@ -343,7 +343,7 @@
             paddingRight: 45,
             paddingTop: 25,
             paddingBottom: 70,
-            minZoom: 0.5,
+            minZoom: 0.3,
             maxZoom: 3,
             candleWidthBase: 16,
             gapBetweenCandles: 2,
@@ -415,6 +415,15 @@
             '1d': 2000
         };
 
+        // Целевое количество свечей для каждого таймфрейма при открытии
+        const TARGET_VISIBLE_COUNT = {
+            '5m': 25,
+            '15m': 40,
+            '1h': 40,
+            '4h': 40,
+            '1d': 60
+        };
+
         const canvas = document.getElementById('chartCanvas');
         const ctx = canvas.getContext('2d');
         const loading = document.getElementById('loading');
@@ -450,10 +459,8 @@
             ctx.scale(dpr, dpr);
             ctx.textBaseline = 'middle';
             ctx.textAlign = 'left';
-            ctx.shadowColor = 'rgba(255,255,255,0.4)';
-            ctx.shadowBlur = 4;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
         }
 
         // Остальные переменные
@@ -461,9 +468,11 @@
         let currentInterval = '1h';
         let startIndex = 0;
         let zoomLevel = 1;
-        const EXTRA_SPACE = 15;
+        const EXTRA_SPACE = 15;          // максимальный запас справа (при скролле)
+        const INITIAL_EXTRA_SPACE = 7;    // начальный запас справа (при открытии)
         let isDragging = false;
         let lastClientX = 0;
+        let lastClientY = 0;
         let dragOffset = 0;
         let refreshIntervalId = null;
         let animLastCandle = null;
@@ -476,7 +485,7 @@
         let centerCandleIndex = null;
 
         // Переменные для перекрестия
-        let crosshairVisible = false;   // по умолчанию выключено
+        let crosshairVisible = false;
         let crosshairX = 0;
         let crosshairY = 0;
         let crosshairCandleIndex = -1;
@@ -502,11 +511,23 @@
 
         // ========== ФУНКЦИИ ГРАФИКА ==========
 
+        // Профессиональное форматирование цены
         function formatPrice(price) {
-            if (price === undefined || price === null) return '0.0000';
-            let parts = price.toFixed(4).split('.');
-            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            return parts.join('.');
+            if (price === undefined || price === null) return '0.00';
+            
+            if (price < 0.000001) {
+                return price.toExponential(4);
+            } else if (price < 0.001) {
+                return price.toFixed(6);
+            } else if (price < 0.01) {
+                return price.toFixed(5);
+            } else if (price < 0.1) {
+                return price.toFixed(4);
+            } else if (price < 1000) {
+                return price.toFixed(4);
+            } else {
+                return price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            }
         }
 
         function getVisibleCount() {
@@ -522,10 +543,31 @@
         function setToLastCandle() {
             if (!chartData.length) return;
             const visibleCount = getVisibleCount();
-            startIndex = Math.max(0, chartData.length - visibleCount + EXTRA_SPACE);
+            // Используем уменьшенный начальный запас
+            startIndex = Math.max(0, chartData.length - visibleCount + INITIAL_EXTRA_SPACE);
             dragOffset = 0;
-            crosshairVisible = false;    // скрываем перекрестие при переходе к последней свече
+            crosshairVisible = false;
             drawChart();
+        }
+
+        // Вычисление zoomLevel для достижения целевого количества свечей на экране
+        function adjustZoomToTarget(interval) {
+            const targetCount = TARGET_VISIBLE_COUNT[interval] || 40;
+            const rect = canvasContainer.getBoundingClientRect();
+            if (rect.width === 0) return; // контейнер ещё не отрисован
+            
+            const availableWidth = rect.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight;
+            if (availableWidth <= 0) return;
+            
+            // totalWidthPerCandle = availableWidth / targetCount
+            const totalWidthPerCandle = availableWidth / targetCount;
+            // candleWidth = totalWidthPerCandle - gap
+            let candleWidth = totalWidthPerCandle - CHART_SETTINGS.gapBetweenCandles;
+            if (candleWidth < 1) candleWidth = 1; // минимальная ширина свечи
+            
+            let newZoom = candleWidth / CHART_SETTINGS.candleWidthBase;
+            newZoom = Math.max(CHART_SETTINGS.minZoom, Math.min(CHART_SETTINGS.maxZoom, newZoom));
+            zoomLevel = newZoom;
         }
 
         function updatePriceColor(candle) {
@@ -543,7 +585,7 @@
             const text = formatPrice(price);
             ctx.font = `500 ${fontSize}px 'JetBrains Mono', 'Roboto Mono', monospace`;
             ctx.letterSpacing = '-0.02em';
-            ctx.shadowBlur = 4;
+            ctx.shadowBlur = 0;
             const textWidth = ctx.measureText(text).width;
             let boxWidth = textWidth + 2 * boxPadding;
             let boxHeight = fontSize + 2 * boxPadding;
@@ -578,8 +620,7 @@
 
             ctx.save();
             ctx.fillStyle = boxBgColor;
-            ctx.shadowBlur = 8;
-            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 0;
             ctx.beginPath();
             ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 6);
             ctx.fill();
@@ -589,7 +630,7 @@
             ctx.stroke();
 
             ctx.fillStyle = textColor;
-            ctx.shadowBlur = 4;
+            ctx.shadowBlur = 0;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.save();
@@ -609,8 +650,7 @@
 
                 ctx.save();
                 ctx.fillStyle = FIRST_BUTTON_SETTINGS.bgColor;
-                ctx.shadowBlur = 6;
-                ctx.shadowOffsetY = 1;
+                ctx.shadowBlur = 0;
                 ctx.beginPath();
                 ctx.roundRect(btnX, btnY, btnW, btnH, 4);
                 ctx.fill();
@@ -623,7 +663,7 @@
                 ctx.font = `${FIRST_BUTTON_SETTINGS.fontSize}px 'JetBrains Mono', monospace`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.shadowBlur = 4;
+                ctx.shadowBlur = 0;
                 ctx.fillText(FIRST_BUTTON_SETTINGS.text, btnX + btnW / 2, btnY + btnH / 2);
                 ctx.restore();
 
@@ -759,7 +799,7 @@
                 chartData = [...olderCandles, ...chartData];
                 startIndex += olderCandles.length;
 
-                crosshairVisible = false;   // скрываем перекрестие при загрузке старых данных
+                crosshairVisible = false;
                 drawChart();
             } catch (err) {
                 console.warn('Не удалось загрузить старые свечи:', err);
@@ -896,7 +936,7 @@
                     ctx.fillRect(x, bodyTop, w, bodyHeight);
                 }
 
-                // Лёгкое свечение (дополнительная тонкая линия)
+                // Лёгкое свечение
                 ctx.save();
                 ctx.shadowColor = isGreen ? '#00e676' : '#ff5252';
                 ctx.shadowBlur = 8;
@@ -926,9 +966,9 @@
                 }
             }
 
-            // Шкала цен — теперь 8 значений для большей детализации
+            // Шкала цен
             const PRICE_SCALE_RIGHT = 15;
-            ctx.shadowBlur = 4;
+            ctx.shadowBlur = 0;
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '500 11px "JetBrains Mono", "Roboto Mono", monospace';
             ctx.textAlign = 'right';
@@ -973,7 +1013,7 @@
             ctx.font = '10px "JetBrains Mono", "Roboto Mono", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.shadowBlur = 2;
+            ctx.shadowBlur = 0;
             const labelY = height - paddingBottom / 2;
 
             const config = LABEL_CONFIG[currentInterval] || { step: 12, pattern: ['hour'] };
@@ -1042,7 +1082,7 @@
             ctx.fillStyle = HIGH_LOW_SETTINGS.textColor;
             ctx.font = `500 ${HIGH_LOW_SETTINGS.fontSize}px "JetBrains Mono", monospace`;
             ctx.textBaseline = 'middle';
-            ctx.shadowBlur = 4;
+            ctx.shadowBlur = 0;
             ctx.letterSpacing = '-0.02em';
 
             if (x > midX) {
@@ -1104,8 +1144,7 @@
             const finalBoxY = Math.max(paddingTop, Math.min(boxY, height - paddingBottom - boxHeight));
 
             ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxBgColor;
-            ctx.shadowBlur = 8;
-            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 0;
             ctx.beginPath();
             ctx.roundRect(boxX, finalBoxY, boxWidth, boxHeight, 6);
             ctx.fill();
@@ -1117,7 +1156,7 @@
             ctx.fillStyle = CROSSHAIR_SETTINGS.rightBoxTextColor;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.shadowBlur = 4;
+            ctx.shadowBlur = 0;
             ctx.fillText(priceText, boxX + boxWidth / 2, finalBoxY + CROSSHAIR_SETTINGS.rightBoxPadding + CROSSHAIR_SETTINGS.rightBoxFontSize / 2);
             ctx.fillStyle = percentChange >= 0 ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
             ctx.fillText(percentText, boxX + boxWidth / 2, finalBoxY + CROSSHAIR_SETTINGS.rightBoxPadding * 2 + CROSSHAIR_SETTINGS.rightBoxFontSize * 1.5);
@@ -1150,7 +1189,6 @@
 
                 ctx.font = `${infoFontSize}px 'JetBrains Mono', monospace`;
                 const lineHeight = infoFontSize + 2;
-                // Измеряем максимальную ширину метки и значения
                 let maxLabelWidth = 0;
                 let maxValueWidth = 0;
                 lines.forEach(line => {
@@ -1169,8 +1207,7 @@
                 if (blockY + blockHeight > height - paddingBottom) blockY = crosshairY - blockHeight - 10;
 
                 ctx.fillStyle = infoBgColor;
-                ctx.shadowBlur = 8;
-                ctx.shadowOffsetY = 2;
+                ctx.shadowBlur = 0;
                 ctx.beginPath();
                 ctx.roundRect(blockX, blockY, blockWidth, blockHeight, 8);
                 ctx.fill();
@@ -1182,7 +1219,7 @@
                 ctx.fillStyle = infoTextColor;
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'top';
-                ctx.shadowBlur = 4;
+                ctx.shadowBlur = 0;
 
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i];
@@ -1235,12 +1272,14 @@
 
                 chartData = rawData;
 
-                zoomLevel = 0.7;
-                setToLastCandle();  // внутри сбрасывает crosshairVisible и перерисовывает
+                // Подбираем масштаб под целевое количество свечей для этого интервала
+                adjustZoomToTarget(interval);
+                
+                setToLastCandle();
 
                 if (chartData.length > 0) {
                     const lastCandle = chartData[chartData.length - 1];
-                    priceDisplay.textContent = lastCandle.close.toFixed(4);
+                    priceDisplay.textContent = formatPrice(lastCandle.close);
                     updatePriceColor(lastCandle);
                 }
                 updatePriceChange(tickerData.priceChangePercent);
@@ -1323,7 +1362,7 @@
                     }
                 }
 
-                priceDisplay.textContent = lastNew.close.toFixed(4);
+                priceDisplay.textContent = formatPrice(lastNew.close);
                 updatePriceColor(lastNew);
                 updatePriceChange(tickerData.priceChangePercent);
 
@@ -1335,7 +1374,7 @@
                     if (startIndex > maxStart) startIndex = maxStart;
                 }
 
-                crosshairVisible = false;   // при обновлении данных скрываем перекрестие
+                crosshairVisible = false;
                 if (!animLastCandle) drawChart();
             } catch (err) {
                 console.warn('Ошибка обновления данных:', err);
@@ -1361,16 +1400,18 @@
             });
         }
 
-        function startDrag(clientX) {
+        function startDrag(clientX, clientY) {
             isDragging = true;
             lastClientX = clientX;
+            lastClientY = clientY;
             canvas.style.cursor = 'grabbing';
         }
 
-        function onDrag(clientX) {
+        function onDrag(clientX, clientY) {
             if (!isDragging) return;
             const dx = clientX - lastClientX;
             lastClientX = clientX;
+            lastClientY = clientY;
 
             dragOffset += dx;
 
@@ -1420,14 +1461,13 @@
                 touchStartTime = Date.now();
                 touchStartX = e.clientX;
                 touchStartY = e.clientY;
-                startDrag(e.clientX);
+                startDrag(e.clientX, e.clientY);
             }
         });
 
         canvas.addEventListener('mousemove', (e) => {
             if (isDragging) {
                 if (crosshairVisible) {
-                    // Если перекрестие активно — двигаем его
                     const rect = canvas.getBoundingClientRect();
                     const scaleX = canvas.width / rect.width / window.devicePixelRatio;
                     const scaleY = canvas.height / rect.height / window.devicePixelRatio;
@@ -1436,8 +1476,7 @@
                     updateCrosshairFromPoint(canvasX, canvasY);
                     drawChart();
                 } else {
-                    // Иначе прокручиваем график
-                    onDrag(e.clientX);
+                    onDrag(e.clientX, e.clientY);
                 }
             }
         });
@@ -1448,7 +1487,6 @@
                 const dx = Math.abs(e.clientX - touchStartX);
                 const dy = Math.abs(e.clientY - touchStartY);
                 if (touchDuration < TAP_DELAY && dx < TAP_DISTANCE && dy < TAP_DISTANCE) {
-                    // Короткий тап — переключаем перекрестие
                     crosshairVisible = !crosshairVisible;
                     if (crosshairVisible) {
                         const rect = canvas.getBoundingClientRect();
@@ -1483,7 +1521,6 @@
                 centerCandleIndex = Math.round(candleIndexFloat);
                 centerCandleIndex = Math.max(0, Math.min(chartData.length - 1, centerCandleIndex));
                 canvas.style.cursor = 'zoom-in';
-                // При пинче скрываем перекрестие
                 crosshairVisible = false;
                 drawChart();
             } else if (e.touches.length === 1) {
@@ -1492,7 +1529,7 @@
                     touchStartTime = Date.now();
                     touchStartX = e.touches[0].clientX;
                     touchStartY = e.touches[0].clientY;
-                    startDrag(e.touches[0].clientX);
+                    startDrag(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }
         });
@@ -1500,7 +1537,6 @@
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             if (pinchActive && e.touches.length === 2) {
-                // При зуме перекрестие уже скрыто в touchstart
                 const newDistance = getPinchDistance(e.touches);
                 const scale = newDistance / initialPinchDistance;
                 let newZoom = initialZoom * scale;
@@ -1539,7 +1575,7 @@
                     updateCrosshairFromPoint(canvasX, canvasY);
                     drawChart();
                 } else {
-                    onDrag(e.touches[0].clientX);
+                    onDrag(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }
         });
@@ -1550,20 +1586,19 @@
                 pinchActive = false;
                 centerCandleIndex = null;
                 canvas.style.cursor = 'crosshair';
-                // перекрестие уже скрыто
             } else if (isDragging && e.touches.length === 0) {
+                const touch = e.changedTouches[0];
                 const touchDuration = Date.now() - touchStartTime;
-                const dx = Math.abs(lastClientX - touchStartX);
-                const dy = 0; // для касаний используем только горизонтальное смещение? оставим как в исходном коде
-                if (touchDuration < TAP_DELAY && dx < TAP_DISTANCE) {
-                    // Короткий тап — переключаем перекрестие
+                const dx = Math.abs(touch.clientX - touchStartX);
+                const dy = Math.abs(touch.clientY - touchStartY);
+                if (touchDuration < TAP_DELAY && dx < TAP_DISTANCE && dy < TAP_DISTANCE) {
                     crosshairVisible = !crosshairVisible;
                     if (crosshairVisible) {
                         const rect = canvas.getBoundingClientRect();
                         const scaleX = canvas.width / rect.width / window.devicePixelRatio;
                         const scaleY = canvas.height / rect.height / window.devicePixelRatio;
-                        const canvasX = (touchStartX - rect.left) * scaleX;
-                        const canvasY = (touchStartY - rect.top) * scaleY;
+                        const canvasX = (touch.clientX - rect.left) * scaleX;
+                        const canvasY = (touch.clientY - rect.top) * scaleY;
                         updateCrosshairFromPoint(canvasX, canvasY);
                     }
                     drawChart();
@@ -1587,7 +1622,6 @@
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            // При зуме колёсиком скрываем перекрестие
             crosshairVisible = false;
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
             let newZoom = zoomLevel * delta;
@@ -1640,26 +1674,22 @@
 
         // ========== ЛОГИКА OVERVIEW (только Binance API) ==========
 
-        // Кэш для circulating supply (обновляется раз в неделю)
         const SUPPLY_CACHE_KEY = 'crypto_supply_cache';
         const SUPPLY_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // неделя
 
-        // База знаний circulating supply для популярных монет
-        // (при необходимости обновляйте вручную актуальными значениями)
         const KNOWN_SUPPLIES = {
-            'BTC': 19546875,     // примерно на начало 2025
-            'NOT': 102719221736, // пример для NOT (замените на реальное)
-            'TON': 5120000000,   // TON
-            'ETH': 120000000,    // пример
-            'BNB': 155000000,    // пример
-            'SOL': 450000000,    // пример
-            'XRP': 50000000000,  // пример
-            'DOGE': 140000000000,// пример
-            'ADA': 35000000000,  // пример
-            'TRX': 90000000000,  // пример
+            'BTC': 19546875,
+            'NOT': 102719221736,
+            'TON': 5120000000,
+            'ETH': 120000000,
+            'BNB': 155000000,
+            'SOL': 450000000,
+            'XRP': 50000000000,
+            'DOGE': 140000000000,
+            'ADA': 35000000000,
+            'TRX': 90000000000,
         };
 
-        // Форматирование чисел
         function formatNumber(num) {
             if (num === null || num === undefined || isNaN(num)) return '—';
             if (num >= 1e12) return '$' + (num / 1e12).toFixed(2) + 'T';
@@ -1677,47 +1707,38 @@
             return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
         }
 
-        // Получение circulating supply из кэша или базы знаний
         function getCirculatingSupply(coinSymbol) {
             const cache = JSON.parse(localStorage.getItem(SUPPLY_CACHE_KEY) || '{}');
             const now = Date.now();
             
-            // Если есть в кэше и не устарело
             if (cache[coinSymbol] && (now - cache[coinSymbol].timestamp < SUPPLY_CACHE_DURATION)) {
                 return cache[coinSymbol].value;
             }
             
-            // Иначе берём из базы знаний
             const known = KNOWN_SUPPLIES[coinSymbol];
             if (known !== undefined) {
-                // Обновляем кэш
                 cache[coinSymbol] = { value: known, timestamp: now };
                 localStorage.setItem(SUPPLY_CACHE_KEY, JSON.stringify(cache));
                 return known;
             }
             
-            return null; // неизвестно
+            return null;
         }
 
-        // Загрузка данных для Overview из Binance
         async function loadOverviewData() {
             try {
-                // Получаем тикер с Binance
                 const tickerResponse = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
                 if (!tickerResponse.ok) throw new Error('Ошибка загрузки тикера');
                 const tickerData = await tickerResponse.json();
                 
                 const price = parseFloat(tickerData.lastPrice);
-                const quoteVolume = parseFloat(tickerData.quoteVolume); // объём в USDT
-                const volume = parseFloat(tickerData.volume); // объём в базовой валюте
+                const quoteVolume = parseFloat(tickerData.quoteVolume);
+                const volume = parseFloat(tickerData.volume);
                 
-                // Определяем базовую валюту
                 const baseCoin = symbol.replace('USDT', '');
                 
-                // Получаем circulating supply
                 let circSupply = getCirculatingSupply(baseCoin);
                 
-                // Рассчитываем показатели
                 let marketCap = null;
                 let fdv = null;
                 let totalSupply = null;
@@ -1725,21 +1746,17 @@
                 
                 if (circSupply !== null) {
                     marketCap = circSupply * price;
-                    // Для FDV используем тот же circulating supply (если нет данных о maxSupply)
                     fdv = marketCap; 
-                    totalSupply = circSupply; // приблизительно
-                    maxSupply = circSupply; // приблизительно, если неизвестен
+                    totalSupply = circSupply;
+                    maxSupply = circSupply;
                 } else {
-                    // Если нет данных о supply, используем объём как индикатор
-                    // Это очень грубая оценка, но для демонстрации
-                    marketCap = quoteVolume * 2; // условно
+                    marketCap = quoteVolume * 2;
                     fdv = marketCap;
-                    circSupply = volume * 10; // очень грубо
+                    circSupply = volume * 10;
                     totalSupply = circSupply;
                     maxSupply = circSupply;
                 }
                 
-                // Форматируем для отображения
                 const data = {
                     marketCap: marketCap ? formatNumber(marketCap) : '—',
                     fdv: fdv ? formatNumber(fdv) : '—',
@@ -1795,4 +1812,4 @@
         overlay.addEventListener('click', hideOverview);
     </script>
 </body>
-</html>
+</html>ы
