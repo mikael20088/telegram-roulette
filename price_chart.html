@@ -22,14 +22,13 @@
             flex-direction: column;
         }
 
-        /* Верхняя панель – изменена для вертикального расположения цены под именем */
+        /* Верхняя панель – вертикальное расположение цены под именем */
         .top-panel {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 24px;          /* чуть уменьшил вертикальные отступы */
-            height: auto;                /* высота теперь автоматическая */
-            min-height: 64px;             /* но оставим минимальную высоту */
+            padding: 8px 24px;
+            min-height: 64px;
             background: #000000;
             border-bottom: 1px solid #2a2a2a;
         }
@@ -45,7 +44,7 @@
             font-weight: 500;
             color: #ffffff;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
-            margin-bottom: 2px;          /* небольшой отступ от цены */
+            margin-bottom: 2px;
         }
 
         .current-price {
@@ -54,7 +53,7 @@
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             letter-spacing: -0.5px;
             transition: color 0.1s ease;
-            line-height: 1.2;            /* чтобы не было больших отступов */
+            line-height: 1.2;
         }
 
         .positive {
@@ -70,8 +69,8 @@
             padding: 4px 12px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.05);
-            align-self: flex-start;       /* плашка не на всю ширину */
-            margin-top: 4px;              /* отступ от цены */
+            align-self: flex-start;
+            margin-top: 4px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             letter-spacing: -0.3px;
         }
@@ -88,16 +87,17 @@
             gap: 10px;
         }
 
+        /* Кнопки Trade и Overview – уменьшенные отступы */
         .trade-btn, .overview-btn {
             background: #2a2a3a;
             border: 1px solid #4a4a5a;
             color: #ffffff;
-            padding: 8px 18px;
+            padding: 8px 12px;
             border-radius: 24px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.15s;
-            font-size: 14px;
+            font-size: 13px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
 
@@ -666,9 +666,9 @@
             paddingRight: 45,
             paddingTop: 25,
             paddingBottom: 70,
-            minZoom: 0.15,
-            maxZoom: 3,
-            candleWidthBase: 16,
+            minZoom: 0.8,                // увеличен мин. масштаб (с 0.15)
+            maxZoom: 2.0,                 // уменьшен макс. масштаб (с 3)
+            candleWidthBase: 8,            // уменьшена базовая ширина (было 16)
             gapBetweenCandles: 2,
             minBodyHeight: 2,
             gridVerticalStep: 8,
@@ -738,12 +738,13 @@
             '1d': 2000
         };
 
+        // Все таймфреймы теперь показывают 130 свечей
         const TARGET_VISIBLE_COUNT = {
-            '5m': 25,
-            '15m': 40,
-            '1h': 40,
-            '4h': 40,
-            '1d': 60
+            '5m': 130,
+            '15m': 130,
+            '1h': 130,
+            '4h': 130,
+            '1d': 130
         };
 
         // ========== ЭЛЕМЕНТЫ DOM ==========
@@ -819,6 +820,11 @@
         let isLoadingMore = false;
         let firstButtonRect = null;
 
+        // Переменные для инерции (easing)
+        let dragSpeed = 0;
+        let lastDragTime = 0;
+        let inertiaFrame = null;
+
         const savedInterval = localStorage.getItem('selectedInterval');
         if (savedInterval && ['5m','15m','1h','4h','1d'].includes(savedInterval)) {
             currentInterval = savedInterval;
@@ -845,6 +851,7 @@
             ctx.textAlign = 'left';
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
+            ctx.imageSmoothingEnabled = true;
         }
 
         function formatPrice(price) {
@@ -885,7 +892,7 @@
         }
 
         function adjustZoomToTarget(interval) {
-            const targetCount = TARGET_VISIBLE_COUNT[interval] || 40;
+            const targetCount = TARGET_VISIBLE_COUNT[interval] || 130;
             const rect = canvasContainer.getBoundingClientRect();
             if (rect.width === 0) return;
             const availableWidth = rect.width - CHART_SETTINGS.paddingLeft - CHART_SETTINGS.paddingRight;
@@ -1681,6 +1688,37 @@
             });
         }
 
+        // ========== ИНЕРЦИЯ (EASING) ==========
+        function startInertia() {
+            if (inertiaFrame) cancelAnimationFrame(inertiaFrame);
+            if (Math.abs(dragSpeed) < 0.1) return;
+            const friction = 0.95;
+            const step = () => {
+                dragSpeed *= friction;
+                dragOffset += dragSpeed;
+                // Ограничения
+                const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
+                const maxStart = getMaxStart();
+                const maxRightOffset = startIndex * totalWidthPerCandle;
+                const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandle;
+                if (dragOffset > maxRightOffset) {
+                    dragOffset = maxRightOffset;
+                    dragSpeed = 0;
+                } else if (dragOffset < maxLeftOffset) {
+                    dragOffset = maxLeftOffset;
+                    dragSpeed = 0;
+                }
+                drawChart();
+                if (Math.abs(dragSpeed) > 0.05) {
+                    inertiaFrame = requestAnimationFrame(step);
+                } else {
+                    dragSpeed = 0;
+                    inertiaFrame = null;
+                }
+            };
+            inertiaFrame = requestAnimationFrame(step);
+        }
+
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ГРАФИКА ==========
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
@@ -1700,6 +1738,11 @@
                 } else {
                     startDrag(e.clientX, e.clientY);
                 }
+                if (inertiaFrame) {
+                    cancelAnimationFrame(inertiaFrame);
+                    inertiaFrame = null;
+                }
+                dragSpeed = 0;
             }
         });
 
@@ -1714,7 +1757,13 @@
                     updateCrosshairFromPoint(canvasX, canvasY);
                     drawChart();
                 } else {
+                    const now = Date.now();
+                    const dt = now - lastDragTime;
+                    if (lastDragTime && dt > 0) {
+                        dragSpeed = (e.clientX - lastClientX) / dt * 16;
+                    }
                     onDrag(e.clientX, e.clientY);
+                    lastDragTime = now;
                 }
             }
         });
@@ -1738,6 +1787,7 @@
                 }
                 if (isCrosshairMoving) isCrosshairMoving = false;
                 endDrag();
+                startInertia();
             }
         });
 
@@ -1781,6 +1831,11 @@
                     } else {
                         startDrag(e.touches[0].clientX, e.touches[0].clientY);
                     }
+                    if (inertiaFrame) {
+                        cancelAnimationFrame(inertiaFrame);
+                        inertiaFrame = null;
+                    }
+                    dragSpeed = 0;
                 }
             }
         });
@@ -1821,7 +1876,13 @@
                     updateCrosshairFromPoint(canvasX, canvasY);
                     drawChart();
                 } else if (!crosshairVisible && isDragging) {
+                    const now = Date.now();
+                    const dt = now - lastDragTime;
+                    if (lastDragTime && dt > 0) {
+                        dragSpeed = (e.touches[0].clientX - lastClientX) / dt * 16;
+                    }
                     onDrag(e.touches[0].clientX, e.touches[0].clientY);
+                    lastDragTime = now;
                 }
             }
         });
@@ -1852,6 +1913,7 @@
                 if (isCrosshairMoving) isCrosshairMoving = false;
                 if (isDragging) {
                     endDrag();
+                    startInertia();
                 }
             }
         });
@@ -1860,7 +1922,7 @@
             e.preventDefault();
             crosshairVisible = false;
             isCrosshairMoving = false;
-            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const delta = e.deltaY > 0 ? 0.95 : 1.05;
             let newZoom = zoomLevel * delta;
             if (newZoom < CHART_SETTINGS.minZoom) newZoom = CHART_SETTINGS.minZoom;
             if (newZoom > CHART_SETTINGS.maxZoom) newZoom = CHART_SETTINGS.maxZoom;
@@ -1892,6 +1954,8 @@
             isDragging = true;
             lastClientX = clientX;
             lastClientY = clientY;
+            lastDragTime = Date.now();
+            dragSpeed = 0;
             canvas.style.cursor = 'grabbing';
         }
 
