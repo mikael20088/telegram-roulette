@@ -656,7 +656,7 @@
         const CANDLE_SETTINGS = {
             upColor: '#00e676',
             downColor: '#ff5252',
-            wickColor: '#a0a0b0',
+            wickColor: '#a0a0a0',
             gridColor: '#2a2a2a',
             textColor: '#ffffff',
         };
@@ -666,9 +666,9 @@
             paddingRight: 45,
             paddingTop: 25,
             paddingBottom: 70,
-            minZoom: 0.8,                // увеличен мин. масштаб (с 0.15)
-            maxZoom: 2.0,                 // уменьшен макс. масштаб (с 3)
-            candleWidthBase: 8,            // уменьшена базовая ширина (было 16)
+            minZoom: 0.2,                // можно сильно отдалять
+            maxZoom: 2.0,
+            candleWidthBase: 10,           // чуть шире, чем изначально (было 8)
             gapBetweenCandles: 2,
             minBodyHeight: 2,
             gridVerticalStep: 8,
@@ -738,7 +738,7 @@
             '1d': 2000
         };
 
-        // Все таймфреймы теперь показывают 130 свечей
+        // Все таймфреймы показывают 130 свечей (и на телефоне тоже)
         const TARGET_VISIBLE_COUNT = {
             '5m': 130,
             '15m': 130,
@@ -1244,10 +1244,10 @@
                 } else {
                     ctx.fillRect(x, bodyTop, w, bodyHeight);
                 }
-                // Лёгкое свечение
+                // Более выраженные тени (shadowBlur = 12)
                 ctx.save();
                 ctx.shadowColor = isGreen ? '#00e676' : '#ff5252';
-                ctx.shadowBlur = 8;
+                ctx.shadowBlur = 12;
                 ctx.strokeStyle = 'transparent';
                 ctx.strokeRect(x, bodyTop, w, bodyHeight);
                 ctx.restore();
