@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>График / USDT — свечной график + Overview + Trade</title>
-    <!-- Подключаем Inter через Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <style>
-        /* Общие стили */
+        /* Общие стили (без изменений) */
         body {
             margin: 0;
             padding: 0;
@@ -181,7 +180,7 @@
             padding: 20px;
             box-sizing: border-box;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
-            overflow: hidden; /* внешняя прокрутка отключена, внутренняя у стакана */
+            overflow: hidden;
         }
         .trade-panel.visible {
             left: 0;
@@ -328,7 +327,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0; /* важно для flex child */
+            min-height: 0;
             overflow-y: auto;
             border-top: 1px solid #333;
             padding-top: 16px;
@@ -380,7 +379,7 @@
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
 
-        /* Панель Overview (без изменений) */
+        /* Панель Overview */
         .overview-panel {
             position: fixed;
             top: 0;
@@ -501,7 +500,7 @@
         <button class="go-last-btn" id="goLastBtn">→|</button>
     </div>
 
-    <!-- Панель Trade (на весь экран) -->
+    <!-- Панель Trade -->
     <div class="overlay" id="tradeOverlay"></div>
     <div class="trade-panel" id="tradePanel">
         <div class="trade-header">
@@ -513,7 +512,6 @@
             <button class="close-btn" id="closeTrade">&times;</button>
         </div>
 
-        <!-- Элементы ввода ордера -->
         <div class="order-entry">
             <div class="input-label">Цена ордера</div>
             <input type="number" id="orderPrice" class="input-field" placeholder="0.00" step="any" value="0.00">
@@ -536,18 +534,14 @@
             </div>
         </div>
 
-        <!-- Стакан ордеров (прокручиваемый) -->
         <div class="order-book">
             <div class="order-book-header">
                 <span>Цена (USDT)</span>
                 <span>Кол-во (TON)</span>
                 <span>Сумма</span>
             </div>
-            <!-- Asks (продажи) -->
             <div id="asksContainer"></div>
-            <!-- Текущая цена -->
             <div class="current-market-price" id="marketPrice">0.0000</div>
-            <!-- Bids (покупки) -->
             <div id="bidsContainer"></div>
         </div>
     </div>
@@ -615,12 +609,12 @@
             paddingTop: 25,
             paddingBottom: 70,
             minZoom: 0.15,
-            maxZoom: 3,
+            maxZoom: 2.2,                // уменьшено с 3 до 2.2
             candleWidthBase: 16,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
-            gridVerticalStep: 4,
-            gridHorizontalCount: 15,
+            gridVerticalStep: 8,
+            gridHorizontalCount: 8,
         };
 
         const LABEL_CONFIG = {
@@ -753,8 +747,9 @@
         let pinchActive = false;
         let initialPinchDistance = 0;
         let initialZoom = 1;
-        let centerCandleIndex = null;
+        let centerCandleIndex = null;        // для пинча
         let crosshairVisible = false;
+        let isCrosshairMoving = false;
         let crosshairX = 0;
         let crosshairY = 0;
         let crosshairCandleIndex = -1;
@@ -762,7 +757,7 @@
         let touchStartTime = 0;
         let touchStartX = 0, touchStartY = 0;
         const TAP_DELAY = 200;
-        const TAP_DISTANCE = 10;
+        const TAP_DISTANCE = 25;
         let isLoadingMore = false;
         let firstButtonRect = null;
 
@@ -772,10 +767,10 @@
         }
 
         // ========== ПЕРЕМЕННЫЕ TRADE ==========
-        let isWalletConnected = false; // Для демонстрации считаем, что кошелька нет
+        let isWalletConnected = false;
         let orderBook = {
-            asks: [], // продажи (красные) - сортировка по возрастанию цены
-            bids: []  // покупки (зелёные) - сортировка по убыванию цены
+            asks: [],
+            bids: []
         };
 
         // ========== ФУНКЦИИ ГРАФИКА ==========
@@ -827,6 +822,7 @@
             startIndex = Math.max(0, chartData.length - visibleCount + INITIAL_EXTRA_SPACE);
             dragOffset = 0;
             crosshairVisible = false;
+            isCrosshairMoving = false;
             drawChart();
         }
 
@@ -1064,6 +1060,7 @@
                 chartData = [...olderCandles, ...chartData];
                 startIndex += olderCandles.length;
                 crosshairVisible = false;
+                isCrosshairMoving = false;
                 drawChart();
             } catch (err) {
                 console.warn('Не удалось загрузить старые свечи:', err);
@@ -1595,6 +1592,7 @@
                 }
 
                 crosshairVisible = false;
+                isCrosshairMoving = false;
                 if (!animLastCandle) drawChart();
 
                 if (tradePanel.classList.contains('visible')) {
@@ -1625,20 +1623,31 @@
             });
         }
 
-        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ГРАФИКА ==========
+        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ГРАФИКА (ИСПРАВЛЕНЫ) ==========
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
             if (!e.defaultPrevented) {
                 touchStartTime = Date.now();
                 touchStartX = e.clientX;
                 touchStartY = e.clientY;
-                startDrag(e.clientX, e.clientY);
+                if (crosshairVisible) {
+                    isCrosshairMoving = true;
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width / window.devicePixelRatio;
+                    const scaleY = canvas.height / rect.height / window.devicePixelRatio;
+                    const canvasX = (e.clientX - rect.left) * scaleX;
+                    const canvasY = (e.clientY - rect.top) * scaleY;
+                    updateCrosshairFromPoint(canvasX, canvasY);
+                    drawChart();
+                } else {
+                    startDrag(e.clientX, e.clientY);
+                }
             }
         });
 
         canvas.addEventListener('mousemove', (e) => {
             if (isDragging) {
-                if (crosshairVisible) {
+                if (crosshairVisible && isCrosshairMoving) {
                     const rect = canvas.getBoundingClientRect();
                     const scaleX = canvas.width / rect.width / window.devicePixelRatio;
                     const scaleY = canvas.height / rect.height / window.devicePixelRatio;
@@ -1669,6 +1678,7 @@
                     }
                     drawChart();
                 }
+                if (isCrosshairMoving) isCrosshairMoving = false;
                 endDrag();
             }
         });
@@ -1683,16 +1693,27 @@
                 pinchActive = true;
                 initialPinchDistance = getPinchDistance(e.touches);
                 initialZoom = zoomLevel;
+
+                // Вычисляем среднюю точку между пальцами
                 const rect = canvas.getBoundingClientRect();
-                const centerX = (rect.left + rect.right) / 2;
                 const scaleX = canvas.width / rect.width / window.devicePixelRatio;
-                const canvasX = (centerX - rect.left) * scaleX;
+                const scaleY = canvas.height / rect.height / window.devicePixelRatio;
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const centerClientX = (touch1.clientX + touch2.clientX) / 2;
+                const centerClientY = (touch1.clientY + touch2.clientY) / 2;
+                const canvasX = (centerClientX - rect.left) * scaleX;
+                const canvasY = (centerClientY - rect.top) * scaleY;
+
+                // Находим индекс свечи под центром
                 const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
                 const candleIndexFloat = (canvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
                 centerCandleIndex = Math.round(candleIndexFloat);
                 centerCandleIndex = Math.max(0, Math.min(chartData.length - 1, centerCandleIndex));
+
                 canvas.style.cursor = 'zoom-in';
                 crosshairVisible = false;
+                isCrosshairMoving = false;
                 drawChart();
             } else if (e.touches.length === 1) {
                 handleCanvasClick(e.touches[0]);
@@ -1700,7 +1721,18 @@
                     touchStartTime = Date.now();
                     touchStartX = e.touches[0].clientX;
                     touchStartY = e.touches[0].clientY;
-                    startDrag(e.touches[0].clientX, e.touches[0].clientY);
+                    if (crosshairVisible) {
+                        isCrosshairMoving = true;
+                        const rect = canvas.getBoundingClientRect();
+                        const scaleX = canvas.width / rect.width / window.devicePixelRatio;
+                        const scaleY = canvas.height / rect.height / window.devicePixelRatio;
+                        const canvasX = (e.touches[0].clientX - rect.left) * scaleX;
+                        const canvasY = (e.touches[0].clientY - rect.top) * scaleY;
+                        updateCrosshairFromPoint(canvasX, canvasY);
+                        drawChart();
+                    } else {
+                        startDrag(e.touches[0].clientX, e.touches[0].clientY);
+                    }
                 }
             }
         });
@@ -1716,23 +1748,28 @@
                 if (newZoom !== zoomLevel) {
                     const oldZoom = zoomLevel;
                     zoomLevel = newZoom;
+
                     if (centerCandleIndex !== null) {
-                        const totalWidthPerCandleOld = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
-                        const totalWidthPerCandleNew = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
-                        const oldCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * totalWidthPerCandleOld + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
-                        const newCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * totalWidthPerCandleNew + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
-                        const deltaX = newCenterX - oldCenterX;
-                        dragOffset -= deltaX;
-                        const maxStart = getMaxStart();
-                        const maxRightOffset = startIndex * totalWidthPerCandleNew;
-                        const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandleNew;
-                        if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
-                        if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
+                        // Корректируем dragOffset, чтобы центр оставался на месте
+                        const oldTotalWidth = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
+                        const newTotalWidth = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
+                        const oldCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * oldTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
+                        const newCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * newTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
+                        dragOffset -= (newCenterX - oldCenterX);
                     }
+
+                    // Ограничения dragOffset
+                    const maxStart = getMaxStart();
+                    const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
+                    const maxRightOffset = startIndex * totalWidthPerCandle;
+                    const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandle;
+                    if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
+                    if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
+
                     drawChart();
                 }
-            } else if (!pinchActive && isDragging && e.touches.length === 1) {
-                if (crosshairVisible) {
+            } else if (!pinchActive && e.touches.length === 1) {
+                if (crosshairVisible && isCrosshairMoving) {
                     const rect = canvas.getBoundingClientRect();
                     const scaleX = canvas.width / rect.width / window.devicePixelRatio;
                     const scaleY = canvas.height / rect.height / window.devicePixelRatio;
@@ -1740,7 +1777,7 @@
                     const canvasY = (e.touches[0].clientY - rect.top) * scaleY;
                     updateCrosshairFromPoint(canvasX, canvasY);
                     drawChart();
-                } else {
+                } else if (!crosshairVisible && isDragging) {
                     onDrag(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }
@@ -1752,7 +1789,7 @@
                 pinchActive = false;
                 centerCandleIndex = null;
                 canvas.style.cursor = 'crosshair';
-            } else if (isDragging && e.touches.length === 0) {
+            } else if (e.touches.length === 0) {
                 const touch = e.changedTouches[0];
                 const touchDuration = Date.now() - touchStartTime;
                 const dx = Math.abs(touch.clientX - touchStartX);
@@ -1769,14 +1806,20 @@
                     }
                     drawChart();
                 }
-                endDrag();
+                if (isCrosshairMoving) isCrosshairMoving = false;
+                if (isDragging) {
+                    endDrag();
+                }
             }
         });
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             crosshairVisible = false;
-            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            isCrosshairMoving = false;
+
+            // Плавный коэффициент масштабирования
+            const delta = e.deltaY > 0 ? 0.95 : 1.05;
             let newZoom = zoomLevel * delta;
             if (newZoom < CHART_SETTINGS.minZoom) newZoom = CHART_SETTINGS.minZoom;
             if (newZoom > CHART_SETTINGS.maxZoom) newZoom = CHART_SETTINGS.maxZoom;
@@ -1784,22 +1827,28 @@
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width / window.devicePixelRatio;
                 const mouseCanvasX = (e.clientX - rect.left) * scaleX;
-                const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
-                const candleIndexFloat = (mouseCanvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
-                const targetCandle = Math.round(candleIndexFloat);
-                const targetCandleIndex = Math.max(0, Math.min(chartData.length - 1, targetCandle));
+
                 const oldZoom = zoomLevel;
                 zoomLevel = newZoom;
-                const totalWidthPerCandleOld = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
-                const totalWidthPerCandleNew = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
-                const oldCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * totalWidthPerCandleOld + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
-                const newCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * totalWidthPerCandleNew + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
-                dragOffset -= (newCenterX - oldCenterX);
+
+                // Находим свечу под курсором и корректируем dragOffset
+                const oldTotalWidth = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
+                const newTotalWidth = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
+                const candleIndexFloat = (mouseCanvasX - CHART_SETTINGS.paddingLeft - dragOffset) / oldTotalWidth + startIndex;
+                const targetCandle = Math.round(candleIndexFloat);
+                const targetCandleIndex = Math.max(0, Math.min(chartData.length - 1, targetCandle));
+
+                const oldCandleCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * oldTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
+                const newCandleCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * newTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
+                dragOffset -= (newCandleCenterX - oldCandleCenterX);
+
+                // Ограничения dragOffset
                 const maxStart = getMaxStart();
-                const maxRightOffset = startIndex * totalWidthPerCandleNew;
-                const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandleNew;
+                const maxRightOffset = startIndex * newTotalWidth;
+                const maxLeftOffset = -(maxStart - startIndex) * newTotalWidth;
                 if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
                 if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
+
                 drawChart();
             }
         });
@@ -1919,7 +1968,6 @@
                 }
                 walletWarning.style.display = 'none';
                 const percent = parseInt(btn.dataset.percent);
-                // Для демонстрации используем фиктивный баланс 100 TON
                 const amount = (percent / 100) * 100;
                 orderAmountInput.value = amount.toFixed(4);
             });
