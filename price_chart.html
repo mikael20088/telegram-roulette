@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>График / USDT — свечной график + Overview + Trade</title>
+    <!-- Подключаем Inter через Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <style>
-        /* Общие стили (без изменений) */
+        /* Общие стили */
         body {
             margin: 0;
             padding: 0;
@@ -20,65 +21,73 @@
             display: flex;
             flex-direction: column;
         }
+
+        /* Верхняя панель – изменена для вертикального расположения цены под именем */
         .top-panel {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
-            height: 64px;
+            padding: 8px 24px;          /* чуть уменьшил вертикальные отступы */
+            height: auto;                /* высота теперь автоматическая */
+            min-height: 64px;             /* но оставим минимальную высоту */
             background: #000000;
             border-bottom: 1px solid #2a2a2a;
         }
+
         .pair-info {
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
-        .pair-row {
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-        }
+
         .pair-name {
             font-size: 18px;
             font-weight: 500;
             color: #ffffff;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
+            margin-bottom: 2px;          /* небольшой отступ от цены */
         }
+
         .current-price {
             font-size: 20px;
             font-weight: 400;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             letter-spacing: -0.5px;
             transition: color 0.1s ease;
+            line-height: 1.2;            /* чтобы не было больших отступов */
         }
+
         .positive {
             color: #00e676;
         }
         .negative {
             color: #ff5252;
         }
+
         .price-change {
             font-size: 14px;
             font-weight: 400;
             padding: 4px 12px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.05);
-            align-self: flex-start;
-            margin-top: 2px;
+            align-self: flex-start;       /* плашка не на всю ширину */
+            margin-top: 4px;              /* отступ от цены */
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             letter-spacing: -0.3px;
         }
+
         .price-change.positive {
             color: #00e676;
         }
         .price-change.negative {
             color: #ff5252;
         }
+
         .action-buttons {
             display: flex;
             gap: 10px;
         }
+
         .trade-btn, .overview-btn {
             background: #2a2a3a;
             border: 1px solid #4a4a5a;
@@ -91,15 +100,18 @@
             font-size: 14px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .trade-btn:hover, .overview-btn:hover {
             background: #3a3a4a;
             border-color: #00e676;
         }
+
         #canvasContainer {
             flex: 1;
             position: relative;
             background: #000000;
         }
+
         #chartCanvas {
             width: 100%;
             height: 100%;
@@ -107,6 +119,7 @@
             cursor: crosshair;
             touch-action: none;
         }
+
         .timeframe-bar {
             height: 52px;
             display: flex;
@@ -116,6 +129,7 @@
             background: #000000;
             border-top: 1px solid #2a2a2a;
         }
+
         .tf-btn {
             background: transparent;
             border: 1px solid #3a3a4a;
@@ -128,11 +142,13 @@
             font-size: 14px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .tf-btn.active, .tf-btn:hover {
             background: #2a2a3a;
             border-color: #00e676;
             color: #ffffff;
         }
+
         .go-last-btn {
             background: transparent;
             border: 1px solid #3a3a4a;
@@ -146,11 +162,13 @@
             line-height: 1;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .go-last-btn:hover {
             background: #2a2a3a;
             border-color: #00e676;
             color: #ffffff;
         }
+
         #loading, #error {
             position: absolute;
             top: 50%;
@@ -162,6 +180,7 @@
             font-size: 14px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         #error { color: #ff5252; }
 
         /* Панель Trade на весь экран */
@@ -182,9 +201,11 @@
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             overflow: hidden;
         }
+
         .trade-panel.visible {
             left: 0;
         }
+
         .trade-header {
             display: flex;
             flex-direction: column;
@@ -194,27 +215,32 @@
             position: relative;
             flex-shrink: 0;
         }
+
         .trade-symbol {
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 5px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .trade-price-row {
             display: flex;
             align-items: baseline;
             gap: 10px;
             margin-bottom: 5px;
         }
+
         .trade-price {
             font-size: 22px;
             font-weight: 400;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .trade-change {
             font-size: 16px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .close-btn {
             position: absolute;
             top: 0;
@@ -227,6 +253,7 @@
             padding: 0;
             line-height: 1;
         }
+
         .close-btn:hover {
             color: #ff5252;
         }
@@ -236,6 +263,7 @@
             flex-shrink: 0;
             margin-bottom: 20px;
         }
+
         .input-label {
             font-size: 14px;
             color: #a0a0b0;
@@ -243,6 +271,7 @@
             display: block;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .input-field {
             background: #2a2a3a;
             border: 1px solid #4a4a5a;
@@ -255,15 +284,18 @@
             font-size: 16px;
             margin-bottom: 8px;
         }
+
         .input-field:focus {
             outline: none;
             border-color: #00e676;
         }
+
         .input-field[readonly] {
             background: #1e1e2e;
             color: #a0a0b0;
             cursor: default;
         }
+
         .wallet-warning {
             color: #ff5252;
             font-size: 12px;
@@ -272,11 +304,13 @@
             display: none;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .percent-buttons {
             display: flex;
             gap: 8px;
             margin: 12px 0 8px;
         }
+
         .percent-btn {
             background: #2a2a3a;
             border: 1px solid #4a4a5a;
@@ -290,16 +324,19 @@
             transition: 0.15s;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .percent-btn:hover {
             background: #3a3a4a;
             border-color: #00e676;
         }
+
         .action-buttons-trade {
             display: flex;
             gap: 12px;
             margin: 16px 0 20px;
             flex-shrink: 0;
         }
+
         .buy-btn, .sell-btn {
             flex: 1;
             padding: 14px 0;
@@ -312,12 +349,15 @@
             transition: opacity 0.15s;
             font-family: 'Inter', 'JetBrains Mono', monospace;
         }
+
         .buy-btn {
             background: #00e676;
         }
+
         .sell-btn {
             background: #ff5252;
         }
+
         .buy-btn:hover, .sell-btn:hover {
             opacity: 0.8;
         }
@@ -332,6 +372,7 @@
             border-top: 1px solid #333;
             padding-top: 16px;
         }
+
         .order-book-header {
             display: flex;
             justify-content: space-between;
@@ -343,6 +384,7 @@
             flex-shrink: 0;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .order-row {
             display: flex;
             justify-content: space-between;
@@ -351,21 +393,26 @@
             font-family: 'Inter', 'JetBrains Mono', monospace;
             flex-shrink: 0;
         }
+
         .order-row.ask .price {
             color: #ff5252;
         }
+
         .order-row.bid .price {
             color: #00e676;
         }
+
         .order-row .price,
         .order-row .amount,
         .order-row .total {
             text-align: right;
             width: 33%;
         }
+
         .order-row .price {
             text-align: left;
         }
+
         .current-market-price {
             background: #1a1a2a;
             border-radius: 4px;
@@ -398,9 +445,11 @@
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
             overflow-y: auto;
         }
+
         .overview-panel.visible {
             right: 0;
         }
+
         .overlay {
             position: fixed;
             top: 0;
@@ -411,9 +460,11 @@
             z-index: 150;
             display: none;
         }
+
         .overlay.visible {
             display: block;
         }
+
         .overview-header {
             display: flex;
             flex-direction: column;
@@ -422,30 +473,36 @@
             margin-bottom: 20px;
             position: relative;
         }
+
         .overview-symbol {
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 5px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .overview-price-row {
             display: flex;
             align-items: baseline;
             gap: 10px;
             margin-bottom: 5px;
         }
+
         .overview-price {
             font-size: 22px;
             font-weight: 400;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .overview-change {
             font-size: 16px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .overview-content {
             flex: 1;
         }
+
         .overview-row {
             display: flex;
             justify-content: space-between;
@@ -455,12 +512,14 @@
             padding-bottom: 5px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .overview-row .value {
             font-weight: 500;
             color: #ffffff;
             text-align: right;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
+
         .note {
             margin-top: 20px;
             font-size: 11px;
@@ -471,12 +530,11 @@
     </style>
 </head>
 <body>
+    <!-- Верхняя панель с изменённой структурой: цена под именем -->
     <div class="top-panel">
         <div class="pair-info">
-            <div class="pair-row">
-                <span class="pair-name" id="pairName">BTC/USDT</span>
-                <span class="current-price" id="priceDisplay">0.0000</span>
-            </div>
+            <span class="pair-name" id="pairName">BTC/USDT</span>
+            <span class="current-price" id="priceDisplay">0.0000</span>
             <span class="price-change" id="priceChangeDisplay">+0.00%</span>
         </div>
         <div class="action-buttons">
@@ -609,7 +667,7 @@
             paddingTop: 25,
             paddingBottom: 70,
             minZoom: 0.15,
-            maxZoom: 2.2,                // уменьшено с 3 до 2.2
+            maxZoom: 3,
             candleWidthBase: 16,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
@@ -747,7 +805,7 @@
         let pinchActive = false;
         let initialPinchDistance = 0;
         let initialZoom = 1;
-        let centerCandleIndex = null;        // для пинча
+        let centerCandleIndex = null;
         let crosshairVisible = false;
         let isCrosshairMoving = false;
         let crosshairX = 0;
@@ -1623,7 +1681,7 @@
             });
         }
 
-        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ГРАФИКА (ИСПРАВЛЕНЫ) ==========
+        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ГРАФИКА ==========
         canvas.addEventListener('mousedown', (e) => {
             handleCanvasClick(e);
             if (!e.defaultPrevented) {
@@ -1693,24 +1751,14 @@
                 pinchActive = true;
                 initialPinchDistance = getPinchDistance(e.touches);
                 initialZoom = zoomLevel;
-
-                // Вычисляем среднюю точку между пальцами
                 const rect = canvas.getBoundingClientRect();
+                const centerX = (rect.left + rect.right) / 2;
                 const scaleX = canvas.width / rect.width / window.devicePixelRatio;
-                const scaleY = canvas.height / rect.height / window.devicePixelRatio;
-                const touch1 = e.touches[0];
-                const touch2 = e.touches[1];
-                const centerClientX = (touch1.clientX + touch2.clientX) / 2;
-                const centerClientY = (touch1.clientY + touch2.clientY) / 2;
-                const canvasX = (centerClientX - rect.left) * scaleX;
-                const canvasY = (centerClientY - rect.top) * scaleY;
-
-                // Находим индекс свечи под центром
+                const canvasX = (centerX - rect.left) * scaleX;
                 const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
                 const candleIndexFloat = (canvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
                 centerCandleIndex = Math.round(candleIndexFloat);
                 centerCandleIndex = Math.max(0, Math.min(chartData.length - 1, centerCandleIndex));
-
                 canvas.style.cursor = 'zoom-in';
                 crosshairVisible = false;
                 isCrosshairMoving = false;
@@ -1748,24 +1796,19 @@
                 if (newZoom !== zoomLevel) {
                     const oldZoom = zoomLevel;
                     zoomLevel = newZoom;
-
                     if (centerCandleIndex !== null) {
-                        // Корректируем dragOffset, чтобы центр оставался на месте
-                        const oldTotalWidth = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
-                        const newTotalWidth = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
-                        const oldCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * oldTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
-                        const newCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * newTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
-                        dragOffset -= (newCenterX - oldCenterX);
+                        const totalWidthPerCandleOld = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
+                        const totalWidthPerCandleNew = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
+                        const oldCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * totalWidthPerCandleOld + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
+                        const newCenterX = CHART_SETTINGS.paddingLeft + (centerCandleIndex - startIndex) * totalWidthPerCandleNew + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
+                        const deltaX = newCenterX - oldCenterX;
+                        dragOffset -= deltaX;
+                        const maxStart = getMaxStart();
+                        const maxRightOffset = startIndex * totalWidthPerCandleNew;
+                        const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandleNew;
+                        if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
+                        if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
                     }
-
-                    // Ограничения dragOffset
-                    const maxStart = getMaxStart();
-                    const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
-                    const maxRightOffset = startIndex * totalWidthPerCandle;
-                    const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandle;
-                    if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
-                    if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
-
                     drawChart();
                 }
             } else if (!pinchActive && e.touches.length === 1) {
@@ -1817,9 +1860,7 @@
             e.preventDefault();
             crosshairVisible = false;
             isCrosshairMoving = false;
-
-            // Плавный коэффициент масштабирования
-            const delta = e.deltaY > 0 ? 0.95 : 1.05;
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
             let newZoom = zoomLevel * delta;
             if (newZoom < CHART_SETTINGS.minZoom) newZoom = CHART_SETTINGS.minZoom;
             if (newZoom > CHART_SETTINGS.maxZoom) newZoom = CHART_SETTINGS.maxZoom;
@@ -1827,28 +1868,22 @@
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width / window.devicePixelRatio;
                 const mouseCanvasX = (e.clientX - rect.left) * scaleX;
-
-                const oldZoom = zoomLevel;
-                zoomLevel = newZoom;
-
-                // Находим свечу под курсором и корректируем dragOffset
-                const oldTotalWidth = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
-                const newTotalWidth = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
-                const candleIndexFloat = (mouseCanvasX - CHART_SETTINGS.paddingLeft - dragOffset) / oldTotalWidth + startIndex;
+                const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
+                const candleIndexFloat = (mouseCanvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
                 const targetCandle = Math.round(candleIndexFloat);
                 const targetCandleIndex = Math.max(0, Math.min(chartData.length - 1, targetCandle));
-
-                const oldCandleCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * oldTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
-                const newCandleCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * newTotalWidth + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
-                dragOffset -= (newCandleCenterX - oldCandleCenterX);
-
-                // Ограничения dragOffset
+                const oldZoom = zoomLevel;
+                zoomLevel = newZoom;
+                const totalWidthPerCandleOld = CHART_SETTINGS.candleWidthBase * oldZoom + CHART_SETTINGS.gapBetweenCandles;
+                const totalWidthPerCandleNew = CHART_SETTINGS.candleWidthBase * newZoom + CHART_SETTINGS.gapBetweenCandles;
+                const oldCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * totalWidthPerCandleOld + dragOffset + CHART_SETTINGS.candleWidthBase * oldZoom / 2;
+                const newCenterX = CHART_SETTINGS.paddingLeft + (targetCandleIndex - startIndex) * totalWidthPerCandleNew + dragOffset + CHART_SETTINGS.candleWidthBase * newZoom / 2;
+                dragOffset -= (newCenterX - oldCenterX);
                 const maxStart = getMaxStart();
-                const maxRightOffset = startIndex * newTotalWidth;
-                const maxLeftOffset = -(maxStart - startIndex) * newTotalWidth;
+                const maxRightOffset = startIndex * totalWidthPerCandleNew;
+                const maxLeftOffset = -(maxStart - startIndex) * totalWidthPerCandleNew;
                 if (dragOffset > maxRightOffset) dragOffset = maxRightOffset;
                 if (dragOffset < maxLeftOffset) dragOffset = maxLeftOffset;
-
                 drawChart();
             }
         });
