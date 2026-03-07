@@ -2832,7 +2832,7 @@
     setTimeout(updateStarsBalance, 1500);
   })();
 
-  // ===== НОВЫЙ ОБРАБОТЧИК СООБЩЕНИЙ ОТ IFRAME STARS =====
+  // ===== ОБРАБОТЧИК СООБЩЕНИЙ ОТ IFRAME STARS (с добавленным PURCHASE_STARS) =====
   window.addEventListener('message', (event) => {
     const data = event.data;
     if (!data) return;
@@ -2840,36 +2840,64 @@
     switch (data.type) {
       case 'STARS_READY':
         // Если iframe загрузился, отправляем ему текущий статус кошелька
-        // Для этого нужно получить доступ к переменным из замыкания initTonAndBalance
-        // Мы можем вызвать функцию из глобального объекта, если она там есть
         if (typeof sendWalletStatusToStars === 'function') {
           sendWalletStatusToStars();
         } else {
-          // Альтернативно, можно отправить сообщение через postMessage, но статус уже есть в другом месте
-          // Попробуем найти iframe и отправить запрос на получение статуса, но проще вызвать функцию
           console.warn('sendWalletStatusToStars not available');
         }
         break;
       case 'CONNECT_WALLET':
-        // Запустить подключение кошелька
         const connectBtn = document.getElementById('connectWalletButton');
         if (connectBtn) {
           connectBtn.click();
         }
         break;
       case 'OPEN_ACCOUNT_MODAL':
-        // Открыть модальное окно аккаунта
         const walletIcon = document.getElementById('walletHeaderIcon');
         if (walletIcon && !walletIcon.classList.contains('hidden')) {
           walletIcon.click();
         }
         break;
       case 'OPEN_PAYMENT_MODAL':
-        // Эмулируем клик по панели баланса, чтобы открыть модальное окно пополнения
         const balancePanel = document.getElementById('balancePanel');
         if (balancePanel) {
           balancePanel.click();
         }
+        break;
+      case 'PURCHASE_STARS':
+        // Получен запрос на покупку Stars из iframe
+        const { stars, tonAmount, username } = data;
+        console.log('Purchase request:', { stars, tonAmount, username });
+
+        // Отправляем запрос на ваш сервер (предполагаем, что он запущен на localhost:5000)
+        fetch('http://localhost:5000/api/buy-stars', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            username: username, 
+            amount: stars 
+          })
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            // Уведомить iframe об успехе
+            const starsIframe = document.getElementById('starsIframe');
+            if (starsIframe && starsIframe.contentWindow) {
+              starsIframe.contentWindow.postMessage({
+                type: 'PURCHASE_SUCCESS',
+                stars: stars
+              }, '*');
+            }
+            alert('Покупка успешно выполнена!');
+          } else {
+            alert('Ошибка покупки: ' + (result.error || 'Неизвестная ошибка'));
+          }
+        })
+        .catch(err => {
+          console.error('Purchase error:', err);
+          alert('Ошибка соединения с сервером. Убедитесь, что сервер запущен.');
+        });
         break;
     }
   });
