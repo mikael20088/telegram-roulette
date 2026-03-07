@@ -2565,6 +2565,18 @@
       balanceSpan.textContent = currentBalance.toFixed(2);
     }
 
+    // ===== НОВАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ СТАТУСА КОШЕЛЬКА В IFRAME STARS =====
+    function sendWalletStatusToStars() {
+      const starsIframe = document.getElementById('starsIframe');
+      if (starsIframe && starsIframe.contentWindow) {
+        starsIframe.contentWindow.postMessage({
+          type: 'WALLET_STATUS',
+          connected: tonConnectUI ? tonConnectUI.connected : false,
+          balance: currentBalance
+        }, '*');
+      }
+    }
+
     // ===== НОВАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ БАЛАНСА В IFRAME STARS =====
     function updateStarsBalance() {
       const starsIframe = document.getElementById('starsIframe');
@@ -2573,6 +2585,8 @@
           type: 'UPDATE_BALANCE',
           balance: currentBalance
         }, '*');
+        // Также отправляем полный статус
+        sendWalletStatusToStars();
       }
     }
 
@@ -2728,6 +2742,7 @@
           console.log('Wallet status:', wallet ? 'connected' : 'disconnected');
           updateWalletUI(wallet);
           updatePayButton();
+          sendWalletStatusToStars(); // отправляем статус в Stars
         });
 
         payButton.addEventListener('click', async () => {
@@ -2819,12 +2834,43 @@
 
   // ===== НОВЫЙ ОБРАБОТЧИК СООБЩЕНИЙ ОТ IFRAME STARS =====
   window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'OPEN_PAYMENT_MODAL') {
-      // Эмулируем клик по панели баланса, чтобы открыть модальное окно пополнения
-      const balancePanel = document.getElementById('balancePanel');
-      if (balancePanel) {
-        balancePanel.click();
-      }
+    const data = event.data;
+    if (!data) return;
+
+    switch (data.type) {
+      case 'STARS_READY':
+        // Если iframe загрузился, отправляем ему текущий статус кошелька
+        // Для этого нужно получить доступ к переменным из замыкания initTonAndBalance
+        // Мы можем вызвать функцию из глобального объекта, если она там есть
+        if (typeof sendWalletStatusToStars === 'function') {
+          sendWalletStatusToStars();
+        } else {
+          // Альтернативно, можно отправить сообщение через postMessage, но статус уже есть в другом месте
+          // Попробуем найти iframe и отправить запрос на получение статуса, но проще вызвать функцию
+          console.warn('sendWalletStatusToStars not available');
+        }
+        break;
+      case 'CONNECT_WALLET':
+        // Запустить подключение кошелька
+        const connectBtn = document.getElementById('connectWalletButton');
+        if (connectBtn) {
+          connectBtn.click();
+        }
+        break;
+      case 'OPEN_ACCOUNT_MODAL':
+        // Открыть модальное окно аккаунта
+        const walletIcon = document.getElementById('walletHeaderIcon');
+        if (walletIcon && !walletIcon.classList.contains('hidden')) {
+          walletIcon.click();
+        }
+        break;
+      case 'OPEN_PAYMENT_MODAL':
+        // Эмулируем клик по панели баланса, чтобы открыть модальное окно пополнения
+        const balancePanel = document.getElementById('balancePanel');
+        if (balancePanel) {
+          balancePanel.click();
+        }
+        break;
     }
   });
 </script>
