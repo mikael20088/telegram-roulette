@@ -632,7 +632,7 @@
         const CANDLE_SETTINGS = {
             upColor:   '#00ff00',
             downColor: '#ff0000',
-            wickColor: '#a0a0a0', // больше не используется
+            wickColor: '#a0a0a0',
             gridColor: '#2a2a2a',
             textColor: '#ffffff',
         };
@@ -790,9 +790,9 @@
         let crosshairPrice = 0;
         let touchStartTime = 0;
         let touchStartX = 0, touchStartY = 0;
-        const TAP_DELAY = 300;
-        const TAP_DISTANCE = 30;
-        const HIDE_CROSSHAIR_DISTANCE = 20; // расстояние для скрытия перекрестия
+        const TAP_DELAY = 500;          // увеличено
+        const TAP_DISTANCE = 40;         // увеличено
+        const HIDE_CROSSHAIR_DISTANCE = 20;
         let isLoadingMore = false;
         let firstButtonRect = null;
 
@@ -830,7 +830,7 @@
             ctx.imageSmoothingEnabled = true;
         }
 
-        // Упрощённая функция получения координат на canvas
+        // Получение координат на canvas в CSS-пикселях
         function getCanvasCoords(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
             return {
@@ -1172,7 +1172,7 @@
                 ctx.fillStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
                 ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
 
-                // --- Фитиль (тень свечи) ---
+                // --- Фитиль ---
                 ctx.beginPath();
                 ctx.moveTo(x + w/2, highY);
                 ctx.lineTo(x + w/2, lowY);
@@ -1180,7 +1180,7 @@
                 ctx.lineWidth = 1.0;
                 ctx.stroke();
 
-                // Тело свечи (только заливка, без обводки)
+                // Тело свечи
                 const bodyTop = Math.min(openY, closeY);
                 const bodyBottom = Math.max(openY, closeY);
                 const bodyHeight = bodyBottom - bodyTop;
@@ -1190,7 +1190,6 @@
                 } else {
                     ctx.fillRect(x, bodyTop, w, bodyHeight);
                 }
-                // --- конец тела ---
             });
 
             // High/Low линии
@@ -1497,7 +1496,6 @@
                 if (startIndex >= maxStart - 5) startIndex = Math.max(0, chartData.length - getVisibleCount() + EXTRA_SPACE);
                 else if (startIndex > maxStart) startIndex = maxStart;
 
-                // Не сбрасываем перекрестие
                 if (!animLastCandle) drawChart();
                 if (tradePanel.classList.contains('visible')) { updateTradePanel(); renderOrderBook(); }
             } catch (err) { console.warn('Ошибка обновления данных:', err); }
@@ -1600,6 +1598,7 @@
 
         canvas.addEventListener('mouseleave', () => { if (isDragging) endDrag(); });
 
+        // ---------- TOUCH-СОБЫТИЯ (ПЕРЕРАБОТАНЫ) ----------
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (e.touches.length === 2) {
@@ -1707,6 +1706,7 @@
                         updateCrosshairFromPoint(coords.x, coords.y);
                     }
                     drawChart();
+                    console.log('Tap detected, crosshairVisible =', crosshairVisible); // отладка
                 }
                 if (isCrosshairMoving) isCrosshairMoving = false;
                 if (isDragging) {
@@ -1716,7 +1716,7 @@
             }
         });
 
-        // Исправленный обработчик колесика
+        // ... остальные обработчики (колесико, drag) без изменений ...
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             crosshairVisible = false;
