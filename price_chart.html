@@ -790,8 +790,8 @@
         let crosshairPrice = 0;
         let touchStartTime = 0;
         let touchStartX = 0, touchStartY = 0;
-        const TAP_DELAY = 500;          // увеличено
-        const TAP_DISTANCE = 40;         // увеличено
+        const TAP_DELAY = 300;
+        const TAP_DISTANCE = 30;
         const HIDE_CROSSHAIR_DISTANCE = 20;
         let isLoadingMore = false;
         let firstButtonRect = null;
@@ -830,7 +830,7 @@
             ctx.imageSmoothingEnabled = true;
         }
 
-        // Получение координат на canvas в CSS-пикселях
+        // Возвращает координаты в CSS-пикселях (относительно canvas)
         function getCanvasCoords(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
             return {
@@ -1015,24 +1015,30 @@
             return timestamp - 3600000;
         }
 
-        function findCandleByX(x) {
+        // Поиск свечи по X-координате (в CSS-пикселях)
+        function findCandleByX(cssX) {
             if (!chartData.length) return -1;
+            const dpr = window.devicePixelRatio || 1;
+            const physicalX = cssX * dpr; // переводим в физические пиксели canvas
             const { paddingLeft, gapBetweenCandles } = CHART_SETTINGS;
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
-            const candleIndexFloat = (x - paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
+            const candleIndexFloat = (physicalX - paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
             const index = Math.round(candleIndexFloat);
             return (index >= 0 && index < chartData.length) ? index : -1;
         }
 
-        function updateCrosshairFromPoint(canvasX, canvasY) {
+        function updateCrosshairFromPoint(cssX, cssY) {
+            const dpr = window.devicePixelRatio || 1;
+            const physicalX = cssX * dpr;
+            const physicalY = cssY * dpr;
             const { paddingLeft, paddingRight, paddingTop, paddingBottom } = CHART_SETTINGS;
-            const width = canvas.width / window.devicePixelRatio;
-            const height = canvas.height / window.devicePixelRatio;
-            if (canvasX < paddingLeft || canvasX > width - paddingRight || canvasY < paddingTop || canvasY > height - paddingBottom) return;
-            crosshairX = canvasX;
-            crosshairY = canvasY;
-            const index = findCandleByX(canvasX);
+            const width = canvas.width / dpr;
+            const height = canvas.height / dpr;
+            if (cssX < paddingLeft || cssX > width - paddingRight || cssY < paddingTop || cssY > height - paddingBottom) return;
+            crosshairX = cssX; // сохраняем для отрисовки (CSS-пиксели)
+            crosshairY = cssY;
+            const index = findCandleByX(cssX);
             if (index !== -1) {
                 crosshairCandleIndex = index;
                 const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
@@ -1040,7 +1046,7 @@
                 crosshairX = CHART_SETTINGS.paddingLeft + (index - startIndex) * totalWidthPerCandle + dragOffset + candleWidth / 2;
             } else {
                 crosshairCandleIndex = -1;
-                crosshairX = canvasX;
+                crosshairX = cssX;
             }
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + CHART_SETTINGS.gapBetweenCandles;
@@ -1057,7 +1063,7 @@
                 maxPrice += priceRange * 0.05;
                 if (minPrice === maxPrice) { minPrice -= 0.01; maxPrice += 0.01; }
                 const chartHeight = height - paddingTop - paddingBottom;
-                crosshairPrice = maxPrice - (canvasY - paddingTop) / chartHeight * (maxPrice - minPrice);
+                crosshairPrice = maxPrice - (cssY - paddingTop) / chartHeight * (maxPrice - minPrice);
             }
         }
 
@@ -1094,8 +1100,9 @@
         function drawChart() {
             if (!chartData || chartData.length === 0) return;
             resizeCanvas();
-            const width = canvas.width / window.devicePixelRatio;
-            const height = canvas.height / window.devicePixelRatio;
+            const dpr = window.devicePixelRatio || 1;
+            const width = canvas.width / dpr;  // CSS-ширина
+            const height = canvas.height / dpr;
             const { paddingLeft, paddingRight, paddingTop, paddingBottom, gapBetweenCandles, minBodyHeight, gridVerticalStep, gridHorizontalCount } = CHART_SETTINGS;
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
@@ -1598,7 +1605,7 @@
 
         canvas.addEventListener('mouseleave', () => { if (isDragging) endDrag(); });
 
-        // ---------- TOUCH-СОБЫТИЯ (ПЕРЕРАБОТАНЫ) ----------
+        // ---------- TOUCH-СОБЫТИЯ ----------
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (e.touches.length === 2) {
@@ -1607,7 +1614,7 @@
                 initialZoom = zoomLevel;
                 const rect = canvas.getBoundingClientRect();
                 const centerX = (rect.left + rect.right) / 2;
-                const canvasX = centerX - rect.left;
+                const canvasX = centerX - rect.left; // CSS-пиксели
                 const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
                 const candleIndexFloat = (canvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
                 centerCandleIndex = Math.round(candleIndexFloat);
