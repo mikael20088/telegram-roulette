@@ -1174,12 +1174,12 @@
                 ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
 
                 // --- Фитиль (тень свечи) ---
-                // Фиксированная толщина 1.5px
+                // Фиксированная толщина 1px
                 ctx.beginPath();
                 ctx.moveTo(x + w/2, highY);
                 ctx.lineTo(x + w/2, lowY);
                 ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 1.0;
                 ctx.stroke();
 
                 // Тело свечи (только заливка, без обводки)
