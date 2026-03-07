@@ -706,13 +706,7 @@
             gapFromPriceBox: 4,
         };
 
-        const REFRESH_INTERVALS = {
-            '5m': 2000,
-            '15m': 2000,
-            '1h': 2000,
-            '4h': 2000,
-            '1d': 2000
-        };
+        // Удалены REFRESH_INTERVALS
 
         const TARGET_VISIBLE_COUNT = {
             '5m': 130,
@@ -775,7 +769,6 @@
         let lastClientX = 0;
         let lastClientY = 0;
         let dragOffset = 0;
-        let refreshIntervalId = null;
         let animLastCandle = null;
         let animFrame = null;
         let pinchActive = false;
@@ -792,7 +785,7 @@
         let touchStartX = 0, touchStartY = 0;
         const TAP_DELAY = 300;
         const TAP_DISTANCE = 30;
-        const HIDE_CROSSHAIR_DISTANCE = 20; // расстояние для скрытия перекрестия
+        const HIDE_CROSSHAIR_DISTANCE = 20;
         let isLoadingMore = false;
         let firstButtonRect = null;
 
@@ -800,6 +793,9 @@
         let dragSpeed = 0;
         let lastDragTime = 0;
         let inertiaFrame = null;
+
+        // Переменная для polling (новый таймер)
+        let pollingInterval = null;
 
         const savedInterval = localStorage.getItem('selectedInterval');
         if (savedInterval && ['5m','15m','1h','4h','1d'].includes(savedInterval)) {
@@ -888,6 +884,17 @@
             const isGreen = candle.close >= candle.open;
             priceDisplay.classList.remove('positive', 'negative');
             priceDisplay.classList.add(isGreen ? 'positive' : 'negative');
+        }
+
+        // Функция для обновления изменения цены (на основе первой и последней свечи)
+        function updatePriceChangeFromCandles(candles) {
+            if (candles.length < 2) return;
+            const first = candles[0];
+            const last = candles[candles.length - 1];
+            const change = ((last.close - first.close) / first.close * 100).toFixed(2);
+            priceChangeDisplay.textContent = (change >= 0 ? '+' : '') + change + '%';
+            priceChangeDisplay.classList.remove('positive', 'negative');
+            priceChangeDisplay.classList.add(change >= 0 ? 'positive' : 'negative');
         }
 
         function drawLastCandleLine(x, y, price, isLastVisible, showButton) {
@@ -1068,6 +1075,7 @@
             const oldestCandle = chartData[0];
             const endTime = oldestCandle.time - 1;
             try {
+                // Пока оставляем прямой запрос к Binance для подгрузки старых свечей
                 const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentInterval}&endTime=${endTime}&limit=500`);
                 if (!response.ok) throw new Error('Ошибка загрузки');
                 const data = await response.json();
@@ -1409,37 +1417,41 @@
             ctx.restore();
         }
 
-        // ========== ЗАГРУЗКА ДАННЫХ ==========
+        // ========== НОВАЯ ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ (ЧЕРЕЗ ПРОКСИ) ==========
         async function loadData(interval) {
             loading.style.display = 'block';
             errorDiv.style.display = 'none';
+
             try {
-                const [candlesResponse, tickerResponse] = await Promise.all([
-                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=500`),
-                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
-                ]);
-                if (!candlesResponse.ok) throw new Error(`HTTP ${candlesResponse.status}`);
-                if (!tickerResponse.ok) throw new Error(`HTTP ${tickerResponse.status}`);
-                const candlesData = await candlesResponse.json();
-                const tickerData = await tickerResponse.json();
-                let rawData = candlesData.map(d => ({
-                    time: parseInt(d[0]),
-                    open: parseFloat(d[1]),
-                    high: parseFloat(d[2]),
-                    low: parseFloat(d[3]),
-                    close: parseFloat(d[4])
-                }));
-                if (interval === '1d') rawData = rawData.map(c => ({ ...c, time: c.time - 3600000 }));
-                chartData = rawData;
+                // Запрос к прокси-серверу (абсолютный URL с портом 3000)
+                const response = await fetch(`http://localhost:3000/api/klines?symbol=${symbol}&interval=${interval}`);
+                if (!response.ok) throw new Error('Ошибка загрузки данных с прокси');
+                const candles = await response.json();
+
+                // Если сервер возвращает свечи в формате Binance, конвертация не нужна
+                chartData = candles;
+
+                // Корректировка для дневного интервала (если ваш прокси уже скорректировал, можно убрать)
+                if (interval === '1d') {
+                    chartData = chartData.map(c => ({ ...c, time: c.time - 3600000 }));
+                }
+
                 adjustZoomToTarget(interval);
                 setToLastCandle();
+
                 if (chartData.length > 0) {
                     const lastCandle = chartData[chartData.length - 1];
                     priceDisplay.textContent = formatPrice(lastCandle.close);
                     updatePriceColor(lastCandle);
+                    // Обновляем изменение цены на основе первой и последней свечи
+                    updatePriceChangeFromCandles(chartData);
                 }
-                updatePriceChange(tickerData.priceChangePercent);
-                if (tradePanel.classList.contains('visible')) { updateTradePanel(); renderOrderBook(); }
+
+                if (tradePanel.classList.contains('visible')) {
+                    updateTradePanel();
+                    renderOrderBook();
+                }
+
                 loading.style.display = 'none';
             } catch (err) {
                 loading.style.display = 'none';
@@ -1448,66 +1460,40 @@
             }
         }
 
-        function updatePriceChange(percentStr) {
-            const percent = parseFloat(percentStr);
-            priceChangeDisplay.textContent = (percent >= 0 ? '+' : '') + percent.toFixed(2) + '%';
-            priceChangeDisplay.classList.remove('positive', 'negative');
-            if (percent > 0) priceChangeDisplay.classList.add('positive');
-            else if (percent < 0) priceChangeDisplay.classList.add('negative');
-            else priceChangeDisplay.classList.add('positive');
-        }
-
-        async function refreshData() {
-            if (!currentInterval || chartData.length === 0) return;
-            try {
-                const [candlesResponse, tickerResponse] = await Promise.all([
-                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentInterval}&limit=500`),
-                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
-                ]);
-                if (!candlesResponse.ok) throw new Error(`HTTP ${candlesResponse.status}`);
-                if (!tickerResponse.ok) throw new Error(`HTTP ${tickerResponse.status}`);
-                const newDataRaw = await candlesResponse.json();
-                const tickerData = await tickerResponse.json();
-                let newData = newDataRaw.map(d => ({
-                    time: parseInt(d[0]),
-                    open: parseFloat(d[1]),
-                    high: parseFloat(d[2]),
-                    low: parseFloat(d[3]),
-                    close: parseFloat(d[4])
-                }));
-                if (currentInterval === '1d') newData = newData.map(c => ({ ...c, time: c.time - 3600000 }));
-                if (newData.length === 0) return;
-                const lastOld = chartData[chartData.length - 1];
-                const lastNew = newData[newData.length - 1];
-                if (lastOld.time === lastNew.time) {
-                    const oldCandle = { ...lastOld };
-                    const newCandle = { ...lastNew };
-                    chartData[chartData.length - 1] = newCandle;
-                    animLastCandle = { oldCandle, newCandle, startTime: performance.now(), duration: 400 };
-                    if (animFrame) cancelAnimationFrame(animFrame);
-                    animFrame = requestAnimationFrame(drawChart);
-                } else if (lastNew.time > lastOld.time) {
-                    chartData.push(lastNew);
-                    if (chartData.length > 5000) { chartData.shift(); if (startIndex > 0) startIndex -= 1; }
+        // ========== ПОЛЛИНГ (обновление каждые 2 секунды) ==========
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(async () => {
+                if (chartData.length > 0 && currentInterval) {
+                    try {
+                        const response = await fetch(`http://localhost:3000/api/klines?symbol=${symbol}&interval=${currentInterval}`);
+                        const candles = await response.json();
+                        // Корректировка для дневного интервала
+                        if (currentInterval === '1d') {
+                            chartData = candles.map(c => ({ ...c, time: c.time - 3600000 }));
+                        } else {
+                            chartData = candles;
+                        }
+                        // Обновляем цену и изменение
+                        if (chartData.length > 0) {
+                            const lastCandle = chartData[chartData.length - 1];
+                            priceDisplay.textContent = formatPrice(lastCandle.close);
+                            updatePriceColor(lastCandle);
+                            updatePriceChangeFromCandles(chartData);
+                        }
+                        drawChart();
+                        if (tradePanel.classList.contains('visible')) {
+                            updateTradePanel();
+                            renderOrderBook();
+                        }
+                    } catch (e) {
+                        console.warn('Polling error', e);
+                    }
                 }
-                priceDisplay.textContent = formatPrice(lastNew.close);
-                updatePriceColor(lastNew);
-                updatePriceChange(tickerData.priceChangePercent);
-                const maxStart = getMaxStart();
-                if (startIndex >= maxStart - 5) startIndex = Math.max(0, chartData.length - getVisibleCount() + EXTRA_SPACE);
-                else if (startIndex > maxStart) startIndex = maxStart;
-
-                // Не сбрасываем перекрестие
-                if (!animLastCandle) drawChart();
-                if (tradePanel.classList.contains('visible')) { updateTradePanel(); renderOrderBook(); }
-            } catch (err) { console.warn('Ошибка обновления данных:', err); }
+            }, 2000);
         }
 
-        function startRefreshTimer(interval) {
-            if (refreshIntervalId) clearInterval(refreshIntervalId);
-            refreshIntervalId = setInterval(refreshData, REFRESH_INTERVALS[interval]);
-        }
-
+        // ========== ОБРАБОТЧИК СМЕНЫ ИНТЕРВАЛА ==========
         function handleIntervalChange(interval) {
             currentInterval = interval;
             localStorage.setItem('selectedInterval', interval);
@@ -1515,7 +1501,9 @@
                 btn.classList.remove('active');
                 if (btn.dataset.interval === interval) btn.classList.add('active');
             });
-            loadData(interval).then(() => startRefreshTimer(interval));
+            loadData(interval).then(() => {
+                startPolling(); // перезапускаем polling с новым интервалом
+            });
         }
 
         // ========== ИНЕРЦИЯ ==========
@@ -1580,7 +1568,6 @@
                 if (touchDuration < TAP_DELAY && dx < TAP_DISTANCE && dy < TAP_DISTANCE) {
                     const coords = getCanvasCoords(e.clientX, e.clientY);
                     if (crosshairVisible) {
-                        // Проверяем расстояние от точки касания до текущего перекрестия
                         const dist = Math.hypot(coords.x - crosshairX, coords.y - crosshairY);
                         if (dist < HIDE_CROSSHAIR_DISTANCE) {
                             crosshairVisible = false;
@@ -1706,7 +1693,7 @@
             }
         });
 
-        // Исправленный обработчик колесика
+        // Исправленный обработчик колесика (без изменений)
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             crosshairVisible = false;
