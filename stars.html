@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
+    /* --- ПОЛНОСТЬЮ ВОССТАНОВЛЕННЫЙ ВИЗУАЛ --- */
     * {
       margin: 0;
       padding: 0;
@@ -202,6 +203,7 @@
       display: none;
     }
 
+    /* Поле ввода (исходное) */
     .input-field {
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(10px);
@@ -229,7 +231,6 @@
       opacity: 0.9;
     }
 
-    /* Стили для аватарки */
     .avatar-icon {
       width: 20px;
       height: 20px;
@@ -251,15 +252,6 @@
     .field-input::placeholder {
       color: rgba(255, 255, 255, 0.5);
       font-weight: 300;
-    }
-
-    /* Сообщение об ошибке под полем */
-    .username-error {
-      color: #ff6b6b;
-      font-size: 12px;
-      margin-left: 18px;
-      margin-bottom: 12px;
-      display: none;
     }
 
     .static-field {
@@ -381,13 +373,12 @@
     </div>
     <div class="subtitle">Пополните баланс себе или подарите другу</div>
 
-    <!-- Поле ввода с иконкой @ и аватаркой -->
+    <!-- Поле ввода с аватаркой -->
     <div class="input-field">
       <span class="field-icon" id="usernameIcon">@</span>
       <img class="avatar-icon" id="usernameAvatar" src="" alt="avatar">
       <input type="text" class="field-input" id="usernameInput" placeholder="Введите Telegram username" autocomplete="off">
     </div>
-    <div class="username-error" id="usernameError">Username не найден</div>
 
     <div class="static-field">
       <span class="field-icon">💎</span>
@@ -417,14 +408,19 @@
       const connectWalletBtn = document.getElementById('connectWalletButton');
       const walletHeaderIcon = document.getElementById('walletHeaderIcon');
 
-      // Элементы для аватарки и ошибки
+      // Элементы для аватарки
       const usernameIcon = document.getElementById('usernameIcon');
       const usernameAvatar = document.getElementById('usernameAvatar');
-      const usernameError = document.getElementById('usernameError');
 
       let tonUsdRate = 3.5;
       const starsPerTon = 0.0045;
 
+      // Флаг валидности username (аватарка загружена)
+      let isUsernameValid = false;
+      // Флаг подключения кошелька (получаем от родителя)
+      let isWalletConnected = false;
+
+      // Функция для обновления видимости кнопок кошелька
       function updateWalletUI(connected) {
         if (connected) {
           connectWalletBtn.classList.add('hidden');
@@ -435,34 +431,89 @@
         }
       }
 
-      // Загрузка аватарки
+      // Кеш для аватарок
+      const avatarCache = new Map();
+
+      // Сброс состояния валидации username
+      function resetUsernameState() {
+        isUsernameValid = false;
+        usernameAvatar.style.display = 'none';
+        usernameAvatar.src = '';
+        usernameIcon.style.display = 'inline';
+        updateButtonState();
+      }
+
+      // Загружаем аватарку по username
       function loadAvatar(username) {
         let clean = username.trim().replace(/^@/, '');
         if (!clean) {
-          usernameIcon.style.display = 'inline';
-          usernameAvatar.style.display = 'none';
-          usernameAvatar.src = '';
-          usernameError.style.display = 'none';
+          resetUsernameState();
           return;
         }
 
-        const avatarUrl = `https://t.me/i/userpic/320/${clean}.jpg`;
+        // Если есть в кеше
+        if (avatarCache.has(clean)) {
+          const cached = avatarCache.get(clean);
+          if (cached === 'found') {
+            usernameAvatar.src = `https://t.me/i/userpic/320/${clean}.jpg`;
+            usernameAvatar.style.display = 'inline';
+            usernameIcon.style.display = 'none';
+            isUsernameValid = true;
+          } else {
+            resetUsernameState();
+          }
+          updateButtonState();
+          return;
+        }
 
+        // Нет в кеше – пробуем загрузить
+        const avatarUrl = `https://t.me/i/userpic/320/${clean}.jpg`;
         const img = new Image();
         img.onload = () => {
+          avatarCache.set(clean, 'found');
           usernameAvatar.src = avatarUrl;
           usernameAvatar.style.display = 'inline';
           usernameIcon.style.display = 'none';
-          usernameError.style.display = 'none';
+          isUsernameValid = true;
+          updateButtonState();
         };
         img.onerror = () => {
-          usernameIcon.style.display = 'inline';
-          usernameAvatar.style.display = 'none';
-          usernameAvatar.src = '';
-          usernameError.style.display = 'block';
+          avatarCache.set(clean, 'notfound');
+          resetUsernameState();
         };
         img.src = avatarUrl;
       }
+
+      // Функция обновления состояния кнопки
+      function updateButtonState() {
+        let stars = parseInt(starsInput.value, 10);
+        const isStarsValid = !isNaN(stars) && stars >= 50 && stars <= 100000;
+        const usernameEmpty = usernameInput.value.trim() === '';
+
+        // Кнопка активна, если:
+        // - сумма валидна И
+        // - (username пуст ИЛИ username валиден)
+        const shouldBeActive = isStarsValid && (usernameEmpty || isUsernameValid);
+
+        if (shouldBeActive) {
+          buyButton.classList.add('active');
+          errorMsg.style.display = 'none';
+        } else {
+          buyButton.classList.remove('active');
+          if (starsInput.value !== '' && !isStarsValid) {
+            errorMsg.style.display = 'block';
+            errorMsg.textContent = 'Минимум 50, максимум 100 000 Stars';
+          } else {
+            errorMsg.style.display = 'none';
+          }
+        }
+      }
+
+      // Обработчики полей
+      starsInput.addEventListener('input', updateButtonState);
+      usernameInput.addEventListener('input', () => {
+        resetUsernameState(); // при вводе сбрасываем валидность username
+      });
 
       usernameInput.addEventListener('blur', () => {
         loadAvatar(usernameInput.value);
@@ -474,16 +525,12 @@
         }
       });
 
-      usernameInput.addEventListener('input', () => {
-        usernameError.style.display = 'none';
-      });
-
+      // Сообщения от родителя
       window.parent.postMessage({ type: 'STARS_READY' }, '*');
 
       window.addEventListener('message', (event) => {
         const data = event.data;
         if (!data) return;
-
         switch (data.type) {
           case 'UPDATE_BALANCE':
             if (balanceAmount) {
@@ -492,6 +539,7 @@
             break;
           case 'WALLET_STATUS':
             if (typeof data.connected === 'boolean') {
+              isWalletConnected = data.connected;
               updateWalletUI(data.connected);
             }
             if (data.balance !== undefined && balanceAmount) {
@@ -501,18 +549,46 @@
         }
       });
 
+      // Клик по панели баланса -> открыть модалку пополнения
       document.getElementById('starsBalancePanel').addEventListener('click', () => {
         window.parent.postMessage({ type: 'OPEN_PAYMENT_MODAL' }, '*');
       });
 
+      // Клик по кнопке подключения кошелька
       connectWalletBtn.addEventListener('click', () => {
         window.parent.postMessage({ type: 'CONNECT_WALLET' }, '*');
       });
 
+      // Клик по иконке кошелька (открыть аккаунт)
       walletHeaderIcon.addEventListener('click', () => {
         window.parent.postMessage({ type: 'OPEN_ACCOUNT_MODAL' }, '*');
       });
 
+      // Обработчик кнопки "Купить Stars"
+      buyButton.addEventListener('click', async () => {
+        if (!buyButton.classList.contains('active')) return;
+
+        const stars = parseInt(starsInput.value, 10);
+        const username = usernameInput.value.trim();
+
+        // Если кошелёк не подключён – отправляем запрос на подключение
+        if (!isWalletConnected) {
+          window.parent.postMessage({ type: 'CONNECT_WALLET' }, '*');
+          return;
+        }
+
+        // Если кошелёк подключён – отправляем запрос на покупку
+        const tonAmount = stars * starsPerTon; // сумма в TON
+
+        window.parent.postMessage({
+          type: 'PURCHASE_STARS',
+          stars: stars,
+          tonAmount: tonAmount,
+          username: username || ''
+        }, '*');
+      });
+
+      // Оригинальная логика Stars (расчёт USD)
       async function fetchTonRate() {
         try {
           const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
@@ -533,52 +609,21 @@
       function updateUI() {
         let stars = parseInt(starsInput.value, 10);
         const isValid = !isNaN(stars) && stars >= 50 && stars <= 100000;
-
         if (isValid) {
           const usdValue = calculateUsd(stars);
           usdHint.textContent = usdValue.toFixed(2) + ' $';
-          buyButton.classList.add('active');
-          errorMsg.style.display = 'none';
         } else {
           usdHint.textContent = '0.00 $';
-          buyButton.classList.remove('active');
-          if (starsInput.value !== '') {
-            errorMsg.style.display = 'block';
-            errorMsg.textContent = 'Минимум 50, максимум 100 000 Stars';
-          } else {
-            errorMsg.style.display = 'none';
-          }
         }
+        // Состояние кнопки обновляется в updateButtonState, который вызывается отдельно
       }
 
       starsInput.addEventListener('input', updateUI);
 
-      buyButton.addEventListener('click', async () => {
-        if (!buyButton.classList.contains('active')) return;
-
-        const stars = parseInt(starsInput.value, 10);
-        const username = usernameInput.value.trim();
-
-        if (username === '') {
-          console.log('Покупка для себя');
-        } else {
-          if (!username.startsWith('@') && !username.match(/^[a-zA-Z0-9_]{5,}$/)) {
-            alert('Пожалуйста, введите корректный Telegram username (например, @durov или durov)');
-            return;
-          }
-        }
-
-        buyButton.textContent = 'Обработка...';
-        buyButton.classList.remove('active');
-
-        setTimeout(() => {
-          alert(`Оплата ${stars} Stars: ${(stars * starsPerTon).toFixed(2)} TON`);
-          buyButton.textContent = 'Купить Stars';
-          buyButton.classList.add('active');
-        }, 1000);
+      fetchTonRate().then(() => {
+        updateUI();
+        updateButtonState();
       });
-
-      fetchTonRate().then(updateUI);
     })();
   </script>
 </body>
