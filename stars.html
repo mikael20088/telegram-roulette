@@ -23,19 +23,19 @@
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding: 0; /* убираем внешние отступы — контейнер займёт всю ширину */
+      padding: 0;
     }
 
     .stars-container {
       width: 100%;
-      max-width: 500px; /* чуть шире, чтобы кнопка точно влезала */
+      max-width: 500px;
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 30px;
       padding: 24px 20px;
-      margin: 20px 16px; /* отступы по бокам, чтобы не прилипало к краям */
+      margin: 20px 16px;
       position: relative;
       box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
       animation: matrixGlow 4s ease-in-out infinite alternate;
@@ -58,7 +58,6 @@
       z-index: -1;
     }
 
-    /* Шапка с заголовком и кнопкой баланса */
     .header-row {
       display: flex;
       justify-content: space-between;
@@ -71,7 +70,7 @@
       font-weight: 700;
       color: #ffffff;
       letter-spacing: -0.3px;
-      margin: 0; /* убираем стандартный отступ */
+      margin: 0;
     }
 
     .subtitle {
@@ -82,7 +81,12 @@
       font-weight: 400;
     }
 
-    /* Панель баланса (кнопка) — теперь внутри контейнера */
+    .right-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .balance-panel {
       position: relative;
       padding: 4px 8px 4px 4px;
@@ -96,7 +100,7 @@
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       font-family: 'Inter', sans-serif;
-      flex-shrink: 0; /* не сжимается */
+      flex-shrink: 0;
     }
 
     .balance-panel::before {
@@ -136,7 +140,68 @@
       font-weight: bold;
     }
 
-    /* Поля ввода и кнопка (без изменений) */
+    .connect-wallet-button {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(10, 20, 10, 0.3);
+      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s;
+      font-size: 18px;
+      color: #00ff88;
+    }
+    .connect-wallet-button:hover {
+      transform: scale(1.05);
+    }
+    .connect-wallet-button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      border-radius: 8px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
+    }
+    .connect-wallet-button::after {
+      content: '+';
+      position: absolute;
+      bottom: 0px;
+      right: 2px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #00ff88;
+      text-shadow: 0 0 5px #00ff88;
+    }
+
+    .wallet-icon-header {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(30, 30, 40, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #00ff88;
+      cursor: pointer;
+    }
+    .wallet-icon-header.hidden,
+    .connect-wallet-button.hidden {
+      display: none;
+    }
+
     .input-field {
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(10px);
@@ -164,6 +229,15 @@
       opacity: 0.9;
     }
 
+    /* Стили для аватарки */
+    .avatar-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: none;
+    }
+
     .field-input {
       flex: 1;
       background: transparent;
@@ -177,6 +251,15 @@
     .field-input::placeholder {
       color: rgba(255, 255, 255, 0.5);
       font-weight: 300;
+    }
+
+    /* Сообщение об ошибке под полем */
+    .username-error {
+      color: #ff6b6b;
+      font-size: 12px;
+      margin-left: 18px;
+      margin-bottom: 12px;
+      display: none;
     }
 
     .static-field {
@@ -284,21 +367,27 @@
 </head>
 <body>
   <div class="stars-container">
-    <!-- Шапка с заголовком и кнопкой баланса в одной строке -->
     <div class="header-row">
       <h1>Telegram Stars</h1>
-      <div class="balance-panel" id="starsBalancePanel">
-        <span class="ton-icon">💎</span>
-        <span class="balance-amount" id="balanceAmount">0.00</span>
-        <span class="plus-square">+</span>
+      <div class="right-group">
+        <div class="balance-panel" id="starsBalancePanel">
+          <span class="ton-icon">💎</span>
+          <span class="balance-amount" id="balanceAmount">0.00</span>
+          <span class="plus-square">+</span>
+        </div>
+        <div class="connect-wallet-button hidden" id="connectWalletButton" title="Подключить кошелек">💳</div>
+        <div class="wallet-icon-header hidden" id="walletHeaderIcon">💎</div>
       </div>
     </div>
     <div class="subtitle">Пополните баланс себе или подарите другу</div>
 
+    <!-- Поле ввода с иконкой @ и аватаркой -->
     <div class="input-field">
-      <span class="field-icon">@</span>
+      <span class="field-icon" id="usernameIcon">@</span>
+      <img class="avatar-icon" id="usernameAvatar" src="" alt="avatar">
       <input type="text" class="field-input" id="usernameInput" placeholder="Введите Telegram username" autocomplete="off">
     </div>
+    <div class="username-error" id="usernameError">Username не найден</div>
 
     <div class="static-field">
       <span class="field-icon">💎</span>
@@ -324,9 +413,105 @@
       const buyButton = document.getElementById('buyButton');
       const usernameInput = document.getElementById('usernameInput');
       const errorMsg = document.getElementById('errorMsg');
+      const balanceAmount = document.getElementById('balanceAmount');
+      const connectWalletBtn = document.getElementById('connectWalletButton');
+      const walletHeaderIcon = document.getElementById('walletHeaderIcon');
+
+      // Элементы для аватарки и ошибки
+      const usernameIcon = document.getElementById('usernameIcon');
+      const usernameAvatar = document.getElementById('usernameAvatar');
+      const usernameError = document.getElementById('usernameError');
 
       let tonUsdRate = 3.5;
       const starsPerTon = 0.0045;
+
+      function updateWalletUI(connected) {
+        if (connected) {
+          connectWalletBtn.classList.add('hidden');
+          walletHeaderIcon.classList.remove('hidden');
+        } else {
+          connectWalletBtn.classList.remove('hidden');
+          walletHeaderIcon.classList.add('hidden');
+        }
+      }
+
+      // Загрузка аватарки
+      function loadAvatar(username) {
+        let clean = username.trim().replace(/^@/, '');
+        if (!clean) {
+          usernameIcon.style.display = 'inline';
+          usernameAvatar.style.display = 'none';
+          usernameAvatar.src = '';
+          usernameError.style.display = 'none';
+          return;
+        }
+
+        const avatarUrl = `https://t.me/i/userpic/320/${clean}.jpg`;
+
+        const img = new Image();
+        img.onload = () => {
+          usernameAvatar.src = avatarUrl;
+          usernameAvatar.style.display = 'inline';
+          usernameIcon.style.display = 'none';
+          usernameError.style.display = 'none';
+        };
+        img.onerror = () => {
+          usernameIcon.style.display = 'inline';
+          usernameAvatar.style.display = 'none';
+          usernameAvatar.src = '';
+          usernameError.style.display = 'block';
+        };
+        img.src = avatarUrl;
+      }
+
+      usernameInput.addEventListener('blur', () => {
+        loadAvatar(usernameInput.value);
+      });
+
+      usernameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          usernameInput.blur();
+        }
+      });
+
+      usernameInput.addEventListener('input', () => {
+        usernameError.style.display = 'none';
+      });
+
+      window.parent.postMessage({ type: 'STARS_READY' }, '*');
+
+      window.addEventListener('message', (event) => {
+        const data = event.data;
+        if (!data) return;
+
+        switch (data.type) {
+          case 'UPDATE_BALANCE':
+            if (balanceAmount) {
+              balanceAmount.textContent = data.balance.toFixed(2);
+            }
+            break;
+          case 'WALLET_STATUS':
+            if (typeof data.connected === 'boolean') {
+              updateWalletUI(data.connected);
+            }
+            if (data.balance !== undefined && balanceAmount) {
+              balanceAmount.textContent = data.balance.toFixed(2);
+            }
+            break;
+        }
+      });
+
+      document.getElementById('starsBalancePanel').addEventListener('click', () => {
+        window.parent.postMessage({ type: 'OPEN_PAYMENT_MODAL' }, '*');
+      });
+
+      connectWalletBtn.addEventListener('click', () => {
+        window.parent.postMessage({ type: 'CONNECT_WALLET' }, '*');
+      });
+
+      walletHeaderIcon.addEventListener('click', () => {
+        window.parent.postMessage({ type: 'OPEN_ACCOUNT_MODAL' }, '*');
+      });
 
       async function fetchTonRate() {
         try {
@@ -394,20 +579,6 @@
       });
 
       fetchTonRate().then(updateUI);
-
-      const balancePanel = document.getElementById('starsBalancePanel');
-      balancePanel.addEventListener('click', () => {
-        window.parent.postMessage({ type: 'OPEN_PAYMENT_MODAL' }, '*');
-      });
-
-      window.addEventListener('message', (event) => {
-        if (event.data.type === 'UPDATE_BALANCE') {
-          const balanceAmount = document.getElementById('balanceAmount');
-          if (balanceAmount) {
-            balanceAmount.textContent = event.data.balance.toFixed(2);
-          }
-        }
-      });
     })();
   </script>
 </body>
