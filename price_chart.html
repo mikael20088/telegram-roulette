@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <style>
-        /* ... (стили без изменений, как в предыдущей версии) ... */
+        /* ... (стили без изменений) ... */
         body {
             margin: 0;
             padding: 0;
@@ -632,7 +632,7 @@
         const CANDLE_SETTINGS = {
             upColor: '#00e676',
             downColor: '#ff5252',
-            wickColor: '#a0a0a0',
+            wickColor: '#a0a0a0', // больше не используется
             gridColor: '#2a2a2a',
             textColor: '#ffffff',
         };
@@ -1172,9 +1172,17 @@
                 const isGreen = candle.close >= candle.open;
                 ctx.fillStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
                 ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
-                // Фитиль
-                ctx.beginPath(); ctx.moveTo(x + w/2, highY); ctx.lineTo(x + w/2, lowY); ctx.strokeStyle = CANDLE_SETTINGS.wickColor; ctx.lineWidth = 0.5; ctx.stroke();
-                // Тело
+
+                // --- Фитиль (тень свечи) ---
+                // Фиксированная толщина 1.5px
+                ctx.beginPath();
+                ctx.moveTo(x + w/2, highY);
+                ctx.lineTo(x + w/2, lowY);
+                ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Тело свечи (только заливка, без обводки)
                 const bodyTop = Math.min(openY, closeY);
                 const bodyBottom = Math.max(openY, closeY);
                 const bodyHeight = bodyBottom - bodyTop;
@@ -1184,13 +1192,7 @@
                 } else {
                     ctx.fillRect(x, bodyTop, w, bodyHeight);
                 }
-                // Тени
-                ctx.save();
-                ctx.shadowColor = isGreen ? 'rgba(0,230,118,0.8)' : 'rgba(255,82,82,0.8)';
-                ctx.shadowBlur = 20;
-                ctx.strokeStyle = 'transparent';
-                ctx.strokeRect(x, bodyTop, w, bodyHeight);
-                ctx.restore();
+                // --- конец тела ---
             });
 
             // High/Low линии
@@ -1970,4 +1972,4 @@
         handleIntervalChange(currentInterval);
     </script>
 </body>
-</html>ы
+</html>
