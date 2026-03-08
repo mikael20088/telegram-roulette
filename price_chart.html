@@ -56,10 +56,10 @@
         }
 
         .positive {
-            color: #00ff00;
+            color: #00E676; /* заменено на цвет тела зелёной свечи */
         }
         .negative {
-            color: #ff0000;
+            color: #FF1744; /* заменено на цвет тела красной свечи */
         }
 
         .price-change {
@@ -75,10 +75,10 @@
         }
 
         .price-change.positive {
-            color: #00ff00;
+            color: #00E676;
         }
         .price-change.negative {
-            color: #ff0000;
+            color: #FF1744;
         }
 
         .action-buttons {
@@ -101,7 +101,7 @@
 
         .trade-btn:hover, .overview-btn:hover {
             background: #3a3a4a;
-            border-color: #00ff00;
+            border-color: #00E676; /* заменено */
         }
 
         #canvasContainer {
@@ -143,7 +143,7 @@
 
         .tf-btn.active, .tf-btn:hover {
             background: #2a2a3a;
-            border-color: #00ff00;
+            border-color: #00E676; /* заменено */
             color: #ffffff;
         }
 
@@ -163,7 +163,7 @@
 
         .go-last-btn:hover {
             background: #2a2a3a;
-            border-color: #00ff00;
+            border-color: #00E676; /* заменено */
             color: #ffffff;
         }
 
@@ -172,14 +172,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #00ff00;
+            color: #00E676; /* заменено */
             display: none;
             z-index: 20;
             font-size: 14px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
 
-        #error { color: #ff0000; }
+        #error { color: #FF1744; } /* заменено */
 
         .trade-panel {
             position: fixed;
@@ -252,7 +252,7 @@
         }
 
         .close-btn:hover {
-            color: #ff0000;
+            color: #FF1744; /* заменено */
         }
 
         .order-entry {
@@ -283,7 +283,7 @@
 
         .input-field:focus {
             outline: none;
-            border-color: #00ff00;
+            border-color: #00E676; /* заменено */
         }
 
         .input-field[readonly] {
@@ -293,7 +293,7 @@
         }
 
         .wallet-warning {
-            color: #ff0000;
+            color: #FF1744; /* заменено */
             font-size: 12px;
             margin-top: -4px;
             margin-bottom: 12px;
@@ -323,7 +323,7 @@
 
         .percent-btn:hover {
             background: #3a3a4a;
-            border-color: #00ff00;
+            border-color: #00E676; /* заменено */
         }
 
         .action-buttons-trade {
@@ -347,11 +347,11 @@
         }
 
         .buy-btn {
-            background: #00ff00;
+            background: #00E676; /* заменено */
         }
 
         .sell-btn {
-            background: #ff0000;
+            background: #FF1744; /* заменено */
         }
 
         .buy-btn:hover, .sell-btn:hover {
@@ -390,11 +390,11 @@
         }
 
         .order-row.ask .price {
-            color: #ff0000;
+            color: #FF1744; /* заменено */
         }
 
         .order-row.bid .price {
-            color: #00ff00;
+            color: #00E676; /* заменено */
         }
 
         .order-row .price,
@@ -416,7 +416,7 @@
             text-align: center;
             font-weight: bold;
             font-size: 18px;
-            color: #00ff00;
+            color: #00E676; /* заменено */
             flex-shrink: 0;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
@@ -630,8 +630,8 @@
 
         // ========== НАСТРОЙКИ ГРАФИКА ==========
         const CANDLE_SETTINGS = {
-            upColor:   '#00E676',
-            downColor: '#FF1744',
+            upColor:   '#00E676',   // цвет тела зелёной свечи
+            downColor: '#FF1744',   // цвет тела красной свечи
             wickColor: '#a0a0a0',
             gridColor: '#2a2a2a',
             textColor: '#ffffff',
@@ -1874,7 +1874,8 @@
             tradeSymbol.textContent = pair;
             tradePrice.textContent = priceDisplay.textContent;
             tradeChange.textContent = priceChangeDisplay.textContent;
-            tradeChange.style.color = priceChangeDisplay.classList.contains('positive') ? '#00ff00' : '#ff0000';
+            // Используем цвета тела свечей
+            tradeChange.style.color = priceChangeDisplay.classList.contains('positive') ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
             marketPriceSpan.textContent = priceDisplay.textContent;
         }
 
@@ -1890,7 +1891,8 @@
             overviewSymbol.textContent = pair.split('/')[0];
             overviewPrice.textContent = priceDisplay.textContent;
             overviewChange.textContent = priceChangeDisplay.textContent;
-            overviewChange.style.color = priceChangeDisplay.classList.contains('positive') ? '#00ff00' : '#ff0000';
+            // Используем цвета тела свечей
+            overviewChange.style.color = priceChangeDisplay.classList.contains('positive') ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
         }
 
         function showOverview() { updateOverviewHeader(); loadOverviewData(); overviewPanel.classList.add('visible'); overlay.classList.add('visible'); }
