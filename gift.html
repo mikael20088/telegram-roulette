@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Gift Charts</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;  /* светло-серый фон */
+      font-family: Arial, sans-serif;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+    .top-title {
+      font-size: 18px;
+      font-weight: normal;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    /* Квадрат (увеличен в 2 раза) */
+    .small-square {
+      width: 96px;
+      height: 96px;
+      background-color: #0c0c1f;   /* тёмно-синий */
+      border-radius: 12px;
+      /* без границ, теней и подсветок */
+      margin-bottom: 20px;          /* отступ снизу */
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    .bottom-link {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 16px;
+      color: #333;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .bottom-link:hover {
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Верхняя надпись -->
+  <div class="top-title">Все подарки</div>
+
+  <!-- Квадрат слева сверху (теперь 96x96) -->
+  <div class="small-square"></div>
+
+  <!-- Пустой разделитель -->
+  <div class="spacer"></div>
+
+  <!-- Нижняя надпись "Главная" (закрывает оверлей) -->
+  <div class="bottom-link" id="homeLink">Главная</div>
+
+  <script>
+    // Закрытие оверлея при клике на "Главная"
+    document.getElementById('homeLink').addEventListener('click', () => {
+      if (window.parent) {
+        window.parent.postMessage({ type: 'CLOSE_GIFT_OVERLAY' }, '*');
+      }
+    });
+  </script>
+
+</body>
+</html>
