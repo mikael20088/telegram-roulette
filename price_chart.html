@@ -56,10 +56,10 @@
         }
 
         .positive {
-            color: #00E676; /* заменено на цвет тела зелёной свечи */
+            color: #00E676;
         }
         .negative {
-            color: #FF1744; /* заменено на цвет тела красной свечи */
+            color: #FF1744;
         }
 
         .price-change {
@@ -101,7 +101,7 @@
 
         .trade-btn:hover, .overview-btn:hover {
             background: #3a3a4a;
-            border-color: #00E676; /* заменено */
+            border-color: #00E676;
         }
 
         #canvasContainer {
@@ -143,7 +143,7 @@
 
         .tf-btn.active, .tf-btn:hover {
             background: #2a2a3a;
-            border-color: #00E676; /* заменено */
+            border-color: #00E676;
             color: #ffffff;
         }
 
@@ -163,7 +163,7 @@
 
         .go-last-btn:hover {
             background: #2a2a3a;
-            border-color: #00E676; /* заменено */
+            border-color: #00E676;
             color: #ffffff;
         }
 
@@ -172,14 +172,35 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #00E676; /* заменено */
-            display: none;
             z-index: 20;
             font-size: 14px;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
 
-        #error { color: #FF1744; } /* заменено */
+        /* Стили для загрузочного кружочка */
+        #loading {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 230, 118, 0.2);
+            border-top: 4px solid #00E676;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        #error {
+            color: #FF1744;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid #FF1744;
+            display: none;
+        }
 
         .trade-panel {
             position: fixed;
@@ -252,7 +273,7 @@
         }
 
         .close-btn:hover {
-            color: #FF1744; /* заменено */
+            color: #FF1744;
         }
 
         .order-entry {
@@ -283,7 +304,7 @@
 
         .input-field:focus {
             outline: none;
-            border-color: #00E676; /* заменено */
+            border-color: #00E676;
         }
 
         .input-field[readonly] {
@@ -293,7 +314,7 @@
         }
 
         .wallet-warning {
-            color: #FF1744; /* заменено */
+            color: #FF1744;
             font-size: 12px;
             margin-top: -4px;
             margin-bottom: 12px;
@@ -323,7 +344,7 @@
 
         .percent-btn:hover {
             background: #3a3a4a;
-            border-color: #00E676; /* заменено */
+            border-color: #00E676;
         }
 
         .action-buttons-trade {
@@ -347,11 +368,11 @@
         }
 
         .buy-btn {
-            background: #00E676; /* заменено */
+            background: #00E676;
         }
 
         .sell-btn {
-            background: #FF1744; /* заменено */
+            background: #FF1744;
         }
 
         .buy-btn:hover, .sell-btn:hover {
@@ -390,11 +411,11 @@
         }
 
         .order-row.ask .price {
-            color: #FF1744; /* заменено */
+            color: #FF1744;
         }
 
         .order-row.bid .price {
-            color: #00E676; /* заменено */
+            color: #00E676;
         }
 
         .order-row .price,
@@ -416,7 +437,7 @@
             text-align: center;
             font-weight: bold;
             font-size: 18px;
-            color: #00E676; /* заменено */
+            color: #00E676;
             flex-shrink: 0;
             font-family: 'Inter', 'JetBrains Mono', 'Roboto Mono', monospace;
         }
@@ -539,7 +560,7 @@
 
     <div id="canvasContainer">
         <canvas id="chartCanvas"></canvas>
-        <div id="loading">Загрузка данных...</div>
+        <div id="loading"></div>
         <div id="error"></div>
     </div>
 
@@ -630,15 +651,15 @@
 
         // ========== НАСТРОЙКИ ГРАФИКА ==========
         const CANDLE_SETTINGS = {
-            upColor:   '#00E676',   // цвет тела зелёной свечи
-            downColor: '#FF1744',   // цвет тела красной свечи
+            upColor:   '#00E676',
+            downColor: '#FF1744',
             wickColor: '#a0a0a0',
             gridColor: '#2a2a2a',
             textColor: '#ffffff',
         };
 
         const CHART_SETTINGS = {
-            paddingLeft: 45,
+            paddingLeft: 5,           // уменьшен с 45 до 5
             paddingRight: 45,
             paddingTop: 25,
             paddingBottom: 70,
@@ -647,7 +668,7 @@
             candleWidthBase: 10,
             gapBetweenCandles: 2,
             minBodyHeight: 2,
-            gridVerticalStep: 8,
+            gridSize: 30,             // фиксированный размер клетки в пикселях
             gridHorizontalCount: 8,
         };
 
@@ -1019,7 +1040,7 @@
         function findCandleByX(cssX) {
             if (!chartData.length) return -1;
             const dpr = window.devicePixelRatio || 1;
-            const physicalX = cssX * dpr; // переводим в физические пиксели canvas
+            const physicalX = cssX * dpr;
             const { paddingLeft, gapBetweenCandles } = CHART_SETTINGS;
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
@@ -1036,7 +1057,7 @@
             const width = canvas.width / dpr;
             const height = canvas.height / dpr;
             if (cssX < paddingLeft || cssX > width - paddingRight || cssY < paddingTop || cssY > height - paddingBottom) return;
-            crosshairX = cssX; // сохраняем для отрисовки (CSS-пиксели)
+            crosshairX = cssX;
             crosshairY = cssY;
             const index = findCandleByX(cssX);
             if (index !== -1) {
@@ -1101,9 +1122,9 @@
             if (!chartData || chartData.length === 0) return;
             resizeCanvas();
             const dpr = window.devicePixelRatio || 1;
-            const width = canvas.width / dpr;  // CSS-ширина
+            const width = canvas.width / dpr;
             const height = canvas.height / dpr;
-            const { paddingLeft, paddingRight, paddingTop, paddingBottom, gapBetweenCandles, minBodyHeight, gridVerticalStep, gridHorizontalCount } = CHART_SETTINGS;
+            const { paddingLeft, paddingRight, paddingTop, paddingBottom, gapBetweenCandles, minBodyHeight, gridSize, gridHorizontalCount } = CHART_SETTINGS;
             const candleWidth = CHART_SETTINGS.candleWidthBase * zoomLevel;
             const totalWidthPerCandle = candleWidth + gapBetweenCandles;
             const visibleCount = getVisibleCount();
@@ -1154,17 +1175,26 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // Сетка
+            // Квадратная сетка с фиксированным шагом gridSize
             ctx.strokeStyle = CANDLE_SETTINGS.gridColor;
             ctx.lineWidth = 0.3;
-            const stepPx = totalWidthPerCandle * gridVerticalStep;
-            const firstLineX = Math.ceil((baseX - paddingLeft) / stepPx) * stepPx + paddingLeft;
-            for (let x = firstLineX; x < width - paddingRight; x += stepPx) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+
+            // Вертикальные линии
+            const firstVert = Math.ceil(paddingLeft / gridSize) * gridSize;
+            for (let x = firstVert; x < width - paddingRight; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, paddingTop);
+                ctx.lineTo(x, height - paddingBottom);
+                ctx.stroke();
             }
-            for (let i = 0; i <= gridHorizontalCount; i++) {
-                const y = paddingTop + (height - paddingTop - paddingBottom) * (i / gridHorizontalCount);
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.strokeStyle = CANDLE_SETTINGS.gridColor; ctx.stroke();
+
+            // Горизонтальные линии
+            const firstHoriz = Math.ceil(paddingTop / gridSize) * gridSize;
+            for (let y = firstHoriz; y < height - paddingBottom; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(width - paddingRight, y);
+                ctx.stroke();
             }
 
             // Свечи
@@ -1179,7 +1209,7 @@
                 ctx.fillStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
                 ctx.strokeStyle = isGreen ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
 
-                // --- Фитиль ---
+                // Фитиль
                 ctx.beginPath();
                 ctx.moveTo(x + w/2, highY);
                 ctx.lineTo(x + w/2, lowY);
@@ -1217,8 +1247,8 @@
                 }
             }
 
-            // Шкала цен
-            const PRICE_SCALE_RIGHT = 15;
+            // Шкала цен (смещена на 2px вправо: отступ 13 вместо 15)
+            const PRICE_SCALE_RIGHT = 13;
             ctx.shadowBlur = 0;
             ctx.fillStyle = CANDLE_SETTINGS.textColor;
             ctx.font = '500 11px "Inter", "JetBrains Mono", "Roboto Mono", monospace';
@@ -1607,14 +1637,14 @@
 
         // ---------- TOUCH-СОБЫТИЯ ----------
         canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Предотвращаем прокрутку страницы
             if (e.touches.length === 2) {
                 pinchActive = true;
                 initialPinchDistance = getPinchDistance(e.touches);
                 initialZoom = zoomLevel;
                 const rect = canvas.getBoundingClientRect();
                 const centerX = (rect.left + rect.right) / 2;
-                const canvasX = centerX - rect.left; // CSS-пиксели
+                const canvasX = centerX - rect.left;
                 const totalWidthPerCandle = CHART_SETTINGS.candleWidthBase * zoomLevel + CHART_SETTINGS.gapBetweenCandles;
                 const candleIndexFloat = (canvasX - CHART_SETTINGS.paddingLeft - dragOffset) / totalWidthPerCandle + startIndex;
                 centerCandleIndex = Math.round(candleIndexFloat);
@@ -1647,7 +1677,7 @@
         });
 
         canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Предотвращаем прокрутку страницы
             if (pinchActive && e.touches.length === 2) {
                 const newDistance = getPinchDistance(e.touches);
                 const scale = newDistance / initialPinchDistance;
@@ -1713,7 +1743,6 @@
                         updateCrosshairFromPoint(coords.x, coords.y);
                     }
                     drawChart();
-                    console.log('Tap detected, crosshairVisible =', crosshairVisible); // отладка
                 }
                 if (isCrosshairMoving) isCrosshairMoving = false;
                 if (isDragging) {
@@ -1723,7 +1752,6 @@
             }
         });
 
-        // ... остальные обработчики (колесико, drag) без изменений ...
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             crosshairVisible = false;
@@ -1874,7 +1902,6 @@
             tradeSymbol.textContent = pair;
             tradePrice.textContent = priceDisplay.textContent;
             tradeChange.textContent = priceChangeDisplay.textContent;
-            // Используем цвета тела свечей
             tradeChange.style.color = priceChangeDisplay.classList.contains('positive') ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
             marketPriceSpan.textContent = priceDisplay.textContent;
         }
@@ -1891,7 +1918,6 @@
             overviewSymbol.textContent = pair.split('/')[0];
             overviewPrice.textContent = priceDisplay.textContent;
             overviewChange.textContent = priceChangeDisplay.textContent;
-            // Используем цвета тела свечей
             overviewChange.style.color = priceChangeDisplay.classList.contains('positive') ? CANDLE_SETTINGS.upColor : CANDLE_SETTINGS.downColor;
         }
 
