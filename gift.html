@@ -24,7 +24,7 @@
       color: #333;
       display: flex;
       flex-direction: column;
-      padding: 20px 20px 20px 5px;      /* левый отступ 5px */
+      padding: 20px 20px 20px 5px;
       box-sizing: border-box;
     }
 
@@ -48,16 +48,32 @@
       margin-left: 0;
     }
 
-    /* Квадрат шире: 86px (было 82px) */
+    /* Квадрат */
     .square-container {
       position: relative;
       width: 86px;
       background-color: #0c0c1f;
-      border-radius: 18px 18px 0 0;      /* скругление чуть увеличено */
+      border-radius: 18px 18px 0 0;
       flex-shrink: 0;
+      /* Для псевдоэлемента с градиентом */
+      z-index: 0;
     }
 
-    /* Плашка процентов — увеличены шрифт и отступы */
+    /* Эффект размытого стекла в нижней части квадрата */
+    .square-container::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 40%;                       /* высота области свечения */
+      background: linear-gradient(to top, rgba(0, 255, 0, 0.9), rgba(0, 255, 0, 0));
+      backdrop-filter: blur(5px);        /* размытие фона под слоем */
+      -webkit-backdrop-filter: blur(5px);
+      pointer-events: none;
+      z-index: 0;                         /* под контентом, но над фоном */
+    }
+
     .percent-badge {
       position: absolute;
       top: 0;
@@ -68,9 +84,9 @@
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #00ff00;
-      font-size: 18px;                   /* было 17px */
+      font-size: 18px;
       font-weight: 600;
-      padding: 9px 0 19px 0;              /* немного увеличены отступы */
+      padding: 9px 0 19px 0;
       text-align: center;
       border-radius: 18px 18px 0 0;
       line-height: 1;
@@ -91,22 +107,21 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Капитализация — увеличен шрифт, скорректирован top */
     .cap-badge {
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(50% - 87px);               /* было -82px, подобрано визуально */
+      top: calc(50% - 87px);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #00ff00;
-      font-size: 20px;                      /* было 18px */
+      font-size: 20px;
       font-weight: 700;
-      padding: 9px 0;                        /* увеличено */
+      padding: 9px 0;
       text-align: center;
-      border-radius: 14px;                   /* чуть больше */
+      border-radius: 14px;
       line-height: 1;
       box-sizing: border-box;
       white-space: nowrap;
@@ -126,21 +141,20 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Цена — увеличен шрифт, скорректирован top */
     .price-badge {
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(50% - 32px);                /* было -30px, чуть изменено */
+      top: calc(50% - 32px);
       transform: translateY(-50%);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #00ff00;
-      font-size: 17px;                       /* было 16px */
+      font-size: 17px;
       font-weight: 700;
-      padding: 9px 0;                         /* увеличено */
+      padding: 9px 0;
       text-align: center;
       border-radius: 14px;
       line-height: 1;
@@ -162,22 +176,21 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Объём (pcs) — увеличен шрифт, скорректирован top */
     .pcs-badge {
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(50% - 7px);                 /* было -4px, подобрано */
+      top: calc(50% - 7px);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #ffffff;
-      font-size: 10px;                       /* было 9px */
+      font-size: 10px;
       font-weight: 700;
-      padding: 5px 0;                         /* увеличено */
+      padding: 5px 0;
       text-align: center;
-      border-radius: 12px;                    /* немного больше */
+      border-radius: 12px;
       line-height: 1;
       box-sizing: border-box;
       white-space: nowrap;
@@ -201,23 +214,23 @@
     .star {
       position: absolute;
       left: 50%;
-      top: 0;                       /* будет переопределено скриптом */
+      top: 0;
       transform: translate(-50%, -50%);
       color: white;
-      font-size: 52px;               /* была 48px, чуть увеличена */
+      font-size: 52px;
       line-height: 1;
       opacity: 0;
       transition: opacity 0.5s ease-in;
-      z-index: 1;
+      z-index: 2;                    /* выше градиентного слоя */
     }
 
-    /* Жёлтая линия под квадратами (ширина пересчитана под 86px) */
+    /* Жёлтая линия под квадратами */
     .squares-row::after {
       content: '';
       position: absolute;
       bottom: 0;
       left: 0;
-      width: calc(4 * 86px + 3 * 1.5px);  /* 4*86 + 4.5 = 344 + 4.5 = 348.5px */
+      width: calc(4 * 86px + 3 * 1.5px);
       height: 2px;
       background-color: #ffff00;
       z-index: 0;
