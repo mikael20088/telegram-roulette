@@ -38,6 +38,7 @@
     }
 
     .squares-row {
+      position: relative;
       flex-grow: 1;
       display: flex;
       flex-wrap: nowrap;
@@ -51,11 +52,10 @@
       position: relative;
       width: 82px;
       background-color: #0c0c1f;
-      border-radius: 16px;
+      border-radius: 16px 16px 0 0;
       flex-shrink: 0;
     }
 
-    /* Плашка процентов сверху */
     .percent-badge {
       position: absolute;
       top: 0;
@@ -66,7 +66,7 @@
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #00ff00;
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 600;
       padding: 8px 0 18px 0;
       text-align: center;
@@ -89,7 +89,6 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Центральный блок $200 на всю ширину */
     .price-badge {
       position: absolute;
       left: 0;
@@ -125,12 +124,11 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Плашка капитализации ($28,77M) — выше $200 */
     .cap-badge {
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(50% - 50px);
+      top: calc(50% - 52px);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
@@ -160,20 +158,19 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Плашка для pcs (432826 pcs) — уменьшена в 2 раза, белый текст */
     .pcs-badge {
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(50% + 26px);           /* новая позиция после уменьшения */
+      top: calc(50% + 26px);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #ffffff;
-      font-size: 9px;                   /* уменьшено в 2 раза (было 18px) */
+      font-size: 9px;
       font-weight: 700;
-      padding: 4px 0;                    /* уменьшено с 8px 0 */
+      padding: 4px 0;
       text-align: center;
       border-radius: 12px;
       line-height: 1;
@@ -195,6 +192,32 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
+    /* Звёздочка: увеличен размер, центрирована по обоим осям */
+    .star {
+      position: absolute;
+      left: 50%;
+      top: 0;  /* будет переопределено скриптом */
+      transform: translate(-50%, -50%);  /* центр элемента совпадёт с заданной точкой */
+      color: white;
+      font-size: 48px;                   /* увеличен в 3 раза */
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.5s ease-in;
+      z-index: 1;
+    }
+
+    /* Жёлтая линия под квадратами */
+    .squares-row::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 1px;
+      width: calc(4 * 82px + 3 * 1.5px);
+      height: 2px;
+      background-color: #ffff00;
+      z-index: 0;
+    }
+
     .bottom-link {
       flex-shrink: 0;
       margin-top: 15px;
@@ -212,46 +235,71 @@
 </head>
 <body>
 
-  <!-- Верхняя надпись -->
   <div class="top-title">Все подарки</div>
 
-  <!-- Ряд из четырёх квадратов -->
   <div class="squares-row">
     <div class="square-container">
       <div class="percent-badge">+12%</div>
-      <div class="price-badge">$200</div>
+      <div class="star">⭐</div>
       <div class="cap-badge">$28,77M</div>
+      <div class="price-badge">$200</div>
       <div class="pcs-badge">432826 pcs</div>
     </div>
     <div class="square-container">
       <div class="percent-badge">+12%</div>
-      <div class="price-badge">$200</div>
+      <div class="star">⭐</div>
       <div class="cap-badge">$28,77M</div>
+      <div class="price-badge">$200</div>
       <div class="pcs-badge">432826 pcs</div>
     </div>
     <div class="square-container">
       <div class="percent-badge">+12%</div>
-      <div class="price-badge">$200</div>
+      <div class="star">⭐</div>
       <div class="cap-badge">$28,77M</div>
+      <div class="price-badge">$200</div>
       <div class="pcs-badge">432826 pcs</div>
     </div>
     <div class="square-container">
       <div class="percent-badge">+12%</div>
-      <div class="price-badge">$200</div>
+      <div class="star">⭐</div>
       <div class="cap-badge">$28,77M</div>
+      <div class="price-badge">$200</div>
       <div class="pcs-badge">432826 pcs</div>
     </div>
   </div>
 
-  <!-- Нижняя надпись "Главная" -->
   <div class="bottom-link" id="homeLink">Главная</div>
 
   <script>
-    document.getElementById('homeLink').addEventListener('click', () => {
-      if (window.parent) {
-        window.parent.postMessage({ type: 'CLOSE_GIFT_OVERLAY' }, '*');
-      }
-    });
+    function positionStars() {
+      const containers = document.querySelectorAll('.square-container');
+      containers.forEach(container => {
+        const percent = container.querySelector('.percent-badge');
+        const cap = container.querySelector('.cap-badge');
+        const star = container.querySelector('.star');
+        if (!percent || !cap || !star) return;
+
+        const percentBottom = percent.offsetTop + percent.offsetHeight;
+        const capTop = cap.offsetTop;
+        const starCenter = (percentBottom + capTop) / 2;
+
+        star.style.top = starCenter + 'px';
+
+        // Плавное появление после установки позиции
+        setTimeout(() => {
+          star.style.opacity = '1';
+        }, 20);
+      });
+    }
+
+    window.addEventListener('load', positionStars);
+    window.addEventListener('resize', positionStars);
+
+    if (document.readyState === 'complete') {
+      positionStars();
+    } else {
+      document.addEventListener('DOMContentLoaded', positionStars);
+    }
   </script>
 
 </body>
