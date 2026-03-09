@@ -55,7 +55,7 @@
       flex-shrink: 0;
     }
 
-    /* Плашка процентов — теперь выше и с крупным текстом */
+    /* Плашка процентов сверху */
     .percent-badge {
       position: absolute;
       top: 0;
@@ -66,9 +66,9 @@
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #00ff00;
-      font-size: 16px;                  /* увеличено в 2 раза (было 8px) */
+      font-size: 16px;
       font-weight: 600;
-      padding: 8px 0 18px 0;            /* увеличена нижняя часть на 10px */
+      padding: 8px 0 18px 0;
       text-align: center;
       border-radius: 16px 16px 0 0;
       line-height: 1;
@@ -89,22 +89,25 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Стиль для цены $200 — сдвинута вниз, чтобы не перекрываться плашкой */
+    /* Центральный блок $200 на всю ширину */
     .price-badge {
       position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 48px;                         /* новое значение */
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #00ff00;
-      font-size: 8px;
+      font-size: 16px;
       font-weight: 700;
-      padding: 2px 4px;
-      border-radius: 6px;
+      padding: 8px 0;
+      text-align: center;
+      border-radius: 12px;
       line-height: 1;
+      box-sizing: border-box;
       white-space: nowrap;
       z-index: 1;
     }
@@ -117,29 +120,34 @@
         linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
         radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
         radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      border-radius: 6px;
+      border-radius: 12px;
       z-index: -1;
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Общий стиль для маленьких баджей — также сдвинуты */
-    .small-badge {
+    /* Плашка капитализации ($28,77M) — выше $200 */
+    .cap-badge {
       position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(50% - 50px);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #00ff00;
-      font-size: 6px;
-      font-weight: 600;
-      padding: 2px 2px;
-      border-radius: 4px;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 8px 0;
+      text-align: center;
+      border-radius: 12px;
       line-height: 1;
+      box-sizing: border-box;
       white-space: nowrap;
       z-index: 1;
     }
 
-    .small-badge::before {
+    .cap-badge::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -147,21 +155,44 @@
         linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
         radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
         radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      border-radius: 4px;
+      border-radius: 12px;
       z-index: -1;
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    .left-badge {
-      left: 50%;
-      transform: translateX(calc(-100% - 3px));
-      top: 66px;                         /* новое значение */
+    /* Плашка для pcs (432826 pcs) — уменьшена в 2 раза, белый текст */
+    .pcs-badge {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(50% + 26px);           /* новая позиция после уменьшения */
+      background: rgba(10, 20, 10, 0.3);
+      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 9px;                   /* уменьшено в 2 раза (было 18px) */
+      font-weight: 700;
+      padding: 4px 0;                    /* уменьшено с 8px 0 */
+      text-align: center;
+      border-radius: 12px;
+      line-height: 1;
+      box-sizing: border-box;
+      white-space: nowrap;
+      z-index: 1;
     }
 
-    .right-badge {
-      left: 50%;
-      transform: translateX(3px);
-      top: 66px;                         /* новое значение */
+    .pcs-badge::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      border-radius: 12px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
     .bottom-link {
@@ -189,26 +220,26 @@
     <div class="square-container">
       <div class="percent-badge">+12%</div>
       <div class="price-badge">$200</div>
-      <div class="small-badge left-badge">444567 pcs</div>
-      <div class="small-badge right-badge">$28,77M</div>
+      <div class="cap-badge">$28,77M</div>
+      <div class="pcs-badge">432826 pcs</div>
     </div>
     <div class="square-container">
       <div class="percent-badge">+12%</div>
       <div class="price-badge">$200</div>
-      <div class="small-badge left-badge">444567 pcs</div>
-      <div class="small-badge right-badge">$28,77M</div>
+      <div class="cap-badge">$28,77M</div>
+      <div class="pcs-badge">432826 pcs</div>
     </div>
     <div class="square-container">
       <div class="percent-badge">+12%</div>
       <div class="price-badge">$200</div>
-      <div class="small-badge left-badge">444567 pcs</div>
-      <div class="small-badge right-badge">$28,77M</div>
+      <div class="cap-badge">$28,77M</div>
+      <div class="pcs-badge">432826 pcs</div>
     </div>
     <div class="square-container">
       <div class="percent-badge">+12%</div>
       <div class="price-badge">$200</div>
-      <div class="small-badge left-badge">444567 pcs</div>
-      <div class="small-badge right-badge">$28,77M</div>
+      <div class="cap-badge">$28,77M</div>
+      <div class="pcs-badge">432826 pcs</div>
     </div>
   </div>
 
