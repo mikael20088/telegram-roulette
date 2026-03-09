@@ -24,7 +24,7 @@
       color: #333;
       display: flex;
       flex-direction: column;
-      padding: 20px;
+      padding: 20px 20px 20px 5px;      /* левый отступ уменьшен до 5px */
       box-sizing: border-box;
     }
 
@@ -45,7 +45,7 @@
       gap: 1.5px;
       align-items: stretch;
       min-height: 0;
-      margin-left: 1px;
+      margin-left: 0;                     /* отступ слева убран */
     }
 
     .square-container {
@@ -89,11 +89,47 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
+    /* Капитализация поднята ещё на 20px (суммарно -30px от исходного) */
+    .cap-badge {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(50% - 82px);               /* было -62px, теперь -82px */
+      background: rgba(10, 20, 10, 0.3);
+      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #00ff00;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 8px 0;
+      text-align: center;
+      border-radius: 12px;
+      line-height: 1;
+      box-sizing: border-box;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    .cap-badge::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
+        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
+      border-radius: 12px;
+      z-index: -1;
+      animation: matrixGlow 4s ease-in-out infinite alternate;
+    }
+
+    /* Цена поднята ещё на 20px (теперь -30px от 50%) */
     .price-badge {
       position: absolute;
       left: 0;
       right: 0;
-      top: 50%;
+      top: calc(50% - 30px);                /* было -10px, теперь -30px */
       transform: translateY(-50%);
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
@@ -124,45 +160,12 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    .cap-badge {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: calc(50% - 52px);
-      background: rgba(10, 20, 10, 0.3);
-      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #00ff00;
-      font-size: 18px;
-      font-weight: 700;
-      padding: 8px 0;
-      text-align: center;
-      border-radius: 12px;
-      line-height: 1;
-      box-sizing: border-box;
-      white-space: nowrap;
-      z-index: 1;
-    }
-
-    .cap-badge::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      border-radius: 12px;
-      z-index: -1;
-      animation: matrixGlow 4s ease-in-out infinite alternate;
-    }
-
+    /* Объём (pcs) поднят ещё на 20px (теперь 50% - 4px) */
     .pcs-badge {
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(50% + 26px);
+      top: calc(50% - 4px);                /* было +16px, теперь -4px */
       background: rgba(10, 20, 10, 0.3);
       backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
       -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
@@ -192,14 +195,14 @@
       animation: matrixGlow 4s ease-in-out infinite alternate;
     }
 
-    /* Звёздочка: увеличен размер, центрирована по обоим осям */
+    /* Звёздочка */
     .star {
       position: absolute;
       left: 50%;
-      top: 0;  /* будет переопределено скриптом */
-      transform: translate(-50%, -50%);  /* центр элемента совпадёт с заданной точкой */
+      top: 0;                       /* будет переопределено скриптом */
+      transform: translate(-50%, -50%);
       color: white;
-      font-size: 48px;                   /* увеличен в 3 раза */
+      font-size: 48px;
       line-height: 1;
       opacity: 0;
       transition: opacity 0.5s ease-in;
@@ -211,7 +214,7 @@
       content: '';
       position: absolute;
       bottom: 0;
-      left: 1px;
+      left: 0;                       /* линия начинается от левого края ряда */
       width: calc(4 * 82px + 3 * 1.5px);
       height: 2px;
       background-color: #ffff00;
@@ -285,7 +288,6 @@
 
         star.style.top = starCenter + 'px';
 
-        // Плавное появление после установки позиции
         setTimeout(() => {
           star.style.opacity = '1';
         }, 20);
