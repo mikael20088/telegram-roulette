@@ -37,19 +37,20 @@
       flex-shrink: 0;
     }
 
-    /* Контейнер квадрата занимает всё оставшееся место */
+    /* Обёртка для квадрата: занимает всё свободное место, выравнивание влево */
     .square-wrapper {
       flex-grow: 1;
       display: flex;
-      justify-content: center;  /* центрируем квадрат по горизонтали */
-      min-height: 0;            /* важно для Firefox */
+      justify-content: flex-start;   /* прижимаем содержимое к левому краю */
+      min-height: 0;
     }
 
-    /* Квадрат фиксированной ширины, высота 100% от родителя */
+    /* Квадрат фиксированной ширины, высота 100% от родителя, отступ слева 5px */
     .square-container {
       position: relative;
       width: 180px;
-      height: 100%;              /* занимает всю высоту wrapper'а */
+      height: 100%;
+      margin-left: 5px;              /* отступ от левого края */
       background-color: #0c0c1f;
       border-radius: 16px;
     }
@@ -183,7 +184,7 @@
   <!-- Верхняя надпись -->
   <div class="top-title">Все подарки</div>
 
-  <!-- Обёртка для квадрата (центрирует и занимает остаток высоты) -->
+  <!-- Обёртка для квадрата (прижимает его влево) -->
   <div class="square-wrapper">
     <div class="square-container">
       <div class="percent-badge">+12%</div>
