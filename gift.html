@@ -135,29 +135,49 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      min-width: 0; /* для корректного обрезания текста */
     }
 
     .category-name {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      width: 100%;
+      gap: 8px; /* небольшой зазор между колонками */
+    }
+
+    .name-left {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       font-size: 16px;
       font-weight: 500;
       color: #fff;
-      line-height: 1.2;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
     }
 
-    .category-name .price {
+    .price-spacer {
+      /* пустой элемент, занимает вторую колонку */
+    }
+
+    .price-percent {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-right: 20px; /* отступ от правого края, чтобы сдвинуть левее */
+    }
+
+    .price {
       color: #fff;
       font-weight: 500;
+      white-space: nowrap;
     }
 
-    .category-name .percent {
+    .percent {
       font-weight: 600;
+      white-space: nowrap;
     }
 
-    .category-name .percent.positive {
+    .percent.positive {
       color: #4caf50;
     }
 
@@ -220,87 +240,118 @@
       <div class="category-emoji">🎁</div>
       <div class="category-info">
         <div class="category-name">
-          <span>Plush Pepe</span>
-          <span class="price">7,199.00</span>
-          <span class="percent positive">+35%</span>
+          <span class="name-left">Plush Pepe</span>
+          <span class="price-spacer"></span>
+          <span class="price-percent">
+            <span class="price">7,199.00</span>
+            <span class="percent positive">+35%</span>
+          </span>
         </div>
         <div class="category-stats">2.8тыс. / 2.9тыс.</div>
       </div>
     </div>
 
-    <!-- Остальные подарки (без цены и процента, пока оставим как есть) -->
+    <!-- Остальные подарки (без цены и процента) -->
     <div class="category-item">
       <div class="category-emoji">🎂</div>
       <div class="category-info">
-        <div class="category-name">Heart Locket</div>
+        <div class="category-name">
+          <span class="name-left">Heart Locket</span>
+          <span class="price-spacer"></span>
+          <!-- price-percent отсутствует, третья колонка пустая -->
+        </div>
         <div class="category-stats">1.9тыс. / 2.0тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">💐</div>
       <div class="category-info">
-        <div class="category-name">Durov's Cap</div>
+        <div class="category-name">
+          <span class="name-left">Durov's Cap</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">4.7тыс. / 4.8тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">🧸</div>
       <div class="category-info">
-        <div class="category-name">Precious Peach</div>
+        <div class="category-name">
+          <span class="name-left">Precious Peach</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">3.0тыс. / 3.2тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">🍫</div>
       <div class="category-info">
-        <div class="category-name">Heroic Helmet</div>
+        <div class="category-name">
+          <span class="name-left">Heroic Helmet</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">3.4тыс. / 3.8тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">🎈</div>
       <div class="category-info">
-        <div class="category-name">Astral Shard</div>
+        <div class="category-name">
+          <span class="name-left">Astral Shard</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">5.7тыс. / 6.2тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">😿</div>
       <div class="category-info">
-        <div class="category-name">Scared Cat</div>
+        <div class="category-name">
+          <span class="name-left">Scared Cat</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">19.3тыс. / 19.3тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">💪</div>
       <div class="category-info">
-        <div class="category-name">Mighty Arm</div>
+        <div class="category-name">
+          <span class="name-left">Mighty Arm</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">3.8тыс. / 4.1тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">🎒</div>
       <div class="category-info">
-        <div class="category-name">Loot Bag</div>
+        <div class="category-name">
+          <span class="name-left">Loot Bag</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">14.4тыс. / 14.5тыс.</div>
       </div>
     </div>
 
-    <!-- Далее можно вставить все остальные подарки из предыдущего списка, но для краткости опущены -->
-    <!-- ... -->
-
-    <!-- Последние несколько для примера -->
+    <!-- Несколько последних для примера -->
     <div class="category-item">
       <div class="category-emoji">🍬</div>
       <div class="category-info">
-        <div class="category-name">Candy Cane</div>
+        <div class="category-name">
+          <span class="name-left">Candy Cane</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">214.5тыс. / 320.6тыс.</div>
       </div>
     </div>
     <div class="category-item">
       <div class="category-emoji">🐍📦</div>
       <div class="category-info">
-        <div class="category-name">Snake Box</div>
+        <div class="category-name">
+          <span class="name-left">Snake Box</span>
+          <span class="price-spacer"></span>
+        </div>
         <div class="category-stats">174.9тыс. / 273.9тыс.</div>
       </div>
     </div>
