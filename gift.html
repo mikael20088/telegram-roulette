@@ -7,315 +7,142 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
-    @keyframes matrixGlow {
-      0% { opacity: 0.8; }
-      100% { opacity: 1; }
-    }
-
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
     }
-
     body {
-      background-color: #f5f5f5;
+      background-color: #1a1a1a;
       font-family: 'Inter', Arial, sans-serif;
-      color: #333;
+      color: #fff;
+    }
+
+    /* Верхняя панель с белой линией */
+    .top-nav {
       display: flex;
-      flex-direction: column;
-      padding: 20px 5px;                 /* правый отступ тоже уменьшен до 5px */
-      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 16px 16px 16px 16px;  /* отступы со всех сторон */
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
     }
 
-    .top-title {
-      font-size: 18px;
-      font-weight: normal;
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-      flex-shrink: 0;
-    }
-
-    .squares-row {
-      position: relative;
-      flex-grow: 1;
-      display: flex;
-      flex-wrap: nowrap;
-      gap: 1.5px;
-      align-items: stretch;
-      min-height: 0;
-      margin-left: 0;
-    }
-
-    /* Квадрат шире: 90px */
-    .square-container {
-      position: relative;
-      width: 90px;
-      background-color: #0c0c1f;
-      border-radius: 20px 20px 0 0;      /* скругление чуть увеличено */
-      flex-shrink: 0;
-      z-index: 0;
-    }
-
-    /* Эффект размытого стекла в нижней части */
-    .square-container::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 40%;
-      background: linear-gradient(to top, rgba(0, 255, 0, 0.9), rgba(0, 255, 0, 0));
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .percent-badge {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(10, 20, 10, 0.3);
-      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #00ff00;
-      font-size: 19px;                   /* увеличено */
-      font-weight: 600;
-      padding: 10px 0 20px 0;              /* увеличено */
-      text-align: center;
-      border-radius: 20px 20px 0 0;
-      line-height: 1;
-      box-sizing: border-box;
-      z-index: 1;
-    }
-
-    .percent-badge::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      border-radius: 20px 20px 0 0;
-      z-index: -1;
-      animation: matrixGlow 4s ease-in-out infinite alternate;
-    }
-
-    .cap-badge {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: calc(50% - 87px);               /* пока оставлено, при необходимости подкорректируете */
-      background: rgba(10, 20, 10, 0.3);
-      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #00ff00;
-      font-size: 22px;                      /* увеличено */
-      font-weight: 700;
-      padding: 10px 0;                       /* увеличено */
-      text-align: center;
-      border-radius: 16px;                   /* увеличено */
-      line-height: 1;
-      box-sizing: border-box;
-      white-space: nowrap;
-      z-index: 1;
-    }
-
-    .cap-badge::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      border-radius: 16px;
-      z-index: -1;
-      animation: matrixGlow 4s ease-in-out infinite alternate;
-    }
-
-    .price-badge {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: calc(50% - 32px);
-      transform: translateY(-50%);
-      background: rgba(10, 20, 10, 0.3);
-      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #00ff00;
-      font-size: 18px;                       /* увеличено */
-      font-weight: 700;
-      padding: 10px 0;                        /* увеличено */
-      text-align: center;
-      border-radius: 16px;
-      line-height: 1;
-      box-sizing: border-box;
-      white-space: nowrap;
-      z-index: 1;
-    }
-
-    .price-badge::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      border-radius: 16px;
-      z-index: -1;
-      animation: matrixGlow 4s ease-in-out infinite alternate;
-    }
-
-    .pcs-badge {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: calc(50% - 7px);
-      background: rgba(10, 20, 10, 0.3);
-      backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      -webkit-backdrop-filter: blur(16px) brightness(1.3) contrast(1.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #ffffff;
-      font-size: 11px;                       /* увеличено */
-      font-weight: 700;
-      padding: 6px 0;                         /* увеличено */
-      text-align: center;
-      border-radius: 14px;                    /* увеличено */
-      line-height: 1;
-      box-sizing: border-box;
-      white-space: nowrap;
-      z-index: 1;
-    }
-
-    .pcs-badge::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        linear-gradient(45deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 25%, rgba(0, 255, 200, 0.12) 50%, rgba(0, 150, 80, 0.05) 75%, rgba(0, 255, 136, 0.15) 100%),
-        radial-gradient(circle at 25% 25%, rgba(120, 255, 120, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(0, 255, 136, 0.2) 0%, transparent 50%);
-      border-radius: 14px;
-      z-index: -1;
-      animation: matrixGlow 4s ease-in-out infinite alternate;
-    }
-
-    .star {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 56px;                       /* увеличено */
-      line-height: 1;
-      opacity: 0;
-      transition: opacity 0.5s ease-in;
-      z-index: 2;
-    }
-
-    /* Жёлтая линия под квадратами (ширина под 90px) */
-    .squares-row::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: calc(4 * 90px + 3 * 1.5px);    /* 360 + 4.5 = 364.5px */
-      height: 2px;
-      background-color: #ffff00;
-      z-index: 0;
-    }
-
-    .bottom-link {
-      flex-shrink: 0;
-      margin-top: 15px;
-      text-align: center;
+    .nav-item {
       font-size: 16px;
-      color: #333;
-      cursor: pointer;
-      transition: color 0.2s;
+      font-weight: 500;
+      color: #ffffff;
+      white-space: nowrap;
     }
 
-    .bottom-link:hover {
-      color: #000;
+    .green-arrow {
+      color: #4caf50;
+    }
+
+    /* Блок поиска с кругами */
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 16px 0 16px;
+    }
+
+    .search-input {
+      flex: 1;
+      background-color: #2a2a2a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      padding: 12px 20px;
+      font-size: 16px;
+      color: #ffffff;
+      outline: none;
+      transition: border 0.2s;
+      min-width: 0;
+    }
+
+    .search-input::placeholder {
+      color: #aaaaaa;
+      font-weight: 400;
+      opacity: 1;
+    }
+
+    .search-input:focus {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .circle-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: #2a2a2a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .circle-btn:hover {
+      background-color: #3a3a3a;
+    }
+
+    .double-arrow {
+      font-size: 20px;
+      line-height: 1;
+      transform: scale(1.2);
+    }
+
+    /* Прямоугольники (категории) */
+    .categories {
+      margin-top: 16px; /* небольшой отступ сверху от поиска */
+    }
+
+    .category-item {
+      background-color: #2a2a2a;      /* единый фон для каждого блока */
+      border-bottom: 1px solid #3a3a3a; /* разделитель */
+      padding: 14px 16px;              /* отступы внутри: слева 16px для эмодзи, справа тоже для будущего текста */
+      font-size: 20px;                 /* размер эмодзи */
+      line-height: 1;
+    }
+
+    /* Для последнего элемента можно убрать нижнюю границу (опционально) */
+    .category-item:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
 <body>
+  <!-- Верхняя панель -->
+  <div class="top-nav">
+    <span class="nav-item">🎁 Все подарки</span>
+    <span class="nav-item">⭐ Избранное</span>
+    <span class="nav-item"><span class="green-arrow">↑</span> Рост</span>
+  </div>
 
-  <div class="top-title">Все подарки</div>
-
-  <div class="squares-row">
-    <div class="square-container">
-      <div class="percent-badge">+12%</div>
-      <div class="star">⭐</div>
-      <div class="cap-badge">$28,77M</div>
-      <div class="price-badge">$200</div>
-      <div class="pcs-badge">432826 pcs</div>
+  <!-- Поиск с двумя кругами справа -->
+  <div class="search-row">
+    <input type="text" class="search-input" placeholder="Поиск подарков">
+    <div class="circle-btn" title="Сортировка">
+      <span class="double-arrow">↑↓</span>
     </div>
-    <div class="square-container">
-      <div class="percent-badge">+12%</div>
-      <div class="star">⭐</div>
-      <div class="cap-badge">$28,77M</div>
-      <div class="price-badge">$200</div>
-      <div class="pcs-badge">432826 pcs</div>
-    </div>
-    <div class="square-container">
-      <div class="percent-badge">+12%</div>
-      <div class="star">⭐</div>
-      <div class="cap-badge">$28,77M</div>
-      <div class="price-badge">$200</div>
-      <div class="pcs-badge">432826 pcs</div>
-    </div>
-    <div class="square-container">
-      <div class="percent-badge">+12%</div>
-      <div class="star">⭐</div>
-      <div class="cap-badge">$28,77M</div>
-      <div class="price-badge">$200</div>
-      <div class="pcs-badge">432826 pcs</div>
+    <div class="circle-btn" title="Фильтр">
+      <span>⌛</span>
     </div>
   </div>
 
-  <div class="bottom-link" id="homeLink">Главная</div>
+  <!-- Пять прямоугольников с эмодзи (без закруглений, без отступов по краям) -->
+  <div class="categories">
+    <div class="category-item">🎁</div>
+    <div class="category-item">🎂</div>
+    <div class="category-item">💐</div>
+    <div class="category-item">🧸</div>
+    <div class="category-item">🍫</div>
+  </div>
 
-  <script>
-    function positionStars() {
-      const containers = document.querySelectorAll('.square-container');
-      containers.forEach(container => {
-        const percent = container.querySelector('.percent-badge');
-        const cap = container.querySelector('.cap-badge');
-        const star = container.querySelector('.star');
-        if (!percent || !cap || !star) return;
-
-        const percentBottom = percent.offsetTop + percent.offsetHeight;
-        const capTop = cap.offsetTop;
-        const starCenter = (percentBottom + capTop) / 2;
-
-        star.style.top = starCenter + 'px';
-
-        setTimeout(() => {
-          star.style.opacity = '1';
-        }, 20);
-      });
-    }
-
-    window.addEventListener('load', positionStars);
-    window.addEventListener('resize', positionStars);
-
-    if (document.readyState === 'complete') {
-      positionStars();
-    } else {
-      document.addEventListener('DOMContentLoaded', positionStars);
-    }
-  </script>
-
+  <!-- Место для будущего контента -->
 </body>
 </html>
