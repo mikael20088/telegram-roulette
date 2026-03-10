@@ -117,6 +117,7 @@
       padding: 16px 16px;
       display: flex;
       gap: 16px;
+      position: relative; /* для абсолютного позиционирования цены */
     }
 
     .category-item:last-child {
@@ -151,8 +152,16 @@
       line-height: 1.2;
     }
 
-    /* Блок с ценой – смещён на 100px от правого края */
+    /* Блок с ценой – только для первого подарка */
+    .has-price .category-info {
+      padding-right: 140px; /* место для блока с ценой (подберите нужное значение) */
+    }
+
     .gift-price {
+      position: absolute;
+      right: 16px;          /* отступ от правого края */
+      top: 50%;
+      transform: translateY(-50%);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -160,9 +169,8 @@
       font-weight: 500;
       color: #fff;
       white-space: nowrap;
-      flex-shrink: 0;
-      margin-left: auto;      /* прижимаем к правому краю */
-      margin-right: 80px;    /* отодвигаем от правого края на 100px (сдвиг влево) */
+      background-color: #2a2a2a; /* чтобы не просвечивал текст под ним */
+      padding-left: 8px;         /* небольшой отступ от текста */
     }
 
     .coin-icon {
@@ -173,11 +181,8 @@
     .percent.green {
       color: #4caf50;
       font-weight: 600;
-      /* Используйте transform для независимого смещения процента:
-         положительное значение (например 15px) — вправо,
-         отрицательное (например -10px) — влево.
-         Меняйте число в пикселях прямо здесь, чтобы подобрать нужное положение. */
-      transform: translateX(75px);
+      transform: translateX(0); /* меняйте это значение для сдвига процента */
+      /* Например: transform: translateX(10px); сдвинет вправо на 10px */
     }
 
     /* Нижняя навигация */
@@ -225,10 +230,10 @@
     </div>
   </div>
 
-  <!-- Список подарков (полный, без сокращений) -->
+  <!-- Список подарков (полный) -->
   <div class="categories">
-    <!-- Plush Pepe с ценой и процентом -->
-    <div class="category-item">
+    <!-- Plush Pepe с ценой и процентом (добавлен класс has-price) -->
+    <div class="category-item has-price">
       <div class="category-emoji">🎁</div>
       <div class="category-info">
         <div class="category-name">Plush Pepe</div>
