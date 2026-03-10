@@ -7,18 +7,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
-    html, body {
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
       height: 100%;
     }
+
     body {
       background-color: #1a1a1a;
       font-family: 'Inter', Arial, sans-serif;
       color: #fff;
     }
 
-    /* Верхняя панель с белой линией */
+    /* Верхняя панель */
     .top-nav {
       display: flex;
       flex-wrap: wrap;
@@ -31,7 +36,7 @@
     .nav-item {
       font-size: 16px;
       font-weight: 500;
-      color: #ffffff;
+      color: #fff;
       white-space: nowrap;
     }
 
@@ -39,7 +44,7 @@
       color: #4caf50;
     }
 
-    /* Блок поиска с кругами */
+    /* Блок поиска */
     .search-row {
       display: flex;
       align-items: center;
@@ -54,16 +59,14 @@
       border-radius: 30px;
       padding: 12px 20px;
       font-size: 16px;
-      color: #ffffff;
+      color: #fff;
       outline: none;
       transition: border 0.2s;
       min-width: 0;
     }
 
     .search-input::placeholder {
-      color: #aaaaaa;
-      font-weight: 400;
-      opacity: 1;
+      color: #aaa;
     }
 
     .search-input:focus {
@@ -82,7 +85,7 @@
       font-size: 22px;
       color: #fff;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background 0.2s;
       flex-shrink: 0;
     }
 
@@ -92,11 +95,10 @@
 
     .double-arrow {
       font-size: 20px;
-      line-height: 1;
       transform: scale(1.2);
     }
 
-    /* Прямоугольники (категории) */
+    /* Категории (подарки) */
     .categories {
       margin-top: 16px;
     }
@@ -104,13 +106,41 @@
     .category-item {
       background-color: #2a2a2a;
       border-bottom: 1px solid #3a3a3a;
-      padding: 18px 16px;  /* увеличен вертикальный отступ (было 14px) */
-      font-size: 20px;
-      line-height: 1;
+      padding: 16px 16px;
+      display: flex;
+      gap: 16px;
     }
 
     .category-item:last-child {
       border-bottom: none;
+    }
+
+    .category-emoji {
+      width: 30px;              /* фиксированная ширина для эмодзи */
+      font-size: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .category-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .category-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .category-stats {
+      font-size: 14px;
+      color: #aaa;              /* серый цвет для чисел */
+      font-weight: 400;
+      line-height: 1.2;
     }
   </style>
 </head>
@@ -122,7 +152,7 @@
     <span class="nav-item"><span class="green-arrow">↑</span> Рост</span>
   </div>
 
-  <!-- Поиск с двумя кругами справа -->
+  <!-- Поиск и кнопки -->
   <div class="search-row">
     <input type="text" class="search-input" placeholder="Поиск подарков">
     <div class="circle-btn" title="Сортировка">
@@ -133,16 +163,50 @@
     </div>
   </div>
 
-  <!-- Шесть прямоугольников с эмодзи (шире по вертикали) -->
+  <!-- Список подарков с эмодзи, названиями и статистикой -->
   <div class="categories">
-    <div class="category-item">🎁</div>
-    <div class="category-item">🎂</div>
-    <div class="category-item">💐</div>
-    <div class="category-item">🧸</div>
-    <div class="category-item">🍫</div>
-    <div class="category-item">🎈</div>  <!-- шестой элемент -->
+    <div class="category-item">
+      <div class="category-emoji">🎁</div>
+      <div class="category-info">
+        <div class="category-name">Plush Pepe</div>
+        <div class="category-stats">2.8тыс. / 2.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎂</div>
+      <div class="category-info">
+        <div class="category-name">Heart Locket</div>
+        <div class="category-stats">1.9тыс. / 2.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💐</div>
+      <div class="category-info">
+        <div class="category-name">Durov's Cap</div>
+        <div class="category-stats">4.7тыс. / 4.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧸</div>
+      <div class="category-info">
+        <div class="category-name">Precious Peach</div>
+        <div class="category-stats">3.0тыс. / 3.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍫</div>
+      <div class="category-info">
+        <div class="category-name">Heroic Helmet</div>
+        <div class="category-stats">3.4тыс. / 3.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎈</div>
+      <div class="category-info">
+        <div class="category-name">Astral Shard</div>
+        <div class="category-stats">5.7тыс. / 6.2тыс.</div>
+      </div>
+    </div>
   </div>
-
-  <!-- Место для будущего контента -->
 </body>
 </html>
