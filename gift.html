@@ -23,7 +23,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
-      padding: 16px 16px 16px 16px;  /* отступы со всех сторон */
+      padding: 16px 16px 16px 16px;
       align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.5);
     }
@@ -98,18 +98,17 @@
 
     /* Прямоугольники (категории) */
     .categories {
-      margin-top: 16px; /* небольшой отступ сверху от поиска */
+      margin-top: 16px;
     }
 
     .category-item {
-      background-color: #2a2a2a;      /* единый фон для каждого блока */
-      border-bottom: 1px solid #3a3a3a; /* разделитель */
-      padding: 14px 16px;              /* отступы внутри: слева 16px для эмодзи, справа тоже для будущего текста */
-      font-size: 20px;                 /* размер эмодзи */
+      background-color: #2a2a2a;
+      border-bottom: 1px solid #3a3a3a;
+      padding: 18px 16px;  /* увеличен вертикальный отступ (было 14px) */
+      font-size: 20px;
       line-height: 1;
     }
 
-    /* Для последнего элемента можно убрать нижнюю границу (опционально) */
     .category-item:last-child {
       border-bottom: none;
     }
@@ -134,13 +133,14 @@
     </div>
   </div>
 
-  <!-- Пять прямоугольников с эмодзи (без закруглений, без отступов по краям) -->
+  <!-- Шесть прямоугольников с эмодзи (шире по вертикали) -->
   <div class="categories">
     <div class="category-item">🎁</div>
     <div class="category-item">🎂</div>
     <div class="category-item">💐</div>
     <div class="category-item">🧸</div>
     <div class="category-item">🍫</div>
+    <div class="category-item">🎈</div>  <!-- шестой элемент -->
   </div>
 
   <!-- Место для будущего контента -->
