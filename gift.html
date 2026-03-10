@@ -161,8 +161,8 @@
       color: #fff;
       white-space: nowrap;
       flex-shrink: 0;
-      margin-left: auto;      /* прижимаем вправо */
-      margin-right: 70px;    /* отступ от правого края 100px */
+      margin-left: auto;      /* прижимаем к правому краю */
+      margin-right: 100px;    /* отодвигаем от правого края на 100px (сдвиг влево) */
     }
 
     .coin-icon {
@@ -173,7 +173,11 @@
     .percent.green {
       color: #4caf50;
       font-weight: 600;
-      transform: translateX(50px); /* сдвигаем только процент влево на 10px */
+      /* Используйте transform для независимого смещения процента:
+         положительное значение (например 15px) — вправо,
+         отрицательное (например -10px) — влево.
+         Меняйте число в пикселях прямо здесь, чтобы подобрать нужное положение. */
+      transform: translateX(75px);
     }
 
     /* Нижняя навигация */
@@ -221,7 +225,7 @@
     </div>
   </div>
 
-  <!-- Список подарков (полный, как в исходном коде) -->
+  <!-- Список подарков (полный, без сокращений) -->
   <div class="categories">
     <!-- Plush Pepe с ценой и процентом -->
     <div class="category-item">
@@ -237,9 +241,765 @@
       </div>
     </div>
 
-    <!-- Все остальные подарки (без изменений) – здесь идёт длинный список, я его сократил для краткости, но вы в своём коде оставляете полный перечень, как ранее) -->
-    <!-- ... остальные .category-item ... -->
-    <!-- Для экономия места в ответе я не копирую все 100+ элементов, но они полностью сохраняются из вашего исходного кода. Главное – изменения только в CSS и в первом подарке. -->
+    <!-- Все остальные подарки без изменений -->
+    <div class="category-item">
+      <div class="category-emoji">🎂</div>
+      <div class="category-info">
+        <div class="category-name">Heart Locket</div>
+        <div class="category-stats">1.9тыс. / 2.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💐</div>
+      <div class="category-info">
+        <div class="category-name">Durov's Cap</div>
+        <div class="category-stats">4.7тыс. / 4.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧸</div>
+      <div class="category-info">
+        <div class="category-name">Precious Peach</div>
+        <div class="category-stats">3.0тыс. / 3.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍫</div>
+      <div class="category-info">
+        <div class="category-name">Heroic Helmet</div>
+        <div class="category-stats">3.4тыс. / 3.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎈</div>
+      <div class="category-info">
+        <div class="category-name">Astral Shard</div>
+        <div class="category-stats">5.7тыс. / 6.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">😿</div>
+      <div class="category-info">
+        <div class="category-name">Scared Cat</div>
+        <div class="category-stats">19.3тыс. / 19.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💪</div>
+      <div class="category-info">
+        <div class="category-name">Mighty Arm</div>
+        <div class="category-stats">3.8тыс. / 4.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎒</div>
+      <div class="category-info">
+        <div class="category-name">Loot Bag</div>
+        <div class="category-stats">14.4тыс. / 14.5тыс.</div>
+      </div>
+    </div>
+
+    <!-- Новые подарки (длинный список) -->
+    <div class="category-item">
+      <div class="category-emoji">💍</div>
+      <div class="category-info">
+        <div class="category-name">Nail Bracelet</div>
+        <div class="category-stats">4.7тыс. / 4.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🤙</div>
+      <div class="category-info">
+        <div class="category-name">Westside Sign</div>
+        <div class="category-stats">11.5тыс. / 12.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧱</div>
+      <div class="category-info">
+        <div class="category-name">Artisan Brick</div>
+        <div class="category-stats">6.3тыс. / 6.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🏆</div>
+      <div class="category-info">
+        <div class="category-name">Mini Oscar</div>
+        <div class="category-stats">4.9тыс. / 5.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧴</div>
+      <div class="category-info">
+        <div class="category-name">Perfume Bottle</div>
+        <div class="category-stats">4.4тыс. / 4.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💎</div>
+      <div class="category-info">
+        <div class="category-name">Ion Gem</div>
+        <div class="category-stats">4.5тыс. / 4.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧪</div>
+      <div class="category-info">
+        <div class="category-name">Magic Potion</div>
+        <div class="category-stats">4.9тыс. / 4.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💍</div>
+      <div class="category-info">
+        <div class="category-name">Gem Signet</div>
+        <div class="category-stats">6.2тыс. / 7.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐸</div>
+      <div class="category-info">
+        <div class="category-name">Kissed Frog</div>
+        <div class="category-stats">14.1тыс. / 14.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧞</div>
+      <div class="category-info">
+        <div class="category-name">Genie Lamp</div>
+        <div class="category-stats">6.5тыс. / 7.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💍</div>
+      <div class="category-info">
+        <div class="category-name">Bonded Ring</div>
+        <div class="category-stats">7.8тыс. / 8.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">⌚</div>
+      <div class="category-info">
+        <div class="category-name">Swiss Watch</div>
+        <div class="category-stats">25.7тыс. / 29.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🚗</div>
+      <div class="category-info">
+        <div class="category-name">Low Rider</div>
+        <div class="category-stats">23.4тыс. / 23.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">👅</div>
+      <div class="category-info">
+        <div class="category-name">Sharp Tongue</div>
+        <div class="category-stats">8.1тыс. / 8.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧸</div>
+      <div class="category-info">
+        <div class="category-name">Toy Bear</div>
+        <div class="category-stats">55.9тыс. / 57.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐱</div>
+      <div class="category-info">
+        <div class="category-name">Neko Helmet</div>
+        <div class="category-stats">15.5тыс. / 16.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">👶</div>
+      <div class="category-info">
+        <div class="category-name">Bling Binky</div>
+        <div class="category-stats">9.3тыс. / 10.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💍</div>
+      <div class="category-info">
+        <div class="category-name">Signet Ring</div>
+        <div class="category-stats">16.8тыс. / 18.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🚬</div>
+      <div class="category-info">
+        <div class="category-name">Vintage Cigar</div>
+        <div class="category-stats">26.4тыс. / 31.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🪆</div>
+      <div class="category-info">
+        <div class="category-name">Voodoo Doll</div>
+        <div class="category-stats">26.8тыс. / 27.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💀</div>
+      <div class="category-info">
+        <div class="category-name">Electric Skull</div>
+        <div class="category-stats">9.2тыс. / 9.4тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🦅</div>
+      <div class="category-info">
+        <div class="category-name">Rare Bird</div>
+        <div class="category-stats">12.0тыс. / 15.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💍</div>
+      <div class="category-info">
+        <div class="category-name">Diamond Ring</div>
+        <div class="category-stats">32.3тыс. / 32.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🌹</div>
+      <div class="category-info">
+        <div class="category-name">Eternal Rose</div>
+        <div class="category-stats">31.1тыс. / 37.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎩</div>
+      <div class="category-info">
+        <div class="category-name">Khabib's Papakha</div>
+        <div class="category-stats">28.5тыс. / 29.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🏹</div>
+      <div class="category-info">
+        <div class="category-name">Cupid Charm</div>
+        <div class="category-stats">30.0тыс. / 33.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💨</div>
+      <div class="category-info">
+        <div class="category-name">Ionic Dryer</div>
+        <div class="category-stats">20.0тыс. / 25.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧪❤️</div>
+      <div class="category-info">
+        <div class="category-name">Love Potion</div>
+        <div class="category-stats">29.1тыс. / 30.4тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">👠</div>
+      <div class="category-info">
+        <div class="category-name">Sky Stilettos</div>
+        <div class="category-stats">50.8тыс. / 58.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🥊</div>
+      <div class="category-info">
+        <div class="category-name">UFC Strike</div>
+        <div class="category-stats">58.4тыс. / 60.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">📀</div>
+      <div class="category-info">
+        <div class="category-name">Record Player</div>
+        <div class="category-stats">33.6тыс. / 46.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💔</div>
+      <div class="category-info">
+        <div class="category-name">Trapped Heart</div>
+        <div class="category-stats">24.9тыс. / 26.4тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎃</div>
+      <div class="category-info">
+        <div class="category-name">Mad Pumpkin</div>
+        <div class="category-stats">19.5тыс. / 22.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧹</div>
+      <div class="category-info">
+        <div class="category-name">Flying Broom</div>
+        <div class="category-stats">24.7тыс. / 25.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🚬</div>
+      <div class="category-info">
+        <div class="category-name">Snoop Cigar</div>
+        <div class="category-stats">117.3тыс. / 119.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💀🌸</div>
+      <div class="category-info">
+        <div class="category-name">Skull Flower</div>
+        <div class="category-stats">21.8тыс. / 24.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🔮</div>
+      <div class="category-info">
+        <div class="category-name">Crystal Ball</div>
+        <div class="category-stats">26.7тыс. / 27.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🕯️</div>
+      <div class="category-info">
+        <div class="category-name">Love Candle</div>
+        <div class="category-stats">23.5тыс. / 30.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">📦❤️</div>
+      <div class="category-info">
+        <div class="category-name">Valentine Box</div>
+        <div class="category-stats">34.6тыс. / 41.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎩</div>
+      <div class="category-info">
+        <div class="category-name">Top Hat</div>
+        <div class="category-stats">34.3тыс. / 35.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🌸</div>
+      <div class="category-info">
+        <div class="category-name">Sakura Flower</div>
+        <div class="category-stats">87.7тыс. / 93.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🔔</div>
+      <div class="category-info">
+        <div class="category-name">Sleigh Bell</div>
+        <div class="category-stats">22.1тыс. / 28.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🔔🔔</div>
+      <div class="category-info">
+        <div class="category-name">Jingle Bells</div>
+        <div class="category-stats">73.0тыс. / 110.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">⭐</div>
+      <div class="category-info">
+        <div class="category-name">Hanging Star</div>
+        <div class="category-stats">45.1тыс. / 58.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🫐📦</div>
+      <div class="category-info">
+        <div class="category-name">Berry Box</div>
+        <div class="category-stats">51.0тыс. / 66.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐰</div>
+      <div class="category-info">
+        <div class="category-name">Jelly Bunny</div>
+        <div class="category-stats">103.6тыс. / 129.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎁</div>
+      <div class="category-info">
+        <div class="category-name">Joyful Bundle</div>
+        <div class="category-stats">80.2тыс. / 114.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧁🐰</div>
+      <div class="category-info">
+        <div class="category-name">Bunny Muffin</div>
+        <div class="category-stats">51.7тыс. / 66.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">👁️</div>
+      <div class="category-info">
+        <div class="category-name">Evil Eye</div>
+        <div class="category-stats">73.4тыс. / 85.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐵</div>
+      <div class="category-info">
+        <div class="category-name">Jolly Chimp</div>
+        <div class="category-stats">116.2тыс. / 132.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧤</div>
+      <div class="category-info">
+        <div class="category-name">Snow Mittens</div>
+        <div class="category-stats">38.9тыс. / 50.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">📅</div>
+      <div class="category-info">
+        <div class="category-name">Desk Calendar</div>
+        <div class="category-stats">289.5тыс. / 319.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💐</div>
+      <div class="category-info">
+        <div class="category-name">Lush Bouquet</div>
+        <div class="category-stats">106.5тыс. / 140.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🕯️</div>
+      <div class="category-info">
+        <div class="category-name">Eternal Candle</div>
+        <div class="category-stats">45.1тыс. / 46.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎀</div>
+      <div class="category-info">
+        <div class="category-name">Bow Tie</div>
+        <div class="category-stats">55.3тыс. / 65.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">⚔️</div>
+      <div class="category-info">
+        <div class="category-name">Light Sword</div>
+        <div class="category-stats">124.4тыс. / 131.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🔑</div>
+      <div class="category-info">
+        <div class="category-name">Input Key</div>
+        <div class="category-stats">130.0тыс. / 159.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍄</div>
+      <div class="category-info">
+        <div class="category-name">Spy Agaric</div>
+        <div class="category-stats">86.7тыс. / 89.4тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧙</div>
+      <div class="category-info">
+        <div class="category-name">Witch Hat</div>
+        <div class="category-stats">82.4тыс. / 88.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧺</div>
+      <div class="category-info">
+        <div class="category-name">Spring Basket</div>
+        <div class="category-stats">176.0тыс. / 231.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🥚</div>
+      <div class="category-info">
+        <div class="category-name">Easter Egg</div>
+        <div class="category-stats">162.6тыс. / 173.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🫙</div>
+      <div class="category-info">
+        <div class="category-name">Restless Jar</div>
+        <div class="category-stats">100.7тыс. / 120.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">☃️</div>
+      <div class="category-info">
+        <div class="category-name">Snow Globe</div>
+        <div class="category-stats">52.9тыс. / 72.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍪❤️</div>
+      <div class="category-info">
+        <div class="category-name">Cookie Heart</div>
+        <div class="category-stats">189.7тыс. / 264.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💐</div>
+      <div class="category-info">
+        <div class="category-name">Pretty Posy</div>
+        <div class="category-stats">122.0тыс. / 181.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🌙</div>
+      <div class="category-info">
+        <div class="category-name">Moon Pendant</div>
+        <div class="category-stats">101.9тыс. / 111.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🛍️</div>
+      <div class="category-info">
+        <div class="category-name">Swag Bag</div>
+        <div class="category-stats">231.5тыс. / 238.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐶</div>
+      <div class="category-info">
+        <div class="category-name">Snoop Dogg</div>
+        <div class="category-stats">580.5тыс. / 593.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">📿</div>
+      <div class="category-info">
+        <div class="category-name">Faith Amulet</div>
+        <div class="category-stats">137.4тыс. / 172.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🏅</div>
+      <div class="category-info">
+        <div class="category-name">Victory Medal</div>
+        <div class="category-stats">97.0тыс. / 124.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🚀</div>
+      <div class="category-info">
+        <div class="category-name">Stellar Rocket</div>
+        <div class="category-stats">136.3тыс. / 156.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍷</div>
+      <div class="category-info">
+        <div class="category-name">Spiced Wine</div>
+        <div class="category-stats">103.2тыс. / 146.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍀</div>
+      <div class="category-info">
+        <div class="category-name">Clover Pin</div>
+        <div class="category-stats">228.6тыс. / 271.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">⚗️</div>
+      <div class="category-info">
+        <div class="category-name">Hex Pot</div>
+        <div class="category-stats">55.7тыс. / 69.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">📓⭐</div>
+      <div class="category-info">
+        <div class="category-name">Star Notepad</div>
+        <div class="category-stats">70.1тыс. / 99.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍰</div>
+      <div class="category-info">
+        <div class="category-name">Mousse Cake</div>
+        <div class="category-stats">166.8тыс. / 230.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎂</div>
+      <div class="category-info">
+        <div class="category-name">Homemade Cake</div>
+        <div class="category-stats">179.1тыс. / 199.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🤡</div>
+      <div class="category-info">
+        <div class="category-name">Jester Hat</div>
+        <div class="category-stats">136.8тыс. / 190.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💰</div>
+      <div class="category-info">
+        <div class="category-name">Money Pot</div>
+        <div class="category-stats">71.0тыс. / 91.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">📱</div>
+      <div class="category-info">
+        <div class="category-name">Tama Gadget</div>
+        <div class="category-stats">103.9тыс. / 135.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎁</div>
+      <div class="category-info">
+        <div class="category-name">Jack-in-the-Box</div>
+        <div class="category-stats">96.1тыс. / 97.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧦</div>
+      <div class="category-info">
+        <div class="category-name">Fresh Socks</div>
+        <div class="category-stats">161.0тыс. / 200.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍦</div>
+      <div class="category-info">
+        <div class="category-name">Ice Cream</div>
+        <div class="category-stats">325.3тыс. / 342.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍫</div>
+      <div class="category-info">
+        <div class="category-name">Happy Brownie</div>
+        <div class="category-stats">219.8тыс. / 264.2тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍪</div>
+      <div class="category-info">
+        <div class="category-name">Ginger Cookie</div>
+        <div class="category-stats">144.3тыс. / 188.9тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎅</div>
+      <div class="category-info">
+        <div class="category-name">Santa Hat</div>
+        <div class="category-stats">69.0тыс. / 89.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧁</div>
+      <div class="category-info">
+        <div class="category-name">Whip Cupcake</div>
+        <div class="category-stats">267.5тыс. / 367.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎄</div>
+      <div class="category-info">
+        <div class="category-name">Winter Wreath</div>
+        <div class="category-stats">72.8тыс. / 100.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍭</div>
+      <div class="category-info">
+        <div class="category-name">Hypno Lollipop</div>
+        <div class="category-stats">80.6тыс. / 116.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍭</div>
+      <div class="category-info">
+        <div class="category-name">Lol Pop</div>
+        <div class="category-stats">432.9тыс. / 468.7тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍹</div>
+      <div class="category-info">
+        <div class="category-name">Holiday Drink</div>
+        <div class="category-stats">84.7тыс. / 121.0тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">📅</div>
+      <div class="category-info">
+        <div class="category-name">Big Year</div>
+        <div class="category-stats">75.1тыс. / 101.4тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎉</div>
+      <div class="category-info">
+        <div class="category-name">Party Sparkler</div>
+        <div class="category-stats">180.0тыс. / 243.8тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐍</div>
+      <div class="category-info">
+        <div class="category-name">Pet Snake</div>
+        <div class="category-stats">179.3тыс. / 279.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐍</div>
+      <div class="category-info">
+        <div class="category-name">Lunar Snake</div>
+        <div class="category-stats">192.6тыс. / 259.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎂</div>
+      <div class="category-info">
+        <div class="category-name">B-Day Candle</div>
+        <div class="category-stats">268.5тыс. / 307.5тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍜</div>
+      <div class="category-info">
+        <div class="category-name">Instant Ramen</div>
+        <div class="category-stats">376.9тыс. / 457.4тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🧦</div>
+      <div class="category-info">
+        <div class="category-name">Xmas Stocking</div>
+        <div class="category-stats">213.4тыс. / 334.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🍬</div>
+      <div class="category-info">
+        <div class="category-name">Candy Cane</div>
+        <div class="category-stats">214.5тыс. / 320.6тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🐍📦</div>
+      <div class="category-info">
+        <div class="category-name">Snake Box</div>
+        <div class="category-stats">174.9тыс. / 273.9тыс.</div>
+      </div>
+    </div>
   </div>
 
   <!-- Нижняя панель -->
