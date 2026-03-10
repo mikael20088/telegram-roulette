@@ -21,6 +21,8 @@
       background-color: #1a1a1a;
       font-family: 'Inter', Arial, sans-serif;
       color: #fff;
+      display: flex;
+      flex-direction: column;
     }
 
     /* Верхняя панель */
@@ -101,6 +103,7 @@
     /* Категории (подарки) */
     .categories {
       margin-top: 16px;
+      flex: 1; /* занимает доступное пространство, чтобы прижать нижнюю панель */
     }
 
     .category-item {
@@ -116,7 +119,7 @@
     }
 
     .category-emoji {
-      width: 30px;              /* фиксированная ширина для эмодзи */
+      width: 30px;
       font-size: 20px;
       text-align: center;
       flex-shrink: 0;
@@ -138,9 +141,33 @@
 
     .category-stats {
       font-size: 14px;
-      color: #aaa;              /* серый цвет для чисел */
+      color: #aaa;
       font-weight: 400;
       line-height: 1.2;
+    }
+
+    /* Нижняя навигационная панель */
+    .bottom-nav {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 16px 12px 16px; /* отступы как у верхней панели (по горизонтали) */
+      border-top: 1px solid rgba(255, 255, 255, 0.5);
+      background-color: #1a1a1a; /* такой же фон */
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .bottom-nav-emoji {
+      font-size: 20px;
+      line-height: 1;
     }
   </style>
 </head>
@@ -206,6 +233,26 @@
         <div class="category-name">Astral Shard</div>
         <div class="category-stats">5.7тыс. / 6.2тыс.</div>
       </div>
+    </div>
+  </div>
+
+  <!-- Нижняя панель навигации -->
+  <div class="bottom-nav">
+    <div class="bottom-nav-item">
+      <span class="bottom-nav-emoji">🏠</span>
+      <span>Главная</span>
+    </div>
+    <div class="bottom-nav-item">
+      <span class="bottom-nav-emoji">⭐</span>
+      <span>Сервисы</span>
+    </div>
+    <div class="bottom-nav-item">
+      <span class="bottom-nav-emoji">👤</span>
+      <span>Аккаунт</span>
+    </div>
+    <div class="bottom-nav-item">
+      <span class="bottom-nav-emoji">⚙️</span>
+      <span>Настройки</span>
     </div>
   </div>
 </body>
