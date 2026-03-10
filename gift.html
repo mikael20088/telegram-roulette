@@ -25,7 +25,7 @@
       flex-direction: column;
     }
 
-    /* Верхняя панель */
+    /* Верхняя панель — фиксирована вверху */
     .top-nav {
       display: flex;
       flex-wrap: wrap;
@@ -33,6 +33,7 @@
       padding: 16px 16px 16px 16px;
       align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      flex-shrink: 0;
     }
 
     .nav-item {
@@ -46,12 +47,13 @@
       color: #4caf50;
     }
 
-    /* Блок поиска */
+    /* Блок поиска и кнопки — фиксирован под верхней панелью */
     .search-row {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 16px 16px 0 16px;
+      flex-shrink: 0;
     }
 
     .search-input {
@@ -100,10 +102,13 @@
       transform: scale(1.2);
     }
 
-    /* Категории (подарки) */
+    /* Список подарков — занимает всё оставшееся место, прокручивается */
     .categories {
       margin-top: 16px;
-      flex: 1; /* занимает доступное пространство, чтобы прижать нижнюю панель */
+      flex: 1;
+      min-height: 0;        /* критически важно для корректного скролла внутри flex-родителя */
+      overflow-y: auto;
+      padding-bottom: 4px;  /* небольшой отступ снизу, чтобы контент не прилипал */
     }
 
     .category-item {
@@ -146,13 +151,14 @@
       line-height: 1.2;
     }
 
-    /* Нижняя навигационная панель */
+    /* Нижняя навигационная панель — всегда прижата к низу */
     .bottom-nav {
       display: flex;
       justify-content: space-between;
-      padding: 8px 16px 12px 16px; /* отступы как у верхней панели (по горизонтали) */
+      padding: 8px 16px 12px 16px;
       border-top: 1px solid rgba(255, 255, 255, 0.5);
-      background-color: #1a1a1a; /* такой же фон */
+      background-color: #1a1a1a;
+      flex-shrink: 0;
     }
 
     .bottom-nav-item {
@@ -172,14 +178,14 @@
   </style>
 </head>
 <body>
-  <!-- Верхняя панель -->
+  <!-- Верхняя панель (всегда сверху) -->
   <div class="top-nav">
     <span class="nav-item">🎁 Все подарки</span>
     <span class="nav-item">⭐ Избранное</span>
     <span class="nav-item"><span class="green-arrow">↑</span> Рост</span>
   </div>
 
-  <!-- Поиск и кнопки -->
+  <!-- Поиск и кнопки (всегда под верхней панелью) -->
   <div class="search-row">
     <input type="text" class="search-input" placeholder="Поиск подарков">
     <div class="circle-btn" title="Сортировка">
@@ -190,7 +196,7 @@
     </div>
   </div>
 
-  <!-- Список подарков с эмодзи, названиями и статистикой -->
+  <!-- Прокручиваемый список подарков -->
   <div class="categories">
     <div class="category-item">
       <div class="category-emoji">🎁</div>
@@ -234,9 +240,31 @@
         <div class="category-stats">5.7тыс. / 6.2тыс.</div>
       </div>
     </div>
+    <!-- Новые подарки (чтобы появился скролл) -->
+    <div class="category-item">
+      <div class="category-emoji">😿</div>
+      <div class="category-info">
+        <div class="category-name">Scared Cat</div>
+        <div class="category-stats">19.3тыс. / 19.3тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">💪</div>
+      <div class="category-info">
+        <div class="category-name">Mighty Arm</div>
+        <div class="category-stats">3.8тыс. / 4.1тыс.</div>
+      </div>
+    </div>
+    <div class="category-item">
+      <div class="category-emoji">🎒</div>
+      <div class="category-info">
+        <div class="category-name">Loot Bag</div>
+        <div class="category-stats">14.4тыс. / 14.5тыс.</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Нижняя панель навигации -->
+  <!-- Нижняя панель (всегда снизу, не прокручивается) -->
   <div class="bottom-nav">
     <div class="bottom-nav-item">
       <span class="bottom-nav-emoji">🏠</span>
