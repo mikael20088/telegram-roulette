@@ -1289,7 +1289,8 @@
   <!-- НОВЫЙ ОВЕРЛЕЙ ДЛЯ GIFT CHARTS (gift.html) -->
   <div class="game-overlay" id="giftOverlay">
     <div class="close-btn" id="giftCloseBtn">×</div>
-    <iframe id="giftIframe" src="gift.html"></iframe>
+    <!-- ИСПРАВЛЕННЫЙ ПУТЬ: теперь с папкой Gifter -->
+    <iframe id="giftIframe" src="Gifter/gift.html"></iframe>
   </div>
 
   <!-- Модальное окно пополнения TON -->
@@ -2150,7 +2151,7 @@
   // НОВЫЙ ОБРАБОТЧИК ДЛЯ GIFT_CHARTS
   document.getElementById('giftChartsMenuItem').addEventListener('click', () => {
     menuContainer.classList.remove('visible');
-    giftIframe.src = 'gift.html';
+    giftIframe.src = 'Gifter/gift.html';  // путь с папкой
     giftOverlay.classList.add('active');
   });
 
