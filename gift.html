@@ -117,7 +117,7 @@
       padding: 16px 16px;
       display: flex;
       gap: 16px;
-      position: relative; /* для абсолютного позиционирования цены */
+      position: relative; /* для абсолютного позиционирования */
     }
 
     .category-item:last-child {
@@ -152,42 +152,47 @@
       line-height: 1.2;
     }
 
-    /* Блок с ценой – только для первого подарка */
+    /* ===== БЛОКИ ЦЕНЫ И ПРОЦЕНТА (ТОЛЬКО ДЛЯ ПЕРВОГО ПОДАРКА) ===== */
     .has-price .category-info {
-      padding-right: 160px; /* достаточно места для блока с ценой, текст не будет заезжать под цену */
+      padding-right: 240px; /* резервируем место для двух блоков (можно увеличить при необходимости) */
     }
 
-    .gift-price {
+    .gift-price,
+    .gift-percent {
       position: absolute;
-      /* Используем CSS-переменные для удобной настройки */
-      --right-offset: 65px;      /* расстояние от правого края (можно менять) */
-      --percent-shift: 65px;      /* дополнительный сдвиг процента (например, 10px вправо) */
-      
-      right: var(--right-offset);
       top: 50%;
       transform: translateY(-50%);
+      background-color: #2a2a2a;
+      padding: 2px 4px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    /* Настройка положения цены */
+    .gift-price {
+      --price-right: 140px;    /* ← меняйте это значение для смещения цены (меньше – ближе к тексту) */
+      right: var(--price-right);
       display: flex;
       align-items: center;
       gap: 6px;
       font-size: 14px;
       font-weight: 500;
       color: #fff;
-      white-space: nowrap;
-      background-color: #2a2a2a; /* фон, чтобы перекрывать текст, если цена наедет */
-      padding: 2px 4px;          /* небольшой отступ для читаемости */
-      border-radius: 4px;         /* скругление, опционально */
-      z-index: 1;                /* чтобы быть выше текста */
+    }
+
+    /* Настройка положения процента */
+    .gift-percent {
+      --percent-right: 20px;   /* ← меняйте это значение для смещения процента */
+      right: var(--percent-right);
+      color: #4caf50;
+      font-weight: 600;
+      font-size: 14px;
     }
 
     .coin-icon {
       font-size: 16px;
       margin-right: 2px;
-    }
-
-    .percent.green {
-      color: #4caf50;
-      font-weight: 600;
-      transform: translateX(var(--percent-shift));
     }
 
     /* Нижняя навигация */
@@ -235,9 +240,9 @@
     </div>
   </div>
 
-  <!-- Список подарков (полный) -->
+  <!-- Список подарков (ПОЛНЫЙ, из вашего исходного кода) -->
   <div class="categories">
-    <!-- Plush Pepe с ценой и процентом (добавлен класс has-price) -->
+    <!-- Plush Pepe с отдельными блоками цены и процента -->
     <div class="category-item has-price">
       <div class="category-emoji">🎁</div>
       <div class="category-info">
@@ -247,13 +252,11 @@
       <div class="gift-price">
         <span class="coin-icon">🪙</span>
         <span class="price">7,199.00</span>
-        <span class="percent green">+38%</span>
       </div>
+      <div class="gift-percent">+38%</div>
     </div>
 
-    <!-- Все остальные подарки без изменений (здесь полный список, сохранён) -->
-    <!-- ... (я оставлю весь ваш список, но в ответе для краткости не буду его дублировать, он такой же, как в предыдущем коде) ... -->
-    <!-- ВАЖНО: ниже должен идти весь ваш список из предыдущего ответа, начиная с Heart Locket и до конца. Я вставлю его полностью. -->
+    <!-- Все остальные подарки (полный список) -->
     <div class="category-item">
       <div class="category-emoji">🎂</div>
       <div class="category-info">
