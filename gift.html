@@ -146,7 +146,7 @@
     }
 
     .category-stats {
-      font-size: 14px;
+      font-size: 13px;        /* чуть мельче */
       color: #aaa;
       font-weight: 400;
       line-height: 1.2;
@@ -159,16 +159,14 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #2a2a2a; /* фон, чтобы перекрыть текст */
-      padding: 2px 4px;
-      border-radius: 4px;
       white-space: nowrap;
       z-index: 1;
+      /* фон и отступы полностью убраны */
     }
 
     /* Настройка положения цены */
     .gift-price {
-      --price-right: 100px;    /* ← меняйте это значение для смещения цены (меньше – ближе к тексту) */
+      --price-right: 100px;    /* ← ваше значение */
       right: var(--price-right);
       display: flex;
       align-items: center;
@@ -180,7 +178,7 @@
 
     /* Настройка положения процента */
     .gift-percent {
-      --percent-right: 17px;   /* ← меняйте это значение для смещения процента */
+      --percent-right: 17px;   /* ← ваше значение */
       right: var(--percent-right);
       color: #4caf50;
       font-weight: 600;
@@ -239,7 +237,7 @@
 
   <!-- Список подарков (ПОЛНЫЙ) -->
   <div class="categories">
-    <!-- Plush Pepe с отдельными блоками цены и процента (без padding-right) -->
+    <!-- Plush Pepe с отдельными блоками цены и процента (без фона) -->
     <div class="category-item has-price">
       <div class="category-emoji">🎁</div>
       <div class="category-info">
@@ -247,7 +245,7 @@
         <div class="category-stats">2.8тыс. / 2.9тыс.</div>
       </div>
       <div class="gift-price">
-        <span class="coin-icon">🪙</span>
+        <span class="coin-icon">💎</span>   <!-- заменён на кристаллик -->
         <span class="price">7,199.00</span>
       </div>
       <div class="gift-percent">+38%</div>
