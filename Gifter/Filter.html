@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Выбор избранных</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: transparent;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #fff;
+      padding: 16px 0;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .filter-list {
+      list-style: none;
+    }
+
+    .filter-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .filter-item:hover {
+      background-color: #3a3a3a;
+    }
+
+    .item-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .item-emoji {
+      font-size: 20px;
+      width: 30px;
+      text-align: center;
+    }
+
+    .item-name {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #007aff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="filter-list" id="filterList"></div>
+
+  <script>
+    // Данные всех подарков (такой же список, как на главной, но без цены и статы)
+    const allGifts = [
+      { emoji: '🎁', name: 'Plush Pepe' },
+      { emoji: '🎂', name: 'Heart Locket' },
+      { emoji: '💐', name: 'Durov\'s Cap' },
+      { emoji: '🧸', name: 'Precious Peach' },
+      { emoji: '🍫', name: 'Heroic Helmet' },
+      { emoji: '🎈', name: 'Astral Shard' },
+      { emoji: '😿', name: 'Scared Cat' },
+      { emoji: '💪', name: 'Mighty Arm' },
+      { emoji: '🎒', name: 'Loot Bag' },
+      { emoji: '💍', name: 'Nail Bracelet' },
+      { emoji: '🤙', name: 'Westside Sign' },
+      { emoji: '🧱', name: 'Artisan Brick' },
+      { emoji: '🏆', name: 'Mini Oscar' },
+      { emoji: '🧴', name: 'Perfume Bottle' },
+      { emoji: '💎', name: 'Ion Gem' },
+      { emoji: '🧪', name: 'Magic Potion' },
+      { emoji: '💍', name: 'Gem Signet' },
+      { emoji: '🐸', name: 'Kissed Frog' },
+      { emoji: '🧞', name: 'Genie Lamp' },
+      { emoji: '💍', name: 'Bonded Ring' },
+      { emoji: '⌚', name: 'Swiss Watch' },
+      { emoji: '🚗', name: 'Low Rider' },
+      { emoji: '👅', name: 'Sharp Tongue' },
+      { emoji: '🧸', name: 'Toy Bear' },
+      { emoji: '🐱', name: 'Neko Helmet' },
+      { emoji: '👶', name: 'Bling Binky' },
+      { emoji: '💍', name: 'Signet Ring' },
+      { emoji: '🚬', name: 'Vintage Cigar' },
+      { emoji: '🪆', name: 'Voodoo Doll' },
+      { emoji: '💀', name: 'Electric Skull' },
+      { emoji: '🦅', name: 'Rare Bird' },
+      { emoji: '💍', name: 'Diamond Ring' },
+      { emoji: '🌹', name: 'Eternal Rose' },
+      { emoji: '🎩', name: 'Khabib\'s Papakha' },
+      { emoji: '🏹', name: 'Cupid Charm' },
+      { emoji: '💨', name: 'Ionic Dryer' },
+      { emoji: '🧪❤️', name: 'Love Potion' },
+      { emoji: '👠', name: 'Sky Stilettos' },
+      { emoji: '🥊', name: 'UFC Strike' },
+      { emoji: '📀', name: 'Record Player' },
+      { emoji: '💔', name: 'Trapped Heart' },
+      { emoji: '🎃', name: 'Mad Pumpkin' },
+      { emoji: '🧹', name: 'Flying Broom' },
+      { emoji: '🚬', name: 'Snoop Cigar' },
+      { emoji: '💀🌸', name: 'Skull Flower' },
+      { emoji: '🔮', name: 'Crystal Ball' },
+      { emoji: '🕯️', name: 'Love Candle' },
+      { emoji: '📦❤️', name: 'Valentine Box' },
+      { emoji: '🎩', name: 'Top Hat' },
+      { emoji: '🌸', name: 'Sakura Flower' },
+      { emoji: '🔔', name: 'Sleigh Bell' },
+      { emoji: '🔔🔔', name: 'Jingle Bells' },
+      { emoji: '⭐', name: 'Hanging Star' },
+      { emoji: '🫐📦', name: 'Berry Box' },
+      { emoji: '🐰', name: 'Jelly Bunny' },
+      { emoji: '🎁', name: 'Joyful Bundle' },
+      { emoji: '🧁🐰', name: 'Bunny Muffin' },
+      { emoji: '👁️', name: 'Evil Eye' },
+      { emoji: '🐵', name: 'Jolly Chimp' },
+      { emoji: '🧤', name: 'Snow Mittens' },
+      { emoji: '📅', name: 'Desk Calendar' },
+      { emoji: '💐', name: 'Lush Bouquet' },
+      { emoji: '🕯️', name: 'Eternal Candle' },
+      { emoji: '🎀', name: 'Bow Tie' },
+      { emoji: '⚔️', name: 'Light Sword' },
+      { emoji: '🔑', name: 'Input Key' },
+      { emoji: '🍄', name: 'Spy Agaric' },
+      { emoji: '🧙', name: 'Witch Hat' },
+      { emoji: '🧺', name: 'Spring Basket' },
+      { emoji: '🥚', name: 'Easter Egg' },
+      { emoji: '🫙', name: 'Restless Jar' },
+      { emoji: '☃️', name: 'Snow Globe' },
+      { emoji: '🍪❤️', name: 'Cookie Heart' },
+      { emoji: '💐', name: 'Pretty Posy' },
+      { emoji: '🌙', name: 'Moon Pendant' },
+      { emoji: '🛍️', name: 'Swag Bag' },
+      { emoji: '🐶', name: 'Snoop Dogg' },
+      { emoji: '📿', name: 'Faith Amulet' },
+      { emoji: '🏅', name: 'Victory Medal' },
+      { emoji: '🚀', name: 'Stellar Rocket' },
+      { emoji: '🍷', name: 'Spiced Wine' },
+      { emoji: '🍀', name: 'Clover Pin' },
+      { emoji: '⚗️', name: 'Hex Pot' },
+      { emoji: '📓⭐', name: 'Star Notepad' },
+      { emoji: '🍰', name: 'Mousse Cake' },
+      { emoji: '🎂', name: 'Homemade Cake' },
+      { emoji: '🤡', name: 'Jester Hat' },
+      { emoji: '💰', name: 'Money Pot' },
+      { emoji: '📱', name: 'Tama Gadget' },
+      { emoji: '🎁', name: 'Jack-in-the-Box' },
+      { emoji: '🧦', name: 'Fresh Socks' },
+      { emoji: '🍦', name: 'Ice Cream' },
+      { emoji: '🍫', name: 'Happy Brownie' },
+      { emoji: '🍪', name: 'Ginger Cookie' },
+      { emoji: '🎅', name: 'Santa Hat' },
+      { emoji: '🧁', name: 'Whip Cupcake' },
+      { emoji: '🎄', name: 'Winter Wreath' },
+      { emoji: '🍭', name: 'Hypno Lollipop' },
+      { emoji: '🍭', name: 'Lol Pop' },
+      { emoji: '🍹', name: 'Holiday Drink' },
+      { emoji: '📅', name: 'Big Year' },
+      { emoji: '🎉', name: 'Party Sparkler' },
+      { emoji: '🐍', name: 'Pet Snake' },
+      { emoji: '🐍', name: 'Lunar Snake' },
+      { emoji: '🎂', name: 'B-Day Candle' },
+      { emoji: '🍜', name: 'Instant Ramen' },
+      { emoji: '🧦', name: 'Xmas Stocking' },
+      { emoji: '🍬', name: 'Candy Cane' },
+      { emoji: '🐍📦', name: 'Snake Box' }
+    ];
+
+    // Ключ для localStorage
+    const STORAGE_KEY = 'favoriteGifts';
+
+    // Загрузка избранных из localStorage
+    function loadFavorites() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    }
+
+    // Сохранение избранных
+    function saveFavorites(favorites) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+    }
+
+    // Рендер списка
+    function renderList() {
+      const favorites = loadFavorites();
+      // Сортируем: сначала выбранные (по порядку, как они сохранились), потом остальные (по исходному порядку)
+      const selectedItems = allGifts.filter(g => favorites.includes(g.name));
+      const unselectedItems = allGifts.filter(g => !favorites.includes(g.name));
+
+      const sortedGifts = [...selectedItems, ...unselectedItems];
+
+      const listEl = document.getElementById('filterList');
+      listEl.innerHTML = sortedGifts.map(gift => {
+        const isSelected = favorites.includes(gift.name);
+        const icon = isSelected ? '✓' : '−';
+        return `
+          <div class="filter-item" data-name="${gift.name}">
+            <div class="item-info">
+              <span class="item-emoji">${gift.emoji}</span>
+              <span class="item-name">${gift.name}</span>
+            </div>
+            <div class="icon-circle">${icon}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Обработчик клика
+    document.getElementById('filterList').addEventListener('click', (e) => {
+      const item = e.target.closest('.filter-item');
+      if (!item) return;
+      const giftName = item.dataset.name;
+      let favorites = loadFavorites();
+      const index = favorites.indexOf(giftName);
+      if (index === -1) {
+        // Добавляем
+        favorites.unshift(giftName); // добавляем в начало
+      } else {
+        // Удаляем
+        favorites.splice(index, 1);
+      }
+      saveFavorites(favorites);
+      renderList(); // перерисовываем (выбранный уйдёт вверх)
+    });
+
+    // Начальный рендер
+    renderList();
+  </script>
+</body>
+</html>

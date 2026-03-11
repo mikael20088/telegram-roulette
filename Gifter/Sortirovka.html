@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сортировка</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: transparent;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100%;
+      padding: 0;
+    }
+
+    .sort-block {
+      width: 100%;
+      margin: 10px 2px 0 2px;
+      background-color: #2a2a2a;
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .sort-compact {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .compact-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .compact-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      color: #aaa;
+    }
+
+    .icon-circle-small {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #007aff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .sort-expanded {
+      margin-top: 16px;
+      max-height: 275px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .sort-expanded::-webkit-scrollbar {
+      display: none;
+    }
+
+    .sort-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 8px;
+      border-bottom: 1px solid #3a3a3a;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .sort-item:last-child {
+      border-bottom: none;
+    }
+
+    .sort-item:hover {
+      background-color: #3a3a3a;
+    }
+
+    .item-text {
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #007aff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Блок Сортировки -->
+  <div class="sort-block" id="sortBlock1">
+    <div class="sort-compact" id="compact1">
+      <span class="compact-title">Сортировка по</span>
+      <span class="compact-value" id="value1">
+        <span class="icon-circle-small">✓</span>
+        <span id="selectedText1">Цена</span>
+      </span>
+    </div>
+    <div class="sort-expanded hidden" id="expanded1"></div>
+  </div>
+
+  <!-- Блок Порядка -->
+  <div class="sort-block" id="sortBlock2">
+    <div class="sort-compact" id="compact2">
+      <span class="compact-title">Порядок</span>
+      <span class="compact-value" id="value2">
+        <span class="icon-circle-small">✓</span>
+        <span id="selectedText2">По убыванию</span>
+      </span>
+    </div>
+    <div class="sort-expanded hidden" id="expanded2"></div>
+  </div>
+
+  <script>
+    // Данные для блоков
+    const blocks = [
+      {
+        id: 'block1',
+        title: 'Сортировка по',
+        items: ['Цена', 'Рост 24ч', 'Движение 24ч', 'Тираж', 'Изначальный тираж', 'Количество улучшенных', 'По названию'],
+        default: 'Цена'
+      },
+      {
+        id: 'block2',
+        title: 'Порядок',
+        items: ['По убыванию', 'По возрастанию'],
+        default: 'По убыванию'
+      }
+    ];
+
+    // Функция инициализации блока
+    function initBlock(blockData) {
+      const blockId = blockData.id;
+      const blockEl = document.getElementById(`sort${blockId.charAt(0).toUpperCase() + blockId.slice(1)}`);
+      const compactDiv = document.getElementById(`compact${blockId.slice(-1)}`);
+      const expandedDiv = document.getElementById(`expanded${blockId.slice(-1)}`);
+      const selectedSpan = document.getElementById(`selectedText${blockId.slice(-1)}`);
+      const valueSpan = document.getElementById(`value${blockId.slice(-1)}`);
+
+      let selectedItem = blockData.default;
+
+      // Рендер списка
+      function renderExpanded() {
+        let html = '';
+        blockData.items.forEach(item => {
+          const isSelected = (item === selectedItem);
+          const icon = isSelected ? '✓' : '−';
+          html += `
+            <div class="sort-item" data-value="${item}">
+              <div class="icon-circle">${icon}</div>
+              <span class="item-text">${item}</span>
+            </div>
+          `;
+        });
+        expandedDiv.innerHTML = html;
+      }
+
+      // Обновление компактного вида
+      function updateCompact() {
+        selectedSpan.textContent = selectedItem;
+        // Галочка уже есть в компактном виде, не меняем
+      }
+
+      // Переключение режимов
+      function showCompact() {
+        compactDiv.classList.remove('hidden');
+        expandedDiv.classList.add('hidden');
+      }
+
+      function showExpanded() {
+        renderExpanded(); // обновляем иконки перед показом
+        compactDiv.classList.add('hidden');
+        expandedDiv.classList.remove('hidden');
+      }
+
+      // Обработчик клика
+      blockEl.addEventListener('click', (e) => {
+        // Клик по пункту списка
+        if (e.target.closest('.sort-item')) {
+          const itemDiv = e.target.closest('.sort-item');
+          const value = itemDiv.dataset.value;
+          if (value) {
+            selectedItem = value;
+            updateCompact();
+            showCompact();
+          }
+          e.stopPropagation();
+        } else {
+          // Клик по самому блоку (не по пункту)
+          if (expandedDiv.classList.contains('hidden')) {
+            showExpanded();
+          } else {
+            showCompact();
+          }
+        }
+      });
+
+      // Инициализация
+      updateCompact();
+      renderExpanded(); // подготовка списка (скрыт)
+    }
+
+    // Инициализируем оба блока
+    initBlock(blocks[0]);
+    initBlock(blocks[1]);
+  </script>
+</body>
+</html>
