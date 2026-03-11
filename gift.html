@@ -153,16 +153,13 @@
     }
 
     /* ===== БЛОКИ ЦЕНЫ И ПРОЦЕНТА (ТОЛЬКО ДЛЯ ПЕРВОГО ПОДАРКА) ===== */
-    .has-price .category-info {
-      padding-right: 240px; /* резервируем место для двух блоков (можно увеличить при необходимости) */
-    }
-
+    /* Абсолютное позиционирование — не влияет на размер родителя */
     .gift-price,
     .gift-percent {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #2a2a2a;
+      background-color: #2a2a2a; /* фон, чтобы перекрыть текст */
       padding: 2px 4px;
       border-radius: 4px;
       white-space: nowrap;
@@ -171,7 +168,7 @@
 
     /* Настройка положения цены */
     .gift-price {
-      --price-right: 120px;    /* ← меняйте это значение для смещения цены (меньше – ближе к тексту) */
+      --price-right: 140px;    /* ← меняйте это значение для смещения цены (меньше – ближе к тексту) */
       right: var(--price-right);
       display: flex;
       align-items: center;
@@ -240,9 +237,9 @@
     </div>
   </div>
 
-  <!-- Список подарков (ПОЛНЫЙ, из вашего исходного кода) -->
+  <!-- Список подарков (ПОЛНЫЙ) -->
   <div class="categories">
-    <!-- Plush Pepe с отдельными блоками цены и процента -->
+    <!-- Plush Pepe с отдельными блоками цены и процента (без padding-right) -->
     <div class="category-item has-price">
       <div class="category-emoji">🎁</div>
       <div class="category-info">
@@ -256,7 +253,7 @@
       <div class="gift-percent">+38%</div>
     </div>
 
-    <!-- Все остальные подарки (полный список) -->
+    <!-- Все остальные подарки (полный список, без изменений) -->
     <div class="category-item">
       <div class="category-emoji">🎂</div>
       <div class="category-info">
