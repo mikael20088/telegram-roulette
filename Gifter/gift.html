@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
+    /* Все стили без изменений (как в предыдущей версии) */
     * {
       margin: 0;
       padding: 0;
@@ -400,8 +401,8 @@
   </div>
 
   <script>
-    // Полные данные всех подарков (эмодзи, название, статистика, цена, процент)
-    const allGiftsFull = [
+    // ========== СТАТИЧЕСКИЕ ДАННЫЕ (из вашего кода) ==========
+    const staticGifts = [
       { emoji: '🎁', name: 'Plush Pepe', stats: '2.8тыс. / 2.9тыс.', price: '7,199.00', percent: '+38%' },
       { emoji: '🎂', name: 'Heart Locket', stats: '1.9тыс. / 2.0тыс.', price: '5,299.00', percent: '+12%' },
       { emoji: '💐', name: 'Durov\'s Cap', stats: '4.7тыс. / 4.8тыс.', price: '3,999.00', percent: '-5%' },
@@ -513,8 +514,77 @@
       { emoji: '🐍📦', name: 'Snake Box', stats: '174.9тыс. / 273.9тыс.', price: '104,999.00', percent: '+62%' }
     ];
 
-    // Сохраняем исходный порядок
-    const originalGifts = [...allGiftsFull];
+    // Текущие данные (начинаем со статики)
+    let allGiftsFull = staticGifts.map(g => ({ ...g })); // копия
+
+    // Предыдущие цены для расчёта процента изменения
+    let previousPrices = {};
+
+    // Функция для преобразования нанотон в число с двумя знаками и форматированием
+    function nanotonToTon(nanoton) {
+      const tons = (parseInt(nanoton) / 1e9).toFixed(2);
+      // Добавляем разделители тысяч
+      return Number(tons).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Функция для расчёта процента изменения
+    function calculatePercent(currentPrice, previousPrice) {
+      if (!previousPrice || previousPrice === '0') return '0%';
+      const current = parseFloat(currentPrice.replace(/,/g, ''));
+      const previous = parseFloat(previousPrice.replace(/,/g, ''));
+      if (previous === 0) return '0%';
+      const change = ((current - previous) / previous) * 100;
+      return (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+    }
+
+    // Загрузка данных из API
+    async function fetchGiftData() {
+      console.log('⏳ Запрашиваем данные из API...');
+      try {
+        const response = await fetch('https://proxy.thermos.gifts/api/v1/collections');
+        console.log('📡 Ответ получен, статус:', response.status);
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        const collections = await response.json();
+        console.log('✅ Данные от API:', collections);
+
+        // Обновляем allGiftsFull, оставляя stats из статики
+        const updatedGifts = staticGifts.map(staticGift => {
+          const found = collections.find(c => c.name === staticGift.name);
+          if (found) {
+            const priceTon = nanotonToTon(found.stats.floor);
+            const previousPrice = previousPrices[staticGift.name] || priceTon;
+            const percent = calculatePercent(priceTon, previousPrice);
+            previousPrices[staticGift.name] = priceTon;
+            return {
+              ...staticGift,
+              price: priceTon,
+              percent: percent
+            };
+          } else {
+            console.warn(`⚠️ Коллекция "${staticGift.name}" не найдена в API, оставляем статические данные`);
+            return { ...staticGift };
+          }
+        });
+        allGiftsFull = updatedGifts;
+        console.log('🔄 Обновлённые данные:', allGiftsFull);
+        // Перерисовываем текущую вкладку (если она не избранное и не сервисы)
+        if (!favoriteContent.style.display || favoriteContent.style.display === 'none' && servicesContent.style.display === 'none') {
+          // Определяем, какая вкладка активна сейчас
+          if (allGiftsBtn.classList.contains('active')) {
+            renderGifts(allGiftsFull);
+          } else if (growthBtn.classList.contains('active')) {
+            const sorted = [...allGiftsFull].sort((a, b) => parsePercent(b.percent) - parsePercent(a.percent));
+            renderGifts(sorted);
+          } else if (fallBtn.classList.contains('active')) {
+            const sorted = [...allGiftsFull].sort((a, b) => parsePercent(a.percent) - parsePercent(b.percent));
+            renderGifts(sorted);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Ошибка загрузки данных:', error);
+        // В случае ошибки оставляем статические данные (уже есть)
+      }
+    }
 
     function parsePercent(percentStr) {
       let numStr = percentStr.replace('%', '').replace('+', '');
@@ -571,7 +641,6 @@
     const filterPanel = document.getElementById('filterPanel');
     const closeFilter = document.getElementById('closeFilter');
 
-    // Состояние: показывать ли верхнюю панель и поиск
     function setTopVisibility(visible) {
       if (visible) {
         topNav.classList.remove('hidden');
@@ -582,26 +651,22 @@
       }
     }
 
-    // Переключение между основными вкладками (верхняя панель)
     function setActiveMainTab(tab) {
-      // Снимаем активный класс со всех верхних вкладок
       allGiftsBtn.classList.remove('active');
       favoriteBtn.classList.remove('active');
       growthBtn.classList.remove('active');
       fallBtn.classList.remove('active');
 
-      // Скрываем все контейнеры
       giftList.style.display = 'none';
       favoriteContent.style.display = 'none';
       servicesContent.style.display = 'none';
 
-      // Показываем верхнюю панель и поиск
       setTopVisibility(true);
 
       if (tab === 'all') {
         allGiftsBtn.classList.add('active');
         giftList.style.display = 'block';
-        renderGifts(originalGifts);
+        renderGifts(allGiftsFull);
       } else if (tab === 'favorite') {
         favoriteBtn.classList.add('active');
         favoriteContent.style.display = 'block';
@@ -610,53 +675,46 @@
       } else if (tab === 'growth') {
         growthBtn.classList.add('active');
         giftList.style.display = 'block';
-        const sorted = [...originalGifts].sort((a, b) => parsePercent(b.percent) - parsePercent(a.percent));
+        const sorted = [...allGiftsFull].sort((a, b) => parsePercent(b.percent) - parsePercent(a.percent));
         renderGifts(sorted);
       } else if (tab === 'fall') {
         fallBtn.classList.add('active');
         giftList.style.display = 'block';
-        const sorted = [...originalGifts].sort((a, b) => parsePercent(a.percent) - parsePercent(b.percent));
+        const sorted = [...allGiftsFull].sort((a, b) => parsePercent(a.percent) - parsePercent(b.percent));
         renderGifts(sorted);
       }
     }
 
-    // Переключение по нижней панели
     function setActiveBottomTab(tab) {
-      // Скрываем все контейнеры
       giftList.style.display = 'none';
       favoriteContent.style.display = 'none';
       servicesContent.style.display = 'none';
 
       if (tab === 'home') {
         setTopVisibility(true);
-        setActiveMainTab('all'); // возврат на главную
+        setActiveMainTab('all');
       } else if (tab === 'services') {
-        setTopVisibility(false); // скрываем верхнюю панель и поиск
+        setTopVisibility(false);
         servicesContent.style.display = 'block';
         const servicesFrame = document.querySelector('#servicesContent iframe');
         if (servicesFrame) servicesFrame.contentWindow.location.reload();
       } else if (tab === 'account') {
-        // TODO: реализовать аккаунт
         console.log('Аккаунт');
       } else if (tab === 'settings') {
-        // TODO: реализовать настройки
         console.log('Настройки');
       }
     }
 
-    // Обработчики верхних вкладок
     allGiftsBtn.addEventListener('click', () => setActiveMainTab('all'));
     favoriteBtn.addEventListener('click', () => setActiveMainTab('favorite'));
     growthBtn.addEventListener('click', () => setActiveMainTab('growth'));
     fallBtn.addEventListener('click', () => setActiveMainTab('fall'));
 
-    // Обработчики нижних кнопок
     homeBottomBtn.addEventListener('click', () => setActiveBottomTab('home'));
     servicesBottomBtn.addEventListener('click', () => setActiveBottomTab('services'));
     accountBottomBtn.addEventListener('click', () => setActiveBottomTab('account'));
     settingsBottomBtn.addEventListener('click', () => setActiveBottomTab('settings'));
 
-    // Сортировка
     sortBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       sortPanel.classList.add('active');
@@ -666,7 +724,6 @@
       sortPanel.classList.remove('active');
     });
 
-    // Фильтр
     filterBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       filterPanel.classList.add('active');
@@ -676,22 +733,22 @@
       filterPanel.classList.remove('active');
     });
 
-    // Закрытие панелей по клику на фон
     window.addEventListener('click', (e) => {
       if (e.target === sortPanel) sortPanel.classList.remove('active');
       if (e.target === filterPanel) filterPanel.classList.remove('active');
     });
 
-    // Обработчик сообщений от iframe
     window.addEventListener('message', (event) => {
       if (event.data.type === 'CLOSE_FILTER_PANEL') {
         filterPanel.classList.remove('active');
       }
     });
 
-    // Инициализация
-    renderGifts(originalGifts);
+    // Инициализация: рендерим статические данные, затем загружаем реальные
+    renderGifts(allGiftsFull);
     setActiveMainTab('all');
+    fetchGiftData(); // первый запрос
+    setInterval(fetchGiftData, 600000); // каждые 10 минут
   </script>
 </body>
 </html>
