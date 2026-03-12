@@ -18,13 +18,65 @@
       background-color: transparent;
       font-family: 'Inter', Arial, sans-serif;
       color: #fff;
-      padding: 16px 0;
+      padding: 0;
       overflow-y: auto;
       height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Заголовок с кнопкой */
+    .filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      background-color: #1a1a1a;
+      cursor: pointer; /* добавляем указатель, чтобы показать кликабельность */
+    }
+
+    .filter-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .save-button {
+      background: transparent;
+      border: 1.5px solid #007aff;
+      border-radius: 20px;
+      padding: 6px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #007aff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      pointer-events: auto; /* кнопка перехватывает клики */
+    }
+
+    .save-button:enabled {
+      opacity: 1;
+      border-color: #007aff;
+      color: #007aff;
+    }
+
+    .save-button:enabled:hover {
+      background-color: rgba(0, 122, 255, 0.1);
+    }
+
+    .save-button:disabled {
+      opacity: 0.4;
+      border-color: #aaa;
+      color: #aaa;
+      cursor: default;
+      pointer-events: none; /* отключаем клики по неактивной кнопке */
     }
 
     .filter-list {
       list-style: none;
+      flex: 1;
+      overflow-y: auto;
     }
 
     .filter-item {
@@ -74,6 +126,10 @@
   </style>
 </head>
 <body>
+  <div class="filter-header" id="filterHeader">
+    <span class="filter-title">Избранные подарки</span>
+    <button class="save-button" id="saveButton" disabled>Сохранить</button>
+  </div>
   <div class="filter-list" id="filterList"></div>
 
   <script>
@@ -190,32 +246,42 @@
       { emoji: '🐍📦', name: 'Snake Box' }
     ];
 
-    // Ключ для localStorage
     const STORAGE_KEY = 'favoriteGifts';
+    let currentFavorites = [];
+    let savedFavorites = [];
 
-    // Загрузка избранных из localStorage
     function loadFavorites() {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     }
 
-    // Сохранение избранных
     function saveFavorites(favorites) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
     }
 
-    // Рендер списка
-    function renderList() {
-      const favorites = loadFavorites();
-      // Сортируем: сначала выбранные (по порядку, как они сохранились), потом остальные (по исходному порядку)
-      const selectedItems = allGifts.filter(g => favorites.includes(g.name));
-      const unselectedItems = allGifts.filter(g => !favorites.includes(g.name));
+    function isFavoritesChanged() {
+      if (currentFavorites.length === 0 && savedFavorites.length === 0) return false;
+      const sortedCurrent = [...currentFavorites].sort();
+      const sortedSaved = [...savedFavorites].sort();
+      return JSON.stringify(sortedCurrent) !== JSON.stringify(sortedSaved);
+    }
 
+    function updateSaveButton() {
+      const saveBtn = document.getElementById('saveButton');
+      const hasSelection = currentFavorites.length > 0;
+      const changed = isFavoritesChanged();
+      saveBtn.disabled = !(hasSelection && changed);
+    }
+
+    function renderList() {
+      const selectedItems = allGifts.filter(g => currentFavorites.includes(g.name));
+      selectedItems.sort((a, b) => currentFavorites.indexOf(a.name) - currentFavorites.indexOf(b.name));
+      const unselectedItems = allGifts.filter(g => !currentFavorites.includes(g.name));
       const sortedGifts = [...selectedItems, ...unselectedItems];
 
       const listEl = document.getElementById('filterList');
       listEl.innerHTML = sortedGifts.map(gift => {
-        const isSelected = favorites.includes(gift.name);
+        const isSelected = currentFavorites.includes(gift.name);
         const icon = isSelected ? '✓' : '−';
         return `
           <div class="filter-item" data-name="${gift.name}">
@@ -227,28 +293,49 @@
           </div>
         `;
       }).join('');
+      updateSaveButton();
     }
 
-    // Обработчик клика
+    // Клик по элементу списка
     document.getElementById('filterList').addEventListener('click', (e) => {
       const item = e.target.closest('.filter-item');
       if (!item) return;
       const giftName = item.dataset.name;
-      let favorites = loadFavorites();
-      const index = favorites.indexOf(giftName);
+      const index = currentFavorites.indexOf(giftName);
       if (index === -1) {
-        // Добавляем
-        favorites.unshift(giftName); // добавляем в начало
+        currentFavorites.unshift(giftName);
       } else {
-        // Удаляем
-        favorites.splice(index, 1);
+        currentFavorites.splice(index, 1);
       }
-      saveFavorites(favorites);
-      renderList(); // перерисовываем (выбранный уйдёт вверх)
+      renderList();
     });
 
-    // Начальный рендер
-    renderList();
+    // Клик по заголовку (кроме кнопки) — закрываем панель
+    document.getElementById('filterHeader').addEventListener('click', (e) => {
+      // Если клик по кнопке — не обрабатываем здесь, она обрабатывается отдельно
+      if (e.target.classList.contains('save-button')) return;
+      // Отправляем родителю сообщение о закрытии
+      window.parent.postMessage({ type: 'CLOSE_FILTER_PANEL' }, '*');
+    });
+
+    // Клик по кнопке "Сохранить"
+    document.getElementById('saveButton').addEventListener('click', () => {
+      // Сохраняем только если кнопка активна (disabled=false)
+      if (!document.getElementById('saveButton').disabled) {
+        saveFavorites(currentFavorites);
+        savedFavorites = [...currentFavorites];
+        updateSaveButton();
+        // После сохранения закрываем панель
+        window.parent.postMessage({ type: 'CLOSE_FILTER_PANEL' }, '*');
+      }
+    });
+
+    // Инициализация
+    (function init() {
+      currentFavorites = loadFavorites();
+      savedFavorites = [...currentFavorites];
+      renderList();
+    })();
   </script>
 </body>
 </html>
