@@ -43,6 +43,14 @@
       white-space: nowrap;
       scrollbar-width: none;
       -ms-overflow-style: none;
+      transition: opacity 0.2s, height 0.2s, padding 0.2s;
+    }
+
+    .top-nav.hidden {
+      opacity: 0;
+      height: 0;
+      padding: 0 16px;
+      pointer-events: none;
     }
 
     .top-nav::-webkit-scrollbar {
@@ -78,6 +86,14 @@
       gap: 8px;
       padding: 16px 16px 0 16px;
       flex-shrink: 0;
+      transition: opacity 0.2s, height 0.2s, padding 0.2s;
+    }
+
+    .search-row.hidden {
+      opacity: 0;
+      height: 0;
+      padding: 0 16px;
+      pointer-events: none;
     }
 
     .search-input {
@@ -134,6 +150,7 @@
       padding-bottom: 4px;
       scrollbar-width: none;
       -ms-overflow-style: none;
+      position: relative;
     }
 
     .content-area::-webkit-scrollbar {
@@ -237,12 +254,14 @@
       margin-right: 2px;
     }
 
-    .favorite-content {
+    .favorite-content,
+    .services-content {
       height: 100%;
       display: none;
     }
 
-    .favorite-content iframe {
+    .favorite-content iframe,
+    .services-content iframe {
       width: 100%;
       height: 100%;
       border: none;
@@ -266,6 +285,7 @@
       font-size: 12px;
       color: #fff;
       font-weight: 500;
+      cursor: pointer;
     }
 
     .bottom-nav-emoji {
@@ -329,7 +349,7 @@
 </head>
 <body>
   <!-- Верхняя панель -->
-  <div class="top-nav">
+  <div class="top-nav" id="topNav">
     <span class="nav-item active" id="allGiftsBtn">🎁 Все подарки</span>
     <span class="nav-item" id="favoriteBtn">⭐ Избранное</span>
     <span class="nav-item" id="growthBtn"><span class="green-arrow">↑</span> Рост</span>
@@ -337,7 +357,7 @@
   </div>
 
   <!-- Поиск и кнопки -->
-  <div class="search-row">
+  <div class="search-row" id="searchRow">
     <input type="text" class="search-input" placeholder="Поиск подарков">
     <div class="circle-btn" id="sortBtn" title="Сортировка"><span class="double-arrow">↑↓</span></div>
     <div class="circle-btn" id="filterBtn" title="Выбрать избранные"><span>⌛</span></div>
@@ -345,21 +365,26 @@
 
   <!-- Область контента -->
   <div class="content-area">
-    <!-- Список подарков (будет заполнен через JS) -->
+    <!-- Список подарков (по умолчанию) -->
     <div class="categories" id="giftList"></div>
 
-    <!-- Контент избранного -->
+    <!-- Контент избранного (скрыт по умолчанию) -->
     <div class="favorite-content" id="favoriteContent">
       <iframe src="LOVE.html"></iframe>
+    </div>
+
+    <!-- Контент сервисов (скрыт по умолчанию) -->
+    <div class="services-content" id="servicesContent">
+      <iframe src="Cervic.html"></iframe>
     </div>
   </div>
 
   <!-- Нижняя панель -->
   <div class="bottom-nav">
-    <div class="bottom-nav-item"><span class="bottom-nav-emoji">🏠</span><span>Главная</span></div>
-    <div class="bottom-nav-item"><span class="bottom-nav-emoji">⭐</span><span>Сервисы</span></div>
-    <div class="bottom-nav-item"><span class="bottom-nav-emoji">👤</span><span>Аккаунт</span></div>
-    <div class="bottom-nav-item"><span class="bottom-nav-emoji">⚙️</span><span>Настройки</span></div>
+    <div class="bottom-nav-item" id="homeBottomBtn"><span class="bottom-nav-emoji">🏠</span><span>Главная</span></div>
+    <div class="bottom-nav-item" id="servicesBottomBtn"><span class="bottom-nav-emoji">⭐</span><span>Сервисы</span></div>
+    <div class="bottom-nav-item" id="accountBottomBtn"><span class="bottom-nav-emoji">👤</span><span>Аккаунт</span></div>
+    <div class="bottom-nav-item" id="settingsBottomBtn"><span class="bottom-nav-emoji">⚙️</span><span>Настройки</span></div>
   </div>
 
   <!-- Панель сортировки -->
@@ -491,20 +516,17 @@
     // Сохраняем исходный порядок
     const originalGifts = [...allGiftsFull];
 
-    // Функция для преобразования процента в число
     function parsePercent(percentStr) {
       let numStr = percentStr.replace('%', '').replace('+', '');
       return parseFloat(numStr);
     }
 
-    // Функция для определения класса процента
     function getPercentClass(percent) {
       if (percent.startsWith('+')) return 'positive';
       if (percent.startsWith('-')) return 'negative';
       return 'neutral';
     }
 
-    // Рендер подарков по заданному массиву
     function renderGifts(giftsArray) {
       const container = document.getElementById('giftList');
       let html = '';
@@ -529,12 +551,19 @@
     }
 
     // Элементы
+    const topNav = document.getElementById('topNav');
+    const searchRow = document.getElementById('searchRow');
     const allGiftsBtn = document.getElementById('allGiftsBtn');
     const favoriteBtn = document.getElementById('favoriteBtn');
     const growthBtn = document.getElementById('growthBtn');
     const fallBtn = document.getElementById('fallBtn');
+    const homeBottomBtn = document.getElementById('homeBottomBtn');
+    const servicesBottomBtn = document.getElementById('servicesBottomBtn');
+    const accountBottomBtn = document.getElementById('accountBottomBtn');
+    const settingsBottomBtn = document.getElementById('settingsBottomBtn');
     const giftList = document.getElementById('giftList');
     const favoriteContent = document.getElementById('favoriteContent');
+    const servicesContent = document.getElementById('servicesContent');
     const sortBtn = document.getElementById('sortBtn');
     const sortPanel = document.getElementById('sortPanel');
     const closeSort = document.getElementById('closeSort');
@@ -542,56 +571,92 @@
     const filterPanel = document.getElementById('filterPanel');
     const closeFilter = document.getElementById('closeFilter');
 
-    // Функция переключения вкладок и обновления списка
-    function setActiveTab(tab) {
-      // Снимаем активный класс со всех вкладок
+    // Состояние: показывать ли верхнюю панель и поиск
+    function setTopVisibility(visible) {
+      if (visible) {
+        topNav.classList.remove('hidden');
+        searchRow.classList.remove('hidden');
+      } else {
+        topNav.classList.add('hidden');
+        searchRow.classList.add('hidden');
+      }
+    }
+
+    // Переключение между основными вкладками (верхняя панель)
+    function setActiveMainTab(tab) {
+      // Снимаем активный класс со всех верхних вкладок
       allGiftsBtn.classList.remove('active');
       favoriteBtn.classList.remove('active');
       growthBtn.classList.remove('active');
       fallBtn.classList.remove('active');
 
-      // По умолчанию показываем список подарков, скрываем избранное
-      giftList.style.display = 'block';
+      // Скрываем все контейнеры
+      giftList.style.display = 'none';
       favoriteContent.style.display = 'none';
+      servicesContent.style.display = 'none';
+
+      // Показываем верхнюю панель и поиск
+      setTopVisibility(true);
 
       if (tab === 'all') {
         allGiftsBtn.classList.add('active');
-        renderGifts(originalGifts); // исходный порядок
+        giftList.style.display = 'block';
+        renderGifts(originalGifts);
       } else if (tab === 'favorite') {
         favoriteBtn.classList.add('active');
-        giftList.style.display = 'none';
         favoriteContent.style.display = 'block';
-        // Перезагружаем iframe LOVE, чтобы он обновил данные из localStorage
         const loveFrame = document.querySelector('#favoriteContent iframe');
         if (loveFrame) loveFrame.contentWindow.location.reload();
       } else if (tab === 'growth') {
         growthBtn.classList.add('active');
-        // Сортировка по убыванию процента (сначала самые большие положительные)
-        const sorted = [...originalGifts].sort((a, b) => {
-          const valA = parsePercent(a.percent);
-          const valB = parsePercent(b.percent);
-          return valB - valA; // по убыванию
-        });
+        giftList.style.display = 'block';
+        const sorted = [...originalGifts].sort((a, b) => parsePercent(b.percent) - parsePercent(a.percent));
         renderGifts(sorted);
       } else if (tab === 'fall') {
         fallBtn.classList.add('active');
-        // Сортировка по возрастанию процента (сначала самые отрицательные)
-        const sorted = [...originalGifts].sort((a, b) => {
-          const valA = parsePercent(a.percent);
-          const valB = parsePercent(b.percent);
-          return valA - valB; // по возрастанию
-        });
+        giftList.style.display = 'block';
+        const sorted = [...originalGifts].sort((a, b) => parsePercent(a.percent) - parsePercent(b.percent));
         renderGifts(sorted);
       }
     }
 
-    // Обработчики кликов на вкладки
-    allGiftsBtn.addEventListener('click', () => setActiveTab('all'));
-    favoriteBtn.addEventListener('click', () => setActiveTab('favorite'));
-    growthBtn.addEventListener('click', () => setActiveTab('growth'));
-    fallBtn.addEventListener('click', () => setActiveTab('fall'));
+    // Переключение по нижней панели
+    function setActiveBottomTab(tab) {
+      // Скрываем все контейнеры
+      giftList.style.display = 'none';
+      favoriteContent.style.display = 'none';
+      servicesContent.style.display = 'none';
 
-    // Сортировка (панель)
+      if (tab === 'home') {
+        setTopVisibility(true);
+        setActiveMainTab('all'); // возврат на главную
+      } else if (tab === 'services') {
+        setTopVisibility(false); // скрываем верхнюю панель и поиск
+        servicesContent.style.display = 'block';
+        const servicesFrame = document.querySelector('#servicesContent iframe');
+        if (servicesFrame) servicesFrame.contentWindow.location.reload();
+      } else if (tab === 'account') {
+        // TODO: реализовать аккаунт
+        console.log('Аккаунт');
+      } else if (tab === 'settings') {
+        // TODO: реализовать настройки
+        console.log('Настройки');
+      }
+    }
+
+    // Обработчики верхних вкладок
+    allGiftsBtn.addEventListener('click', () => setActiveMainTab('all'));
+    favoriteBtn.addEventListener('click', () => setActiveMainTab('favorite'));
+    growthBtn.addEventListener('click', () => setActiveMainTab('growth'));
+    fallBtn.addEventListener('click', () => setActiveMainTab('fall'));
+
+    // Обработчики нижних кнопок
+    homeBottomBtn.addEventListener('click', () => setActiveBottomTab('home'));
+    servicesBottomBtn.addEventListener('click', () => setActiveBottomTab('services'));
+    accountBottomBtn.addEventListener('click', () => setActiveBottomTab('account'));
+    settingsBottomBtn.addEventListener('click', () => setActiveBottomTab('settings'));
+
+    // Сортировка
     sortBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       sortPanel.classList.add('active');
@@ -601,7 +666,7 @@
       sortPanel.classList.remove('active');
     });
 
-    // Фильтр (выбор избранных)
+    // Фильтр
     filterBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       filterPanel.classList.add('active');
@@ -617,16 +682,16 @@
       if (e.target === filterPanel) filterPanel.classList.remove('active');
     });
 
-    // Обработчик сообщений от iframe (например, закрытие панели фильтра)
+    // Обработчик сообщений от iframe
     window.addEventListener('message', (event) => {
       if (event.data.type === 'CLOSE_FILTER_PANEL') {
         filterPanel.classList.remove('active');
       }
     });
 
-    // Инициализация: рендерим все подарки и активируем вкладку "Все подарки"
+    // Инициализация
     renderGifts(originalGifts);
-    setActiveTab('all');
+    setActiveMainTab('all');
   </script>
 </body>
 </html>

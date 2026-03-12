@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сервисы</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #1a1a1a;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #fff;
+      height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    .container {
+      padding: 20px 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #fff;
+    }
+
+    .analytics-header {
+      background-color: #2a2a2a;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .analytics-header .text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .feature-card {
+      background-color: #2a2a2a;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .feature-card:hover {
+      background-color: #3a3a3a;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .feature-subtitle {
+      font-size: 13px;
+      color: #aaa;
+      font-weight: 400;
+      line-height: 1.4;
+    }
+
+    .indices-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin: 24px 0 16px 0;
+    }
+
+    .squares-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .square-card {
+      flex: 1;
+      background-color: #2a2a2a;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .square-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 500;
+      color: #aaa;
+    }
+
+    .arrow-right {
+      color: #007aff;
+      font-size: 16px;
+      margin-left: 4px;
+    }
+
+    .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1.2;
+      flex-wrap: wrap;
+    }
+
+    .value .icon {
+      font-size: 18px;
+      margin-right: 2px;
+    }
+
+    .sub-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .change {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+
+    .change.positive {
+      color: #4caf50;
+    }
+
+    .green-arrow {
+      font-size: 14px;
+      color: #4caf50;
+    }
+
+    .coin-icon, .user-icon {
+      font-size: 16px;
+      margin-right: 2px;
+    }
+
+    .last-element {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Заголовок страницы -->
+    <div class="title">Сервисы</div>
+
+    <!-- Прямоугольник "Инструменты аналитики" -->
+    <div class="analytics-header">
+      <span class="text">Инструменты аналитики</span>
+    </div>
+
+    <!-- Карточка "Тепловая карта" -->
+    <div class="feature-card">
+      <div class="feature-title">Тепловая карта</div>
+      <div class="feature-subtitle">Состояние всего рынка в одном изображении.</div>
+    </div>
+
+    <!-- Карточка "Сравнение графиков" -->
+    <div class="feature-card">
+      <div class="feature-title">Сравнение графиков</div>
+      <div class="feature-subtitle">Сравнение графиков до 3 подарков.</div>
+    </div>
+
+    <!-- Заголовок "Индексы" -->
+    <div class="indices-title">Индексы</div>
+
+    <!-- Первая пара квадратов: Market Cap и Trading Volume -->
+    <div class="squares-row">
+      <div class="square-card">
+        <div class="square-header">
+          Market Cap
+          <span class="arrow-right">→</span>
+        </div>
+        <div class="value">
+          <span class="coin-icon">💎</span>134,672.78
+        </div>
+        <div class="change positive">
+          <span class="green-arrow">↑</span> 20%
+        </div>
+      </div>
+      <div class="square-card">
+        <div class="square-header">
+          Trading Volume
+          <span class="arrow-right">→</span>
+        </div>
+        <div class="value">
+          <span class="coin-icon">💎</span>109,672.78
+        </div>
+        <div class="change positive">
+          <span class="green-arrow">↑</span> 35%
+        </div>
+      </div>
+    </div>
+
+    <!-- Вторая пара квадратов: Total Supply и FDV -->
+    <div class="squares-row">
+      <div class="square-card">
+        <div class="square-header">
+          Total Supply
+          <span class="arrow-right">→</span>
+        </div>
+        <div class="value">
+          <span class="icon">🎁</span>9,707,578
+        </div>
+        <div class="change positive">
+          <span class="green-arrow">↑</span> 6%
+        </div>
+      </div>
+      <div class="square-card">
+        <div class="square-header">
+          FDV
+          <span class="arrow-right">→</span>
+        </div>
+        <div class="value">
+          <span class="coin-icon">💎</span>115,893,916.64
+        </div>
+        <div class="change positive">
+          <span class="green-arrow">↑</span> 0.15%
+        </div>
+      </div>
+    </div>
+
+    <!-- Третья пара квадратов: Уникальные холдеры и TOP 10 NFT World -->
+    <div class="squares-row">
+      <div class="square-card">
+        <div class="square-header">
+          Уникальные холдеры
+          <span class="arrow-right">→</span>
+        </div>
+        <div class="value">
+          <span class="icon">👤</span>2 856 678
+        </div>
+        <div class="change positive">
+          <span class="green-arrow">↑</span> +5000 (+4%)
+        </div>
+      </div>
+      <div class="square-card">
+        <div class="square-header">
+          TOP 10 NFT World
+          <span class="arrow-right">→</span>
+        </div>
+        <div class="value" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+          <span style="display: flex; align-items: center; gap: 4px;"><span class="coin-icon">💎</span>Plush Pepe</span>
+          <span style="display: flex; align-items: center; gap: 4px;"><span class="coin-icon">💎</span>Number 1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Дополнительный отступ для скролла -->
+    <div class="last-element"></div>
+  </div>
+</body>
+</html>
