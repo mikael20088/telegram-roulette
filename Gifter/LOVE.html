@@ -35,10 +35,15 @@
       display: flex;
       gap: 16px;
       position: relative;
+      cursor: pointer;
     }
 
     .category-item:last-child {
       border-bottom: none;
+    }
+
+    .category-item:hover {
+      background-color: #3a3a3a;
     }
 
     .category-emoji {
@@ -69,7 +74,6 @@
       line-height: 1.2;
     }
 
-    /* Блоки цены и процента (для каждого подарка) */
     .gift-price,
     .gift-percent {
       position: absolute;
@@ -80,7 +84,7 @@
     }
 
     .gift-price {
-      --price-right: 100px;   /* такое же значение, как на главной */
+      --price-right: 100px;
       right: var(--price-right);
       display: flex;
       align-items: center;
@@ -91,11 +95,22 @@
     }
 
     .gift-percent {
-      --percent-right: 17px;   /* такое же значение, как на главной */
+      --percent-right: 17px;
       right: var(--percent-right);
-      color: #4caf50;
       font-weight: 600;
       font-size: 14px;
+    }
+
+    .gift-percent.positive {
+      color: #4caf50;
+    }
+
+    .gift-percent.negative {
+      color: #ff5252;
+    }
+
+    .gift-percent.neutral {
+      color: #fff;
     }
 
     .coin-icon {
@@ -115,12 +130,12 @@
   <div id="favoritesContainer" class="categories"></div>
 
   <script>
-    // Ключ для localStorage
+    // Ключи для localStorage
     const STORAGE_KEY = 'favoriteGifts';
+    const DATA_KEY = 'giftData';
 
-    // Полные данные всех подарков (эмодзи, название, статистика, цена, процент)
-    // Значения для демонстрации; при необходимости замените на реальные.
-    const allGiftsFull = [
+    // Полный список подарков (статический, на случай отсутствия данных в localStorage)
+    const fallbackGifts = [
       { emoji: '🎁', name: 'Plush Pepe', stats: '2.8тыс. / 2.9тыс.', price: '7,199.00', percent: '+38%' },
       { emoji: '🎂', name: 'Heart Locket', stats: '1.9тыс. / 2.0тыс.', price: '5,299.00', percent: '+12%' },
       { emoji: '💐', name: 'Durov\'s Cap', stats: '4.7тыс. / 4.8тыс.', price: '3,999.00', percent: '+5%' },
@@ -238,9 +253,20 @@
       return stored ? JSON.parse(stored) : [];
     }
 
+    // Загрузка актуальных данных подарков
+    function loadGiftData() {
+      const stored = localStorage.getItem(DATA_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      // Если нет сохранённых данных, используем статический массив
+      return fallbackGifts;
+    }
+
     // Рендер избранных подарков
     function renderFavorites() {
       const favorites = loadFavorites();
+      const allGifts = loadGiftData();
       const container = document.getElementById('favoritesContainer');
 
       if (favorites.length === 0) {
@@ -248,13 +274,17 @@
         return;
       }
 
-      // Фильтруем полный массив, оставляем только выбранные
-      const selectedGifts = allGiftsFull.filter(gift => favorites.includes(gift.name));
+      // Фильтруем, оставляем только выбранные
+      const selectedGifts = allGifts.filter(gift => favorites.includes(gift.name));
 
       let html = '';
       selectedGifts.forEach(gift => {
+        let percentClass = 'neutral';
+        if (gift.percent.startsWith('+')) percentClass = 'positive';
+        else if (gift.percent.startsWith('-')) percentClass = 'negative';
+
         html += `
-          <div class="category-item">
+          <div class="category-item" data-name="${gift.name}" data-emoji="${gift.emoji}" data-stats="${gift.stats}" data-price="${gift.price}" data-percent="${gift.percent}">
             <div class="category-emoji">${gift.emoji}</div>
             <div class="category-info">
               <div class="category-name">${gift.name}</div>
@@ -264,7 +294,7 @@
               <span class="coin-icon">💎</span>
               <span class="price">${gift.price}</span>
             </div>
-            <div class="gift-percent">${gift.percent}</div>
+            <div class="gift-percent ${percentClass}">${gift.percent}</div>
           </div>
         `;
       });
@@ -272,12 +302,36 @@
       container.innerHTML = html;
     }
 
+    // Обработчик клика на подарок в избранном
+    document.getElementById('favoritesContainer').addEventListener('click', (e) => {
+      const item = e.target.closest('.category-item');
+      if (!item) return;
+
+      const giftName = item.dataset.name;
+      const giftEmoji = item.dataset.emoji;
+      const giftStats = item.dataset.stats;
+      const giftPrice = item.dataset.price;
+      const giftPercent = item.dataset.percent;
+
+      // Отправляем родительскому окну сообщение с данными подарка
+      window.parent.postMessage({
+        type: 'OPEN_GRAPH',
+        gift: {
+          name: giftName,
+          emoji: giftEmoji,
+          stats: giftStats,
+          price: giftPrice,
+          percent: giftPercent
+        }
+      }, '*');
+    });
+
     // Первоначальный рендер
     renderFavorites();
 
     // Слушаем изменения localStorage (если фильтр меняет данные)
     window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_KEY) {
+      if (e.key === STORAGE_KEY || e.key === DATA_KEY) {
         renderFavorites();
       }
     });

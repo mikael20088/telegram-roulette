@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
-    /* Все стили без изменений (как в предыдущей версии) */
     * {
       margin: 0;
       padding: 0;
@@ -177,6 +176,7 @@
       gap: 16px;
       position: relative;
       align-items: center;
+      cursor: pointer;
     }
 
     .category-item:last-child {
@@ -346,6 +346,29 @@
       border: none;
       background: transparent;
     }
+
+    .fullscreen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1a1a1a;
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+    }
+
+    .fullscreen-overlay.active {
+      display: flex;
+    }
+
+    .fullscreen-overlay iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+    }
   </style>
 </head>
 <body>
@@ -366,15 +389,10 @@
 
   <!-- Область контента -->
   <div class="content-area">
-    <!-- Список подарков (по умолчанию) -->
     <div class="categories" id="giftList"></div>
-
-    <!-- Контент избранного (скрыт по умолчанию) -->
     <div class="favorite-content" id="favoriteContent">
       <iframe src="LOVE.html"></iframe>
     </div>
-
-    <!-- Контент сервисов (скрыт по умолчанию) -->
     <div class="services-content" id="servicesContent">
       <iframe src="Cervic.html"></iframe>
     </div>
@@ -400,130 +418,153 @@
     <iframe src="Filter.html"></iframe>
   </div>
 
+  <!-- Оверлей для графика -->
+  <div class="fullscreen-overlay" id="graphOverlay">
+    <iframe id="graphFrame" src=""></iframe>
+  </div>
+
   <script>
-    // ========== СТАТИЧЕСКИЕ ДАННЫЕ (из вашего кода) ==========
-    const staticGifts = [
-      { emoji: '🎁', name: 'Plush Pepe', stats: '2.8тыс. / 2.9тыс.', price: '7,199.00', percent: '+38%' },
-      { emoji: '🎂', name: 'Heart Locket', stats: '1.9тыс. / 2.0тыс.', price: '5,299.00', percent: '+12%' },
-      { emoji: '💐', name: 'Durov\'s Cap', stats: '4.7тыс. / 4.8тыс.', price: '3,999.00', percent: '-5%' },
-      { emoji: '🧸', name: 'Precious Peach', stats: '3.0тыс. / 3.2тыс.', price: '2,499.00', percent: '-7%' },
-      { emoji: '🍫', name: 'Heroic Helmet', stats: '3.4тыс. / 3.8тыс.', price: '4,299.00', percent: '+15%' },
-      { emoji: '🎈', name: 'Astral Shard', stats: '5.7тыс. / 6.2тыс.', price: '6,999.00', percent: '+22%' },
-      { emoji: '😿', name: 'Scared Cat', stats: '19.3тыс. / 19.3тыс.', price: '12,499.00', percent: '-3%' },
-      { emoji: '💪', name: 'Mighty Arm', stats: '3.8тыс. / 4.1тыс.', price: '3,799.00', percent: '+9%' },
-      { emoji: '🎒', name: 'Loot Bag', stats: '14.4тыс. / 14.5тыс.', price: '8,999.00', percent: '+18%' },
-      { emoji: '💍', name: 'Nail Bracelet', stats: '4.7тыс. / 4.8тыс.', price: '2,199.00', percent: '-6%' },
-      { emoji: '🤙', name: 'Westside Sign', stats: '11.5тыс. / 12.0тыс.', price: '7,499.00', percent: '+14%' },
-      { emoji: '🧱', name: 'Artisan Brick', stats: '6.3тыс. / 6.9тыс.', price: '4,999.00', percent: '+11%' },
-      { emoji: '🏆', name: 'Mini Oscar', stats: '4.9тыс. / 5.6тыс.', price: '5,599.00', percent: '+20%' },
-      { emoji: '🧴', name: 'Perfume Bottle', stats: '4.4тыс. / 4.8тыс.', price: '3,299.00', percent: '-8%' },
-      { emoji: '💎', name: 'Ion Gem', stats: '4.5тыс. / 4.7тыс.', price: '4,499.00', percent: '+10%' },
-      { emoji: '🧪', name: 'Magic Potion', stats: '4.9тыс. / 4.9тыс.', price: '5,199.00', percent: '+13%' },
-      { emoji: '💍', name: 'Gem Signet', stats: '6.2тыс. / 7.0тыс.', price: '6,499.00', percent: '+17%' },
-      { emoji: '🐸', name: 'Kissed Frog', stats: '14.1тыс. / 14.3тыс.', price: '9,299.00', percent: '0%' },
-      { emoji: '🧞', name: 'Genie Lamp', stats: '6.5тыс. / 7.7тыс.', price: '8,799.00', percent: '+21%' },
-      { emoji: '💍', name: 'Bonded Ring', stats: '7.8тыс. / 8.1тыс.', price: '7,999.00', percent: '+16%' },
-      { emoji: '⌚', name: 'Swiss Watch', stats: '25.7тыс. / 29.3тыс.', price: '15,999.00', percent: '+25%' },
-      { emoji: '🚗', name: 'Low Rider', stats: '23.4тыс. / 23.9тыс.', price: '14,499.00', percent: '+23%' },
-      { emoji: '👅', name: 'Sharp Tongue', stats: '8.1тыс. / 8.5тыс.', price: '5,899.00', percent: '+12%' },
-      { emoji: '🧸', name: 'Toy Bear', stats: '55.9тыс. / 57.7тыс.', price: '22,999.00', percent: '+30%' },
-      { emoji: '🐱', name: 'Neko Helmet', stats: '15.5тыс. / 16.1тыс.', price: '10,499.00', percent: '+18%' },
-      { emoji: '👶', name: 'Bling Binky', stats: '9.3тыс. / 10.0тыс.', price: '6,799.00', percent: '+14%' },
-      { emoji: '💍', name: 'Signet Ring', stats: '16.8тыс. / 18.5тыс.', price: '11,299.00', percent: '+20%' },
-      { emoji: '🚬', name: 'Vintage Cigar', stats: '26.4тыс. / 31.0тыс.', price: '18,999.00', percent: '+27%' },
-      { emoji: '🪆', name: 'Voodoo Doll', stats: '26.8тыс. / 27.6тыс.', price: '17,499.00', percent: '+24%' },
-      { emoji: '💀', name: 'Electric Skull', stats: '9.2тыс. / 9.4тыс.', price: '6,299.00', percent: '+11%' },
-      { emoji: '🦅', name: 'Rare Bird', stats: '12.0тыс. / 15.0тыс.', price: '9,999.00', percent: '0%' },
-      { emoji: '💍', name: 'Diamond Ring', stats: '32.3тыс. / 32.9тыс.', price: '21,499.00', percent: '+28%' },
-      { emoji: '🌹', name: 'Eternal Rose', stats: '31.1тыс. / 37.6тыс.', price: '20,999.00', percent: '+29%' },
-      { emoji: '🎩', name: 'Khabib\'s Papakha', stats: '28.5тыс. / 29.0тыс.', price: '19,499.00', percent: '+26%' },
-      { emoji: '🏹', name: 'Cupid Charm', stats: '30.0тыс. / 33.1тыс.', price: '20,299.00', percent: '+27%' },
-      { emoji: '💨', name: 'Ionic Dryer', stats: '20.0тыс. / 25.7тыс.', price: '14,999.00', percent: '+23%' },
-      { emoji: '🧪❤️', name: 'Love Potion', stats: '29.1тыс. / 30.4тыс.', price: '18,299.00', percent: '+25%' },
-      { emoji: '👠', name: 'Sky Stilettos', stats: '50.8тыс. / 58.5тыс.', price: '32,999.00', percent: '+35%' },
-      { emoji: '🥊', name: 'UFC Strike', stats: '58.4тыс. / 60.0тыс.', price: '35,499.00', percent: '+38%' },
-      { emoji: '📀', name: 'Record Player', stats: '33.6тыс. / 46.9тыс.', price: '24,999.00', percent: '+32%' },
-      { emoji: '💔', name: 'Trapped Heart', stats: '24.9тыс. / 26.4тыс.', price: '16,499.00', percent: '+21%' },
-      { emoji: '🎃', name: 'Mad Pumpkin', stats: '19.5тыс. / 22.2тыс.', price: '13,999.00', percent: '+19%' },
-      { emoji: '🧹', name: 'Flying Broom', stats: '24.7тыс. / 25.9тыс.', price: '15,799.00', percent: '+20%' },
-      { emoji: '🚬', name: 'Snoop Cigar', stats: '117.3тыс. / 119.6тыс.', price: '55,999.00', percent: '+45%' },
-      { emoji: '💀🌸', name: 'Skull Flower', stats: '21.8тыс. / 24.1тыс.', price: '14,299.00', percent: '+18%' },
-      { emoji: '🔮', name: 'Crystal Ball', stats: '26.7тыс. / 27.7тыс.', price: '17,999.00', percent: '+22%' },
-      { emoji: '🕯️', name: 'Love Candle', stats: '23.5тыс. / 30.3тыс.', price: '16,299.00', percent: '+21%' },
-      { emoji: '📦❤️', name: 'Valentine Box', stats: '34.6тыс. / 41.0тыс.', price: '25,499.00', percent: '+30%' },
-      { emoji: '🎩', name: 'Top Hat', stats: '34.3тыс. / 35.1тыс.', price: '22,999.00', percent: '+26%' },
-      { emoji: '🌸', name: 'Sakura Flower', stats: '87.7тыс. / 93.1тыс.', price: '42,999.00', percent: '+40%' },
-      { emoji: '🔔', name: 'Sleigh Bell', stats: '22.1тыс. / 28.0тыс.', price: '15,299.00', percent: '+19%' },
-      { emoji: '🔔🔔', name: 'Jingle Bells', stats: '73.0тыс. / 110.0тыс.', price: '48,999.00', percent: '+42%' },
-      { emoji: '⭐', name: 'Hanging Star', stats: '45.1тыс. / 58.1тыс.', price: '29,999.00', percent: '+33%' },
-      { emoji: '🫐📦', name: 'Berry Box', stats: '51.0тыс. / 66.6тыс.', price: '33,499.00', percent: '+36%' },
-      { emoji: '🐰', name: 'Jelly Bunny', stats: '103.6тыс. / 129.3тыс.', price: '58,999.00', percent: '+48%' },
-      { emoji: '🎁', name: 'Joyful Bundle', stats: '80.2тыс. / 114.1тыс.', price: '49,999.00', percent: '+44%' },
-      { emoji: '🧁🐰', name: 'Bunny Muffin', stats: '51.7тыс. / 66.7тыс.', price: '34,499.00', percent: '+37%' },
-      { emoji: '👁️', name: 'Evil Eye', stats: '73.4тыс. / 85.2тыс.', price: '41,999.00', percent: '+39%' },
-      { emoji: '🐵', name: 'Jolly Chimp', stats: '116.2тыс. / 132.2тыс.', price: '62,999.00', percent: '+50%' },
-      { emoji: '🧤', name: 'Snow Mittens', stats: '38.9тыс. / 50.0тыс.', price: '27,499.00', percent: '+31%' },
-      { emoji: '📅', name: 'Desk Calendar', stats: '289.5тыс. / 319.5тыс.', price: '129,999.00', percent: '+60%' },
-      { emoji: '💐', name: 'Lush Bouquet', stats: '106.5тыс. / 140.1тыс.', price: '59,999.00', percent: '+47%' },
-      { emoji: '🕯️', name: 'Eternal Candle', stats: '45.1тыс. / 46.6тыс.', price: '28,999.00', percent: '+32%' },
-      { emoji: '🎀', name: 'Bow Tie', stats: '55.3тыс. / 65.7тыс.', price: '36,499.00', percent: '+38%' },
-      { emoji: '⚔️', name: 'Light Sword', stats: '124.4тыс. / 131.2тыс.', price: '68,999.00', percent: '+52%' },
-      { emoji: '🔑', name: 'Input Key', stats: '130.0тыс. / 159.8тыс.', price: '74,999.00', percent: '+55%' },
-      { emoji: '🍄', name: 'Spy Agaric', stats: '86.7тыс. / 89.4тыс.', price: '46,999.00', percent: '+41%' },
-      { emoji: '🧙', name: 'Witch Hat', stats: '82.4тыс. / 88.5тыс.', price: '44,999.00', percent: '+40%' },
-      { emoji: '🧺', name: 'Spring Basket', stats: '176.0тыс. / 231.3тыс.', price: '89,999.00', percent: '+58%' },
-      { emoji: '🥚', name: 'Easter Egg', stats: '162.6тыс. / 173.2тыс.', price: '79,999.00', percent: '+56%' },
-      { emoji: '🫙', name: 'Restless Jar', stats: '100.7тыс. / 120.2тыс.', price: '55,999.00', percent: '+46%' },
-      { emoji: '☃️', name: 'Snow Globe', stats: '52.9тыс. / 72.8тыс.', price: '37,999.00', percent: '+39%' },
-      { emoji: '🍪❤️', name: 'Cookie Heart', stats: '189.7тыс. / 264.5тыс.', price: '99,999.00', percent: '+62%' },
-      { emoji: '💐', name: 'Pretty Posy', stats: '122.0тыс. / 181.2тыс.', price: '69,999.00', percent: '+53%' },
-      { emoji: '🌙', name: 'Moon Pendant', stats: '101.9тыс. / 111.1тыс.', price: '57,999.00', percent: '+49%' },
-      { emoji: '🛍️', name: 'Swag Bag', stats: '231.5тыс. / 238.0тыс.', price: '119,999.00', percent: '+65%' },
-      { emoji: '🐶', name: 'Snoop Dogg', stats: '580.5тыс. / 593.8тыс.', price: '299,999.00', percent: '+80%' },
-      { emoji: '📿', name: 'Faith Amulet', stats: '137.4тыс. / 172.8тыс.', price: '77,999.00', percent: '+57%' },
-      { emoji: '🏅', name: 'Victory Medal', stats: '97.0тыс. / 124.6тыс.', price: '54,999.00', percent: '+45%' },
-      { emoji: '🚀', name: 'Stellar Rocket', stats: '136.3тыс. / 156.3тыс.', price: '79,999.00', percent: '+59%' },
-      { emoji: '🍷', name: 'Spiced Wine', stats: '103.2тыс. / 146.1тыс.', price: '61,999.00', percent: '+51%' },
-      { emoji: '🍀', name: 'Clover Pin', stats: '228.6тыс. / 271.0тыс.', price: '129,999.00', percent: '+68%' },
-      { emoji: '⚗️', name: 'Hex Pot', stats: '55.7тыс. / 69.8тыс.', price: '38,999.00', percent: '+40%' },
-      { emoji: '📓⭐', name: 'Star Notepad', stats: '70.1тыс. / 99.1тыс.', price: '44,999.00', percent: '+42%' },
-      { emoji: '🍰', name: 'Mousse Cake', stats: '166.8тыс. / 230.5тыс.', price: '89,999.00', percent: '+60%' },
-      { emoji: '🎂', name: 'Homemade Cake', stats: '179.1тыс. / 199.5тыс.', price: '94,999.00', percent: '+61%' },
-      { emoji: '🤡', name: 'Jester Hat', stats: '136.8тыс. / 190.2тыс.', price: '79,999.00', percent: '+58%' },
-      { emoji: '💰', name: 'Money Pot', stats: '71.0тыс. / 91.8тыс.', price: '47,999.00', percent: '+43%' },
-      { emoji: '📱', name: 'Tama Gadget', stats: '103.9тыс. / 135.1тыс.', price: '62,999.00', percent: '+52%' },
-      { emoji: '🎁', name: 'Jack-in-the-Box', stats: '96.1тыс. / 97.3тыс.', price: '54,999.00', percent: '+46%' },
-      { emoji: '🧦', name: 'Fresh Socks', stats: '161.0тыс. / 200.5тыс.', price: '84,999.00', percent: '+59%' },
-      { emoji: '🍦', name: 'Ice Cream', stats: '325.3тыс. / 342.3тыс.', price: '159,999.00', percent: '+72%' },
-      { emoji: '🍫', name: 'Happy Brownie', stats: '219.8тыс. / 264.2тыс.', price: '119,999.00', percent: '+66%' },
-      { emoji: '🍪', name: 'Ginger Cookie', stats: '144.3тыс. / 188.9тыс.', price: '82,999.00', percent: '+57%' },
-      { emoji: '🎅', name: 'Santa Hat', stats: '69.0тыс. / 89.0тыс.', price: '44,999.00', percent: '+41%' },
-      { emoji: '🧁', name: 'Whip Cupcake', stats: '267.5тыс. / 367.6тыс.', price: '149,999.00', percent: '+70%' },
-      { emoji: '🎄', name: 'Winter Wreath', stats: '72.8тыс. / 100.8тыс.', price: '49,999.00', percent: '+44%' },
-      { emoji: '🍭', name: 'Hypno Lollipop', stats: '80.6тыс. / 116.6тыс.', price: '52,999.00', percent: '+48%' },
-      { emoji: '🍭', name: 'Lol Pop', stats: '432.9тыс. / 468.7тыс.', price: '219,999.00', percent: '+75%' },
-      { emoji: '🍹', name: 'Holiday Drink', stats: '84.7тыс. / 121.0тыс.', price: '55,999.00', percent: '+49%' },
-      { emoji: '📅', name: 'Big Year', stats: '75.1тыс. / 101.4тыс.', price: '49,999.00', percent: '+45%' },
-      { emoji: '🎉', name: 'Party Sparkler', stats: '180.0тыс. / 243.8тыс.', price: '99,999.00', percent: '+63%' },
-      { emoji: '🐍', name: 'Pet Snake', stats: '179.3тыс. / 279.1тыс.', price: '109,999.00', percent: '+64%' },
-      { emoji: '🐍', name: 'Lunar Snake', stats: '192.6тыс. / 259.3тыс.', price: '114,999.00', percent: '+65%' },
-      { emoji: '🎂', name: 'B-Day Candle', stats: '268.5тыс. / 307.5тыс.', price: '139,999.00', percent: '+68%' },
-      { emoji: '🍜', name: 'Instant Ramen', stats: '376.9тыс. / 457.4тыс.', price: '189,999.00', percent: '+73%' },
-      { emoji: '🧦', name: 'Xmas Stocking', stats: '213.4тыс. / 334.6тыс.', price: '129,999.00', percent: '+67%' },
-      { emoji: '🍬', name: 'Candy Cane', stats: '214.5тыс. / 320.6тыс.', price: '124,999.00', percent: '+66%' },
-      { emoji: '🐍📦', name: 'Snake Box', stats: '174.9тыс. / 273.9тыс.', price: '104,999.00', percent: '+62%' }
+    // ========== БАЗОВЫЕ ДАННЫЕ (только эмодзи, название, статистика) ==========
+    const baseGifts = [
+      { emoji: '🎁', name: 'Plush Pepe', stats: '2.8тыс. / 2.9тыс.' },
+      { emoji: '🎂', name: 'Heart Locket', stats: '1.9тыс. / 2.0тыс.' },
+      { emoji: '💐', name: 'Durov\'s Cap', stats: '4.7тыс. / 4.8тыс.' },
+      { emoji: '🧸', name: 'Precious Peach', stats: '3.0тыс. / 3.2тыс.' },
+      { emoji: '🍫', name: 'Heroic Helmet', stats: '3.4тыс. / 3.8тыс.' },
+      { emoji: '🎈', name: 'Astral Shard', stats: '5.7тыс. / 6.2тыс.' },
+      { emoji: '😿', name: 'Scared Cat', stats: '19.3тыс. / 19.3тыс.' },
+      { emoji: '💪', name: 'Mighty Arm', stats: '3.8тыс. / 4.1тыс.' },
+      { emoji: '🎒', name: 'Loot Bag', stats: '14.4тыс. / 14.5тыс.' },
+      { emoji: '💍', name: 'Nail Bracelet', stats: '4.7тыс. / 4.8тыс.' },
+      { emoji: '🤙', name: 'Westside Sign', stats: '11.5тыс. / 12.0тыс.' },
+      { emoji: '🧱', name: 'Artisan Brick', stats: '6.3тыс. / 6.9тыс.' },
+      { emoji: '🏆', name: 'Mini Oscar', stats: '4.9тыс. / 5.6тыс.' },
+      { emoji: '🧴', name: 'Perfume Bottle', stats: '4.4тыс. / 4.8тыс.' },
+      { emoji: '💎', name: 'Ion Gem', stats: '4.5тыс. / 4.7тыс.' },
+      { emoji: '🧪', name: 'Magic Potion', stats: '4.9тыс. / 4.9тыс.' },
+      { emoji: '💍', name: 'Gem Signet', stats: '6.2тыс. / 7.0тыс.' },
+      { emoji: '🐸', name: 'Kissed Frog', stats: '14.1тыс. / 14.3тыс.' },
+      { emoji: '🧞', name: 'Genie Lamp', stats: '6.5тыс. / 7.7тыс.' },
+      { emoji: '💍', name: 'Bonded Ring', stats: '7.8тыс. / 8.1тыс.' },
+      { emoji: '⌚', name: 'Swiss Watch', stats: '25.7тыс. / 29.3тыс.' },
+      { emoji: '🚗', name: 'Low Rider', stats: '23.4тыс. / 23.9тыс.' },
+      { emoji: '👅', name: 'Sharp Tongue', stats: '8.1тыс. / 8.5тыс.' },
+      { emoji: '🧸', name: 'Toy Bear', stats: '55.9тыс. / 57.7тыс.' },
+      { emoji: '🐱', name: 'Neko Helmet', stats: '15.5тыс. / 16.1тыс.' },
+      { emoji: '👶', name: 'Bling Binky', stats: '9.3тыс. / 10.0тыс.' },
+      { emoji: '💍', name: 'Signet Ring', stats: '16.8тыс. / 18.5тыс.' },
+      { emoji: '🚬', name: 'Vintage Cigar', stats: '26.4тыс. / 31.0тыс.' },
+      { emoji: '🪆', name: 'Voodoo Doll', stats: '26.8тыс. / 27.6тыс.' },
+      { emoji: '💀', name: 'Electric Skull', stats: '9.2тыс. / 9.4тыс.' },
+      { emoji: '🦅', name: 'Rare Bird', stats: '12.0тыс. / 15.0тыс.' },
+      { emoji: '💍', name: 'Diamond Ring', stats: '32.3тыс. / 32.9тыс.' },
+      { emoji: '🌹', name: 'Eternal Rose', stats: '31.1тыс. / 37.6тыс.' },
+      { emoji: '🎩', name: 'Khabib\'s Papakha', stats: '28.5тыс. / 29.0тыс.' },
+      { emoji: '🏹', name: 'Cupid Charm', stats: '30.0тыс. / 33.1тыс.' },
+      { emoji: '💨', name: 'Ionic Dryer', stats: '20.0тыс. / 25.7тыс.' },
+      { emoji: '🧪❤️', name: 'Love Potion', stats: '29.1тыс. / 30.4тыс.' },
+      { emoji: '👠', name: 'Sky Stilettos', stats: '50.8тыс. / 58.5тыс.' },
+      { emoji: '🥊', name: 'UFC Strike', stats: '58.4тыс. / 60.0тыс.' },
+      { emoji: '📀', name: 'Record Player', stats: '33.6тыс. / 46.9тыс.' },
+      { emoji: '💔', name: 'Trapped Heart', stats: '24.9тыс. / 26.4тыс.' },
+      { emoji: '🎃', name: 'Mad Pumpkin', stats: '19.5тыс. / 22.2тыс.' },
+      { emoji: '🧹', name: 'Flying Broom', stats: '24.7тыс. / 25.9тыс.' },
+      { emoji: '🚬', name: 'Snoop Cigar', stats: '117.3тыс. / 119.6тыс.' },
+      { emoji: '💀🌸', name: 'Skull Flower', stats: '21.8тыс. / 24.1тыс.' },
+      { emoji: '🔮', name: 'Crystal Ball', stats: '26.7тыс. / 27.7тыс.' },
+      { emoji: '🕯️', name: 'Love Candle', stats: '23.5тыс. / 30.3тыс.' },
+      { emoji: '📦❤️', name: 'Valentine Box', stats: '34.6тыс. / 41.0тыс.' },
+      { emoji: '🎩', name: 'Top Hat', stats: '34.3тыс. / 35.1тыс.' },
+      { emoji: '🌸', name: 'Sakura Flower', stats: '87.7тыс. / 93.1тыс.' },
+      { emoji: '🔔', name: 'Sleigh Bell', stats: '22.1тыс. / 28.0тыс.' },
+      { emoji: '🔔🔔', name: 'Jingle Bells', stats: '73.0тыс. / 110.0тыс.' },
+      { emoji: '⭐', name: 'Hanging Star', stats: '45.1тыс. / 58.1тыс.' },
+      { emoji: '🫐📦', name: 'Berry Box', stats: '51.0тыс. / 66.6тыс.' },
+      { emoji: '🐰', name: 'Jelly Bunny', stats: '103.6тыс. / 129.3тыс.' },
+      { emoji: '🎁', name: 'Joyful Bundle', stats: '80.2тыс. / 114.1тыс.' },
+      { emoji: '🧁🐰', name: 'Bunny Muffin', stats: '51.7тыс. / 66.7тыс.' },
+      { emoji: '👁️', name: 'Evil Eye', stats: '73.4тыс. / 85.2тыс.' },
+      { emoji: '🐵', name: 'Jolly Chimp', stats: '116.2тыс. / 132.2тыс.' },
+      { emoji: '🧤', name: 'Snow Mittens', stats: '38.9тыс. / 50.0тыс.' },
+      { emoji: '📅', name: 'Desk Calendar', stats: '289.5тыс. / 319.5тыс.' },
+      { emoji: '💐', name: 'Lush Bouquet', stats: '106.5тыс. / 140.1тыс.' },
+      { emoji: '🕯️', name: 'Eternal Candle', stats: '45.1тыс. / 46.6тыс.' },
+      { emoji: '🎀', name: 'Bow Tie', stats: '55.3тыс. / 65.7тыс.' },
+      { emoji: '⚔️', name: 'Light Sword', stats: '124.4тыс. / 131.2тыс.' },
+      { emoji: '🔑', name: 'Input Key', stats: '130.0тыс. / 159.8тыс.' },
+      { emoji: '🍄', name: 'Spy Agaric', stats: '86.7тыс. / 89.4тыс.' },
+      { emoji: '🧙', name: 'Witch Hat', stats: '82.4тыс. / 88.5тыс.' },
+      { emoji: '🧺', name: 'Spring Basket', stats: '176.0тыс. / 231.3тыс.' },
+      { emoji: '🥚', name: 'Easter Egg', stats: '162.6тыс. / 173.2тыс.' },
+      { emoji: '🫙', name: 'Restless Jar', stats: '100.7тыс. / 120.2тыс.' },
+      { emoji: '☃️', name: 'Snow Globe', stats: '52.9тыс. / 72.8тыс.' },
+      { emoji: '🍪❤️', name: 'Cookie Heart', stats: '189.7тыс. / 264.5тыс.' },
+      { emoji: '💐', name: 'Pretty Posy', stats: '122.0тыс. / 181.2тыс.' },
+      { emoji: '🌙', name: 'Moon Pendant', stats: '101.9тыс. / 111.1тыс.' },
+      { emoji: '🛍️', name: 'Swag Bag', stats: '231.5тыс. / 238.0тыс.' },
+      { emoji: '🐶', name: 'Snoop Dogg', stats: '580.5тыс. / 593.8тыс.' },
+      { emoji: '📿', name: 'Faith Amulet', stats: '137.4тыс. / 172.8тыс.' },
+      { emoji: '🏅', name: 'Victory Medal', stats: '97.0тыс. / 124.6тыс.' },
+      { emoji: '🚀', name: 'Stellar Rocket', stats: '136.3тыс. / 156.3тыс.' },
+      { emoji: '🍷', name: 'Spiced Wine', stats: '103.2тыс. / 146.1тыс.' },
+      { emoji: '🍀', name: 'Clover Pin', stats: '228.6тыс. / 271.0тыс.' },
+      { emoji: '⚗️', name: 'Hex Pot', stats: '55.7тыс. / 69.8тыс.' },
+      { emoji: '📓⭐', name: 'Star Notepad', stats: '70.1тыс. / 99.1тыс.' },
+      { emoji: '🍰', name: 'Mousse Cake', stats: '166.8тыс. / 230.5тыс.' },
+      { emoji: '🎂', name: 'Homemade Cake', stats: '179.1тыс. / 199.5тыс.' },
+      { emoji: '🤡', name: 'Jester Hat', stats: '136.8тыс. / 190.2тыс.' },
+      { emoji: '💰', name: 'Money Pot', stats: '71.0тыс. / 91.8тыс.' },
+      { emoji: '📱', name: 'Tama Gadget', stats: '103.9тыс. / 135.1тыс.' },
+      { emoji: '🎁', name: 'Jack-in-the-Box', stats: '96.1тыс. / 97.3тыс.' },
+      { emoji: '🧦', name: 'Fresh Socks', stats: '161.0тыс. / 200.5тыс.' },
+      { emoji: '🍦', name: 'Ice Cream', stats: '325.3тыс. / 342.3тыс.' },
+      { emoji: '🍫', name: 'Happy Brownie', stats: '219.8тыс. / 264.2тыс.' },
+      { emoji: '🍪', name: 'Ginger Cookie', stats: '144.3тыс. / 188.9тыс.' },
+      { emoji: '🎅', name: 'Santa Hat', stats: '69.0тыс. / 89.0тыс.' },
+      { emoji: '🧁', name: 'Whip Cupcake', stats: '267.5тыс. / 367.6тыс.' },
+      { emoji: '🎄', name: 'Winter Wreath', stats: '72.8тыс. / 100.8тыс.' },
+      { emoji: '🍭', name: 'Hypno Lollipop', stats: '80.6тыс. / 116.6тыс.' },
+      { emoji: '🍭', name: 'Lol Pop', stats: '432.9тыс. / 468.7тыс.' },
+      { emoji: '🍹', name: 'Holiday Drink', stats: '84.7тыс. / 121.0тыс.' },
+      { emoji: '📅', name: 'Big Year', stats: '75.1тыс. / 101.4тыс.' },
+      { emoji: '🎉', name: 'Party Sparkler', stats: '180.0тыс. / 243.8тыс.' },
+      { emoji: '🐍', name: 'Pet Snake', stats: '179.3тыс. / 279.1тыс.' },
+      { emoji: '🐍', name: 'Lunar Snake', stats: '192.6тыс. / 259.3тыс.' },
+      { emoji: '🎂', name: 'B-Day Candle', stats: '268.5тыс. / 307.5тыс.' },
+      { emoji: '🍜', name: 'Instant Ramen', stats: '376.9тыс. / 457.4тыс.' },
+      { emoji: '🧦', name: 'Xmas Stocking', stats: '213.4тыс. / 334.6тыс.' },
+      { emoji: '🍬', name: 'Candy Cane', stats: '214.5тыс. / 320.6тыс.' },
+      { emoji: '🐍📦', name: 'Snake Box', stats: '174.9тыс. / 273.9тыс.' }
     ];
 
-    // Текущие данные (начинаем со статики)
-    let allGiftsFull = staticGifts.map(g => ({ ...g })); // копия
+    // Текущие данные (будут заполнены из localStorage или API)
+    let allGiftsFull = [];
 
     // Предыдущие цены для расчёта процента изменения
     let previousPrices = {};
 
+    // Загружаем сохранённые данные из localStorage
+    const storedData = localStorage.getItem('giftData');
+    if (storedData) {
+      try {
+        allGiftsFull = JSON.parse(storedData);
+      } catch (e) {
+        console.warn('Ошибка парсинга giftData, начинаем с пустого массива');
+      }
+    }
+
+    const savedPrices = localStorage.getItem('previousPrices');
+    if (savedPrices) {
+      try {
+        previousPrices = JSON.parse(savedPrices);
+      } catch (e) {
+        console.warn('Ошибка парсинга previousPrices');
+      }
+    }
+
     // Функция для преобразования нанотон в число с двумя знаками и форматированием
     function nanotonToTon(nanoton) {
       const tons = (parseInt(nanoton) / 1e9).toFixed(2);
-      // Добавляем разделители тысяч
       return Number(tons).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
@@ -542,34 +583,38 @@
       console.log('⏳ Запрашиваем данные из API...');
       try {
         const response = await fetch('https://proxy.thermos.gifts/api/v1/collections');
-        console.log('📡 Ответ получен, статус:', response.status);
         if (!response.ok) throw new Error(`HTTP error ${response.status}`);
         const collections = await response.json();
-        console.log('✅ Данные от API:', collections);
+        console.log('✅ Данные от API получены');
 
-        // Обновляем allGiftsFull, оставляя stats из статики
-        const updatedGifts = staticGifts.map(staticGift => {
-          const found = collections.find(c => c.name === staticGift.name);
+        // Обновляем allGiftsFull, берём stats из baseGifts, цену и процент из API
+        const updatedGifts = baseGifts.map(base => {
+          const found = collections.find(c => c.name === base.name);
           if (found) {
             const priceTon = nanotonToTon(found.stats.floor);
-            const previousPrice = previousPrices[staticGift.name] || priceTon;
+            const previousPrice = previousPrices[base.name] || priceTon;
             const percent = calculatePercent(priceTon, previousPrice);
-            previousPrices[staticGift.name] = priceTon;
+            previousPrices[base.name] = priceTon;
             return {
-              ...staticGift,
+              ...base,
               price: priceTon,
               percent: percent
             };
           } else {
-            console.warn(`⚠️ Коллекция "${staticGift.name}" не найдена в API, оставляем статические данные`);
-            return { ...staticGift };
+            console.warn(`⚠️ Коллекция "${base.name}" не найдена в API, оставляем последние сохранённые данные`);
+            const existing = allGiftsFull.find(g => g.name === base.name);
+            if (existing) return existing;
+            return { ...base, price: '0.00', percent: '0%' };
           }
         });
+
         allGiftsFull = updatedGifts;
-        console.log('🔄 Обновлённые данные:', allGiftsFull);
-        // Перерисовываем текущую вкладку (если она не избранное и не сервисы)
+        localStorage.setItem('giftData', JSON.stringify(allGiftsFull));
+        localStorage.setItem('previousPrices', JSON.stringify(previousPrices));
+        console.log('🔄 Данные сохранены в localStorage');
+
+        // Перерисовываем текущую вкладку
         if (!favoriteContent.style.display || favoriteContent.style.display === 'none' && servicesContent.style.display === 'none') {
-          // Определяем, какая вкладка активна сейчас
           if (allGiftsBtn.classList.contains('active')) {
             renderGifts(allGiftsFull);
           } else if (growthBtn.classList.contains('active')) {
@@ -582,7 +627,6 @@
         }
       } catch (error) {
         console.error('❌ Ошибка загрузки данных:', error);
-        // В случае ошибки оставляем статические данные (уже есть)
       }
     }
 
@@ -599,11 +643,15 @@
 
     function renderGifts(giftsArray) {
       const container = document.getElementById('giftList');
+      if (!giftsArray || giftsArray.length === 0) {
+        container.innerHTML = '<div class="empty-message">Загрузка данных...</div>';
+        return;
+      }
       let html = '';
       giftsArray.forEach(gift => {
         const percentClass = getPercentClass(gift.percent);
         html += `
-          <div class="category-item">
+          <div class="category-item" data-name="${gift.name}">
             <div class="category-emoji">${gift.emoji}</div>
             <div class="category-info">
               <div class="category-name">${gift.name}</div>
@@ -611,9 +659,9 @@
             </div>
             <div class="gift-price">
               <span class="coin-icon">💎</span>
-              <span class="price">${gift.price}</span>
+              <span class="price">${gift.price || '0.00'}</span>
             </div>
-            <div class="gift-percent ${percentClass}">${gift.percent}</div>
+            <div class="gift-percent ${percentClass}">${gift.percent || '0%'}</div>
           </div>
         `;
       });
@@ -640,6 +688,8 @@
     const filterBtn = document.getElementById('filterBtn');
     const filterPanel = document.getElementById('filterPanel');
     const closeFilter = document.getElementById('closeFilter');
+    const graphOverlay = document.getElementById('graphOverlay');
+    const graphFrame = document.getElementById('graphFrame');
 
     function setTopVisibility(visible) {
       if (visible) {
@@ -670,8 +720,9 @@
       } else if (tab === 'favorite') {
         favoriteBtn.classList.add('active');
         favoriteContent.style.display = 'block';
-        const loveFrame = document.querySelector('#favoriteContent iframe');
-        if (loveFrame) loveFrame.contentWindow.location.reload();
+        // Данные в LOVE.html обновятся автоматически через событие storage, перезагрузка iframe не требуется
+        // const loveFrame = document.querySelector('#favoriteContent iframe');
+        // if (loveFrame) loveFrame.contentWindow.location.reload();
       } else if (tab === 'growth') {
         growthBtn.classList.add('active');
         giftList.style.display = 'block';
@@ -704,6 +755,43 @@
         console.log('Настройки');
       }
     }
+
+    // Обработчик клика на подарок
+    giftList.addEventListener('click', (e) => {
+      const item = e.target.closest('.category-item');
+      if (!item) return;
+      const giftName = item.dataset.name;
+      const gift = allGiftsFull.find(g => g.name === giftName);
+      if (!gift) return;
+      const params = new URLSearchParams({
+        name: gift.name,
+        emoji: gift.emoji,
+        stats: gift.stats,
+        price: gift.price,
+        percent: gift.percent
+      });
+      graphFrame.src = `Grafik.html?${params.toString()}`;
+      graphOverlay.classList.add('active');
+    });
+
+    // Обработчик сообщений от iframe
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'CLOSE_GRAPH') {
+        graphOverlay.classList.remove('active');
+        graphFrame.src = '';
+      } else if (event.data.type === 'OPEN_GRAPH') {
+        const gift = event.data.gift;
+        const params = new URLSearchParams({
+          name: gift.name,
+          emoji: gift.emoji,
+          stats: gift.stats,
+          price: gift.price,
+          percent: gift.percent
+        });
+        graphFrame.src = `Grafik.html?${params.toString()}`;
+        graphOverlay.classList.add('active');
+      }
+    });
 
     allGiftsBtn.addEventListener('click', () => setActiveMainTab('all'));
     favoriteBtn.addEventListener('click', () => setActiveMainTab('favorite'));
@@ -738,17 +826,11 @@
       if (e.target === filterPanel) filterPanel.classList.remove('active');
     });
 
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'CLOSE_FILTER_PANEL') {
-        filterPanel.classList.remove('active');
-      }
-    });
-
-    // Инициализация: рендерим статические данные, затем загружаем реальные
+    // Инициализация
     renderGifts(allGiftsFull);
     setActiveMainTab('all');
     fetchGiftData(); // первый запрос
-    setInterval(fetchGiftData, 600000); // каждые 10 минут
+    setInterval(fetchGiftData, 300000); // каждые 5 минут
   </script>
 </body>
 </html>

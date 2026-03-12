@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>График подарка</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #1a1a1a;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #fff;
+      height: 100vh;
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    .container {
+      padding: 20px 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 8px 0;
+    }
+
+    .back-button span {
+      font-size: 20px;
+    }
+
+    .right-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .action-btn.active {
+      color: #fff;
+    }
+
+    .gift-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 0;
+    }
+
+    .gift-emoji {
+      font-size: 32px;
+      width: 48px;
+      text-align: center;
+    }
+
+    .gift-details {
+      flex: 1;
+    }
+
+    .gift-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .gift-stats {
+      font-size: 14px;
+      color: #aaa;
+      font-weight: 400;
+    }
+
+    .gift-price-block {
+      text-align: right;
+    }
+
+    .gift-price {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .gift-percent {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .gift-percent.positive {
+      color: #4caf50;
+    }
+
+    .gift-percent.negative {
+      color: #ff5252;
+    }
+
+    .gift-percent.neutral {
+      color: #fff;
+    }
+
+    .control-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      background-color: #2a2a2a;
+      border-radius: 40px;
+      padding: 4px;
+    }
+
+    .currency-selector {
+      display: flex;
+      gap: 4px;
+    }
+
+    .currency-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .currency-btn.active {
+      background-color: #007aff;
+      color: #fff;
+    }
+
+    .chart-type-selector {
+      display: flex;
+      gap: 4px;
+    }
+
+    .chart-type-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 30px;
+      font-size: 18px;
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chart-type-btn.active {
+      background-color: #007aff;
+      color: #fff;
+    }
+
+    .chart-container {
+      background-color: #2a2a2a;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      height: 250px;
+      position: relative;
+    }
+
+    .timeframe-bar {
+      display: flex;
+      gap: 8px;
+      background-color: #2a2a2a;
+      border-radius: 30px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .timeframe-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      text-align: center;
+    }
+
+    .timeframe-btn.active {
+      background-color: #007aff;
+      color: #fff;
+    }
+
+    .error-message {
+      text-align: center;
+      color: #ff5252;
+      margin-top: 40px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Верхняя панель -->
+    <div class="top-bar">
+      <div class="back-button" id="backBtn">
+        <span>←</span> Назад
+      </div>
+      <div class="right-actions">
+        <button class="action-btn active" id="overviewBtn">Overview</button>
+        <button class="action-btn" id="modelsBtn">Models</button>
+      </div>
+    </div>
+
+    <!-- Информация о подарке (будет заполнена из URL) -->
+    <div class="gift-info" id="giftInfo"></div>
+
+    <!-- Панель выбора валюты и типа графика -->
+    <div class="control-panel">
+      <div class="currency-selector">
+        <button class="currency-btn active" data-currency="TON">💎TON</button>
+        <button class="currency-btn" data-currency="USDT">$USDT</button>
+        <button class="currency-btn" data-currency="RUB">₽RUB</button>
+      </div>
+      <div class="chart-type-selector">
+        <button class="chart-type-btn active" data-chart="line">📈</button>
+        <button class="chart-type-btn" data-chart="candle">📊</button>
+      </div>
+    </div>
+
+    <!-- Контейнер для графика -->
+    <div class="chart-container">
+      <canvas id="priceChart"></canvas>
+    </div>
+
+    <!-- Панель временных интервалов -->
+    <div class="timeframe-bar">
+      <button class="timeframe-btn active" data-timeframe="all">Все</button>
+      <button class="timeframe-btn" data-timeframe="1y">1 год</button>
+      <button class="timeframe-btn" data-timeframe="6m">6 мес</button>
+      <button class="timeframe-btn" data-timeframe="3m">3 мес</button>
+      <button class="timeframe-btn" data-timeframe="1m">1 мес</button>
+    </div>
+  </div>
+
+  <script>
+    // Получаем параметры из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const giftName = urlParams.get('name');
+    const giftEmoji = urlParams.get('emoji');
+    const giftStats = urlParams.get('stats');
+    const giftPrice = urlParams.get('price');
+    const giftPercent = urlParams.get('percent');
+
+    // Элементы
+    const giftInfoDiv = document.getElementById('giftInfo');
+    const backBtn = document.getElementById('backBtn');
+    const currencyBtns = document.querySelectorAll('.currency-btn');
+    const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
+    const timeframeBtns = document.querySelectorAll('.timeframe-btn');
+    const ctx = document.getElementById('priceChart').getContext('2d');
+
+    // Если нет данных, показываем ошибку
+    if (!giftName) {
+      giftInfoDiv.innerHTML = `<div class="error-message">Данные не переданы</div>`;
+    } else {
+      // Определяем класс для процента
+      let percentClass = 'neutral';
+      if (giftPercent && giftPercent.startsWith('+')) percentClass = 'positive';
+      else if (giftPercent && giftPercent.startsWith('-')) percentClass = 'negative';
+
+      giftInfoDiv.innerHTML = `
+        <div class="gift-emoji">${giftEmoji || '🎁'}</div>
+        <div class="gift-details">
+          <div class="gift-name">${giftName}</div>
+          <div class="gift-stats">${giftStats || '0тыс. / 0тыс.'}</div>
+        </div>
+        <div class="gift-price-block">
+          <div class="gift-price">
+            <span class="coin-icon">💎</span>${giftPrice || '0.00'}
+          </div>
+          <div class="gift-percent ${percentClass}">${giftPercent || '0%'}</div>
+        </div>
+      `;
+    }
+
+    // Функция для генерации случайных данных (имитация)
+    function generateChartData(points = 50, basePrice = parseFloat(giftPrice?.replace(/,/g, '') || 7000)) {
+      const data = [];
+      let price = basePrice;
+      for (let i = 0; i < points; i++) {
+        // Случайное изменение от -2% до +2%
+        const change = (Math.random() * 4 - 2) / 100;
+        price = price * (1 + change);
+        data.push(price);
+      }
+      return data;
+    }
+
+    // Создаём график
+    let chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array.from({ length: 50 }, (_, i) => i + 1),
+        datasets: [{
+          label: 'Цена (TON)',
+          data: generateChartData(50),
+          borderColor: '#007aff',
+          backgroundColor: 'rgba(0, 122, 255, 0.1)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.2,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
+        },
+        scales: {
+          x: { display: false },
+          y: { 
+            grid: { color: '#333' },
+            ticks: { color: '#aaa' }
+          }
+        }
+      }
+    });
+
+    // Функция обновления данных графика (каждые 10 минут)
+    function updateChartData() {
+      const newData = generateChartData(50, parseFloat(giftPrice?.replace(/,/g, '') || 7000));
+      chart.data.datasets[0].data = newData;
+      chart.update();
+    }
+
+    // Запускаем обновление каждые 10 минут (600000 мс)
+    setInterval(updateChartData, 600000);
+
+    // Обработчик кнопки "Назад"
+    backBtn.addEventListener('click', () => {
+      window.parent.postMessage({ type: 'CLOSE_GRAPH' }, '*');
+    });
+
+    // Переключение валют (пока только изменение цвета)
+    currencyBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        currencyBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // Здесь можно будет менять данные графика под выбранную валюту
+      });
+    });
+
+    // Переключение типа графика
+    chartTypeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        chartTypeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const chartType = btn.dataset.chart;
+        if (chartType === 'line') {
+          chart.config.type = 'line';
+          chart.update();
+        } else if (chartType === 'candle') {
+          // Свечной график пока не реализован, показываем заглушку
+          alert('Свечной график будет добавлен позже');
+          // Возвращаем активность обратно на линейный
+          document.querySelector('[data-chart="line"]').classList.add('active');
+          btn.classList.remove('active');
+        }
+      });
+    });
+
+    // Переключение временных интервалов
+    timeframeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        timeframeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // Здесь можно менять количество точек данных
+        const points = 50; // по умолчанию
+        // В реальности нужно подгружать данные за выбранный период
+        chart.data.datasets[0].data = generateChartData(points, parseFloat(giftPrice?.replace(/,/g, '') || 7000));
+        chart.update();
+      });
+    });
+  </script>
+</body>
+</html>
