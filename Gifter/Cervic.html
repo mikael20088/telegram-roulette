@@ -8,282 +8,90 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      background-color: #1a1a1a;
-      font-family: 'Inter', Arial, sans-serif;
-      color: #fff;
-      height: 100%;
-      overflow-y: auto;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    body::-webkit-scrollbar {
-      display: none;
-    }
-
-    .container {
-      padding: 20px 16px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .title {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 24px;
-      color: #fff;
-    }
-
-    .analytics-header {
-      background-color: #2a2a2a;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
-    .analytics-header .text {
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .feature-card {
-      background-color: #2a2a2a;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 12px;
-      transition: background 0.2s;
-      cursor: pointer;
-    }
-
-    .feature-card:hover {
-      background-color: #3a3a3a;
-    }
-
-    .feature-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    .feature-subtitle {
-      font-size: 13px;
-      color: #aaa;
-      font-weight: 400;
-      line-height: 1.4;
-    }
-
-    .indices-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-      margin: 24px 0 16px 0;
-    }
-
-    .squares-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .square-card {
-      flex: 1;
-      background-color: #2a2a2a;
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .square-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 14px;
-      font-weight: 500;
-      color: #aaa;
-    }
-
-    .arrow-right {
-      color: #007aff;
-      font-size: 16px;
-      margin-left: 4px;
-    }
-
-    .value {
-      font-size: 16px;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      line-height: 1.3;
-      flex-wrap: wrap;
-      word-break: break-word;
-    }
-
-    .value .icon {
-      font-size: 16px;
-      margin-right: 2px;
-    }
-
-    .sub-value {
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    .change {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 13px;
-      font-weight: 600;
-      flex-wrap: wrap;
-    }
-
-    .change.positive {
-      color: #4caf50;
-    }
-
-    .change.negative {
-      color: #ff5252;
-    }
-
-    .green-arrow {
-      font-size: 13px;
-      color: #4caf50;
-    }
-
-    .red-arrow {
-      font-size: 13px;
-      color: #ff5252;
-    }
-
-    .coin-icon, .user-icon {
-      font-size: 14px;
-      margin-right: 2px;
-    }
-
-    .last-element {
-      margin-bottom: 30px;
-    }
+    /* Стили без изменений (как в предыдущей версии) */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #1a1a1a; font-family: 'Inter', sans-serif; color: #fff; height: 100%; overflow-y: auto; scrollbar-width: none; }
+    body::-webkit-scrollbar { display: none; }
+    .container { padding: 20px 16px; max-width: 600px; margin: 0 auto; }
+    .title { font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #fff; }
+    .analytics-header { background-color: #2a2a2a; border-radius: 16px; padding: 16px; margin-bottom: 16px; text-align: center; }
+    .analytics-header .text { font-size: 18px; font-weight: 600; color: #fff; }
+    .feature-card { background-color: #2a2a2a; border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: background 0.2s; cursor: pointer; }
+    .feature-card:hover { background-color: #3a3a3a; }
+    .feature-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .feature-subtitle { font-size: 13px; color: #aaa; font-weight: 400; line-height: 1.4; }
+    .indices-title { font-size: 18px; font-weight: 600; color: #fff; margin: 24px 0 16px 0; }
+    .squares-row { display: flex; gap: 12px; margin-bottom: 20px; }
+    .square-card { flex: 1; background-color: #2a2a2a; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: background 0.2s; }
+    .square-card:hover { background-color: #3a3a3a; }
+    .square-header { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; color: #aaa; }
+    .arrow-right { color: #007aff; font-size: 16px; margin-left: 4px; }
+    .value { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 4px; line-height: 1.3; flex-wrap: wrap; word-break: break-word; }
+    .value .icon { font-size: 16px; margin-right: 2px; }
+    .sub-value { font-size: 14px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .change { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; flex-wrap: wrap; }
+    .change.positive { color: #4caf50; }
+    .change.negative { color: #ff5252; }
+    .green-arrow { font-size: 13px; color: #4caf50; }
+    .red-arrow { font-size: 13px; color: #ff5252; }
+    .coin-icon, .user-icon { font-size: 14px; margin-right: 2px; }
+    .last-element { margin-bottom: 30px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Заголовок страницы -->
     <div class="title">Сервисы</div>
+    <div class="analytics-header"><span class="text">Инструменты аналитики</span></div>
 
-    <!-- Прямоугольник "Инструменты аналитики" -->
-    <div class="analytics-header">
-      <span class="text">Инструменты аналитики</span>
-    </div>
-
-    <!-- Карточка "Тепловая карта" (кликабельная) -->
     <div class="feature-card" id="heatmapCard">
       <div class="feature-title">Тепловая карта</div>
       <div class="feature-subtitle">Состояние всего рынка в одном изображении.</div>
     </div>
 
-    <!-- Карточка "Сравнение графиков" (кликабельная) -->
     <div class="feature-card" id="compareCard">
       <div class="feature-title">Сравнение графиков</div>
       <div class="feature-subtitle">Сравнение графиков до 3 подарков.</div>
     </div>
 
-    <!-- Заголовок "Индексы" -->
     <div class="indices-title">Индексы</div>
 
-    <!-- Первая пара квадратов: Market Cap и Trading Volume -->
+    <!-- Первая пара -->
     <div class="squares-row">
       <div class="square-card" id="marketCapCard">
-        <div class="square-header">
-          Market Cap
-          <span class="arrow-right">→</span>
-        </div>
-        <div class="value" id="marketCapValue">
-          <span class="coin-icon">💎</span>0
-        </div>
-        <div class="change" id="marketCapChange">
-          <span class="green-arrow">↑</span> 0%
-        </div>
+        <div class="square-header">Market Cap<span class="arrow-right">→</span></div>
+        <div class="value" id="marketCapValue"><span class="coin-icon">💎</span>0</div>
+        <div class="change" id="marketCapChange"><span class="green-arrow">↑</span> 0%</div>
       </div>
-      <div class="square-card">
-        <div class="square-header">
-          Trading Volume
-          <span class="arrow-right">→</span>
-        </div>
-        <div class="value">
-          <span class="coin-icon">💎</span>109,672.78
-        </div>
-        <div class="change positive">
-          <span class="green-arrow">↑</span> 35%
-        </div>
+      <div class="square-card" id="tradingVolumeCard">
+        <div class="square-header">Trading Volume<span class="arrow-right">→</span></div>
+        <div class="value" id="tradingVolumeValue"><span class="coin-icon">💎</span>109,672.78</div>
+        <div class="change positive" id="tradingVolumeChange"><span class="green-arrow">↑</span> 35%</div>
       </div>
     </div>
 
-    <!-- Вторая пара квадратов: Total Supply и FDV -->
+    <!-- Вторая пара -->
     <div class="squares-row">
-      <div class="square-card">
-        <div class="square-header">
-          Total Supply
-          <span class="arrow-right">→</span>
-        </div>
-        <div class="value">
-          <span class="icon">🎁</span>9,707,578
-        </div>
-        <div class="change positive">
-          <span class="green-arrow">↑</span> 6%
-        </div>
+      <div class="square-card" id="totalSupplyCard">
+        <div class="square-header">Total Supply<span class="arrow-right">→</span></div>
+        <div class="value" id="totalSupplyValue"><span class="icon">🎁</span>9,707,578</div>
+        <div class="change positive" id="totalSupplyChange"><span class="green-arrow">↑</span> 6%</div>
       </div>
       <div class="square-card" id="fdvCard">
-        <div class="square-header">
-          FDV
-          <span class="arrow-right">→</span>
-        </div>
-        <div class="value" id="fdvValue">
-          <span class="coin-icon">💎</span>0
-        </div>
-        <div class="change" id="fdvChange">
-          <span class="green-arrow">↑</span> 0%
-        </div>
+        <div class="square-header">FDV<span class="arrow-right">→</span></div>
+        <div class="value" id="fdvValue"><span class="coin-icon">💎</span>0</div>
+        <div class="change" id="fdvChange"><span class="green-arrow">↑</span> 0%</div>
       </div>
     </div>
 
-    <!-- Третья пара квадратов: Уникальные холдеры и TOP 10 NFT World -->
+    <!-- Третья пара -->
     <div class="squares-row">
-      <div class="square-card">
-        <div class="square-header">
-          Уникальные холдеры
-          <span class="arrow-right">→</span>
-        </div>
-        <div class="value">
-          <span class="icon">👤</span>2 856 678
-        </div>
-        <div class="change positive">
-          <span class="green-arrow">↑</span> +5000 (+4%)
-        </div>
+      <div class="square-card" id="holdersCard">
+        <div class="square-header">Уникальные холдеры<span class="arrow-right">→</span></div>
+        <div class="value" id="holdersValue"><span class="icon">👤</span>2 856 678</div>
+        <div class="change positive" id="holdersChange"><span class="green-arrow">↑</span> +5000 (+4%)</div>
       </div>
-      <div class="square-card">
-        <div class="square-header">
-          TOP 10 NFT World
-          <span class="arrow-right">→</span>
-        </div>
+      <div class="square-card" id="top10Card">
+        <div class="square-header">TOP 10 NFT World<span class="arrow-right">→</span></div>
         <div class="value" style="flex-direction: column; align-items: flex-start; gap: 4px;">
           <span style="display: flex; align-items: center; gap: 4px;"><span class="coin-icon">💎</span>Plush Pepe</span>
           <span style="display: flex; align-items: center; gap: 4px;"><span class="coin-icon">💎</span>Number 1</span>
@@ -291,13 +99,12 @@
       </div>
     </div>
 
-    <!-- Дополнительный отступ для скролла -->
     <div class="last-element"></div>
   </div>
 
   <script>
     (function() {
-      // ================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (для индексов) ==================
+      // Функции для расчёта индексов (как в предыдущей версии)
       function parseStats(statsStr) {
         if (!statsStr) return { supply: 0, maxSupply: 0 };
         const parts = statsStr.split('/').map(s => s.trim());
@@ -419,31 +226,45 @@
         }
       }
 
-      // ================== ОСНОВНОЙ КОД ==================
+      // ================== ОБРАБОТЧИКИ КЛИКОВ НА КВАДРАТЫ ==================
+      const marketCapCard = document.getElementById('marketCapCard');
+      const tradingVolumeCard = document.getElementById('tradingVolumeCard');
+      const totalSupplyCard = document.getElementById('totalSupplyCard');
+      const fdvCard = document.getElementById('fdvCard');
+      const holdersCard = document.getElementById('holdersCard');
+      const top10Card = document.getElementById('top10Card');
+
+      function openIndexGraph(indexType) {
+        window.parent.postMessage({ type: 'OPEN_INDEX_GRAPH', index: indexType }, '*');
+      }
+
+      marketCapCard.addEventListener('click', () => openIndexGraph('marketcap'));
+      tradingVolumeCard.addEventListener('click', () => openIndexGraph('tradingvolume'));
+      totalSupplyCard.addEventListener('click', () => openIndexGraph('totalsupply'));
+      fdvCard.addEventListener('click', () => openIndexGraph('fdv'));
+      holdersCard.addEventListener('click', () => openIndexGraph('holders'));
+      top10Card.addEventListener('click', () => openIndexGraph('top10'));
+
+      // ================== ОСТАЛЬНОЙ КОД ==================
       const heatmapCard = document.getElementById('heatmapCard');
       const compareCard = document.getElementById('compareCard');
 
-      // При клике на "Тепловая карта" отправляем сообщение родителю
       heatmapCard.addEventListener('click', () => {
         window.parent.postMessage({ type: 'OPEN_HEATMAP' }, '*');
       });
 
-      // При клике на "Сравнение графиков" отправляем сообщение родителю
       compareCard.addEventListener('click', () => {
         window.parent.postMessage({ type: 'OPEN_COMPARISON' }, '*');
       });
 
-      // Обновляем индексы при загрузке
       updateIndices();
 
-      // Слушаем изменения localStorage (для обновления индексов на этой странице)
       window.addEventListener('storage', (event) => {
         if (event.key === 'giftData' || event.key === PREV_MARKET_CAP_KEY || event.key === PREV_FDV_KEY) {
           updateIndices();
         }
       });
 
-      // Периодическое обновление каждые 5 минут
       setInterval(updateIndices, 300000);
     })();
   </script>

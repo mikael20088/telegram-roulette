@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
+    /* Все стили без изменений (полностью из вашего кода) */
     * {
       margin: 0;
       padding: 0;
@@ -418,7 +419,7 @@
     <iframe src="Filter.html"></iframe>
   </div>
 
-  <!-- Оверлей для графика и тепловой карты -->
+  <!-- Оверлей для графиков и других страниц -->
   <div class="fullscreen-overlay" id="graphOverlay">
     <iframe id="graphFrame" src=""></iframe>
   </div>
@@ -779,6 +780,10 @@
       const giftName = item.dataset.name;
       const gift = allGiftsFull.find(g => g.name === giftName);
       if (!gift) return;
+
+      // Очищаем данные сравнения, чтобы открылся обычный график
+      sessionStorage.removeItem('comparisonGifts');
+
       const params = new URLSearchParams({
         name: gift.name,
         emoji: gift.emoji,
@@ -790,7 +795,7 @@
       graphOverlay.classList.add('active');
     });
 
-    // ========== ОБРАБОТЧИК СООБЩЕНИЙ (ПОЛНЫЙ) ==========
+    // ========== ОБРАБОТЧИК СООБЩЕНИЙ ==========
     window.addEventListener('message', (event) => {
       // Закрытие любого оверлея
       if (event.data.type === 'CLOSE_GRAPH' || event.data.type === 'CLOSE_HEATMAP' || event.data.type === 'CLOSE_COMPARISON') {
@@ -799,6 +804,7 @@
       }
       // Открыть график одного подарка
       else if (event.data.type === 'OPEN_GRAPH') {
+        sessionStorage.removeItem('comparisonGifts');
         const gift = event.data.gift;
         const params = new URLSearchParams({
           name: gift.name,
@@ -824,7 +830,18 @@
       else if (event.data.type === 'OPEN_COMPARISON_GRAPH') {
         const gifts = event.data.gifts;
         sessionStorage.setItem('comparisonGifts', JSON.stringify(gifts));
-        graphFrame.src = 'Grafik.html'; // загружаем тот же Grafik.html, он сам определит режим
+        graphFrame.src = 'Grafik.html';
+        graphOverlay.classList.add('active');
+      }
+      // Открыть график для индекса (Market Cap, FDV и т.д.)
+      else if (event.data.type === 'OPEN_INDEX_GRAPH') {
+        const { indexType, value, change } = event.data;
+        const params = new URLSearchParams({
+          index: indexType,
+          value: value,
+          change: change
+        });
+        graphFrame.src = `Grafik.html?${params.toString()}`;
         graphOverlay.classList.add('active');
       }
     });
