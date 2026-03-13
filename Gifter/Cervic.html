@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
-    /* Полностью копируем стили из предыдущей версии Cervic.html */
     * {
       margin: 0;
       padding: 0;
@@ -201,8 +200,8 @@
       <div class="feature-subtitle">Состояние всего рынка в одном изображении.</div>
     </div>
 
-    <!-- Карточка "Сравнение графиков" -->
-    <div class="feature-card">
+    <!-- Карточка "Сравнение графиков" (кликабельная) -->
+    <div class="feature-card" id="compareCard">
       <div class="feature-title">Сравнение графиков</div>
       <div class="feature-subtitle">Сравнение графиков до 3 подарков.</div>
     </div>
@@ -422,10 +421,16 @@
 
       // ================== ОСНОВНОЙ КОД ==================
       const heatmapCard = document.getElementById('heatmapCard');
+      const compareCard = document.getElementById('compareCard');
 
       // При клике на "Тепловая карта" отправляем сообщение родителю
       heatmapCard.addEventListener('click', () => {
         window.parent.postMessage({ type: 'OPEN_HEATMAP' }, '*');
+      });
+
+      // При клике на "Сравнение графиков" отправляем сообщение родителю
+      compareCard.addEventListener('click', () => {
+        window.parent.postMessage({ type: 'OPEN_COMPARISON' }, '*');
       });
 
       // Обновляем индексы при загрузке

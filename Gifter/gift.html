@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
-    /* Все стили без изменений (полностью из вашего кода) */
     * {
       margin: 0;
       padding: 0;
@@ -791,15 +790,14 @@
       graphOverlay.classList.add('active');
     });
 
-    // ========== ИЗМЕНЕНИЯ ЗДЕСЬ ==========
-    // Обработчик сообщений от iframe
+    // ========== ОБРАБОТЧИК СООБЩЕНИЙ (ПОЛНЫЙ) ==========
     window.addEventListener('message', (event) => {
-      // Закрытие оверлея (как для графика, так и для тепловой карты)
-      if (event.data.type === 'CLOSE_GRAPH' || event.data.type === 'CLOSE_HEATMAP') {
+      // Закрытие любого оверлея
+      if (event.data.type === 'CLOSE_GRAPH' || event.data.type === 'CLOSE_HEATMAP' || event.data.type === 'CLOSE_COMPARISON') {
         graphOverlay.classList.remove('active');
         graphFrame.src = '';
       }
-      // Открыть график конкретного подарка
+      // Открыть график одного подарка
       else if (event.data.type === 'OPEN_GRAPH') {
         const gift = event.data.gift;
         const params = new URLSearchParams({
@@ -815,6 +813,18 @@
       // Открыть тепловую карту
       else if (event.data.type === 'OPEN_HEATMAP') {
         graphFrame.src = 'Heatmap.html';
+        graphOverlay.classList.add('active');
+      }
+      // Открыть страницу выбора подарков для сравнения
+      else if (event.data.type === 'OPEN_COMPARISON') {
+        graphFrame.src = 'cravnenie.html';
+        graphOverlay.classList.add('active');
+      }
+      // Открыть график сравнения (после выбора)
+      else if (event.data.type === 'OPEN_COMPARISON_GRAPH') {
+        const gifts = event.data.gifts;
+        sessionStorage.setItem('comparisonGifts', JSON.stringify(gifts));
+        graphFrame.src = 'Grafik.html'; // загружаем тот же Grafik.html, он сам определит режим
         graphOverlay.classList.add('active');
       }
     });

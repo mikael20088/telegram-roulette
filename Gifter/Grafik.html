@@ -7,259 +7,66 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #1a1a1a; font-family: 'Inter', sans-serif; color: #fff; height: 100vh; overflow-y: auto; scrollbar-width: none; }
+    body::-webkit-scrollbar { display: none; }
+    .container { padding: 20px 16px; max-width: 600px; margin: 0 auto; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .back-button { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 500; color: #fff; cursor: pointer; background: none; border: none; padding: 8px 0; }
+    .back-button span { font-size: 20px; }
+    .right-actions { display: flex; gap: 16px; }
+    .action-btn { background: none; border: none; color: #aaa; font-size: 16px; font-weight: 500; cursor: pointer; }
+    .action-btn.active { color: #fff; }
 
-    body {
-      background-color: #1a1a1a;
-      font-family: 'Inter', Arial, sans-serif;
-      color: #fff;
-      height: 100vh;
-      overflow-y: auto;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
+    .gift-info { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .gift-emoji { font-size: 32px; width: 48px; text-align: center; }
+    .gift-details { flex: 1; }
+    .gift-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .gift-stats { font-size: 14px; color: #aaa; }
+    .gift-price-block { text-align: right; }
+    .gift-price { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .gift-percent { font-size: 16px; font-weight: 600; margin-top: 2px; }
+    .gift-percent.positive { color: #4caf50; }
+    .gift-percent.negative { color: #ff5252; }
 
-    body::-webkit-scrollbar {
-      display: none;
-    }
+    .comparison-info { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .comparison-gift-row { display: flex; align-items: center; gap: 12px; background-color: #2a2a2a; border-radius: 12px; padding: 8px 12px; }
+    .color-dot { width: 16px; height: 16px; border-radius: 4px; }
+    .color-blue { background-color: #007AFF; }
+    .color-orange { background-color: #FF9F0A; }
+    .color-purple { background-color: #BF5AF2; }
+    .gift-mini-emoji { font-size: 24px; }
+    .gift-mini-name { flex: 1; font-size: 16px; font-weight: 500; color: #fff; }
+    .gift-mini-price { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
 
-    .container {
-      padding: 20px 16px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
+    .control-panel { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background-color: #2a2a2a; border-radius: 40px; padding: 4px; }
+    .currency-selector, .chart-type-selector { display: flex; gap: 4px; }
+    .currency-btn, .chart-type-btn { background: transparent; border: none; padding: 8px 16px; border-radius: 30px; font-size: 14px; font-weight: 500; color: #aaa; cursor: pointer; }
+    .currency-btn.active, .chart-type-btn.active { background-color: #007aff; color: #fff; }
+    .chart-type-btn { padding: 8px 12px; font-size: 18px; }
 
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
+    .chart-container { background-color: #2a2a2a; border-radius: 16px; padding: 16px; margin-bottom: 20px; height: 250px; position: relative; }
+    .timeframe-bar { display: flex; gap: 8px; background-color: #2a2a2a; border-radius: 30px; padding: 4px; margin-bottom: 20px; }
+    .timeframe-btn { background: transparent; border: none; padding: 8px 16px; border-radius: 30px; font-size: 14px; font-weight: 500; color: #aaa; cursor: pointer; flex: 1; text-align: center; }
+    .timeframe-btn.active { background-color: #007aff; color: #fff; }
 
-    .back-button {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 16px;
-      font-weight: 500;
-      color: #fff;
-      cursor: pointer;
-      background: none;
-      border: none;
-      padding: 8px 0;
-    }
-
-    .back-button span {
-      font-size: 20px;
-    }
-
-    .right-actions {
-      display: flex;
-      gap: 16px;
-    }
-
-    .action-btn {
-      background: none;
-      border: none;
-      color: #aaa;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .action-btn.active {
-      color: #fff;
-    }
-
-    .gift-info {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-      padding: 0;
-    }
-
-    .gift-emoji {
-      font-size: 32px;
-      width: 48px;
-      text-align: center;
-    }
-
-    .gift-details {
-      flex: 1;
-    }
-
-    .gift-name {
-      font-size: 20px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    .gift-stats {
-      font-size: 14px;
-      color: #aaa;
-      font-weight: 400;
-    }
-
-    .gift-price-block {
-      text-align: right;
-    }
-
-    .gift-price {
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-
-    .gift-percent {
-      font-size: 16px;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-
-    .gift-percent.positive {
-      color: #4caf50;
-    }
-
-    .gift-percent.negative {
-      color: #ff5252;
-    }
-
-    .gift-percent.neutral {
-      color: #fff;
-    }
-
-    .control-panel {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      background-color: #2a2a2a;
-      border-radius: 40px;
-      padding: 4px;
-    }
-
-    .currency-selector {
-      display: flex;
-      gap: 4px;
-    }
-
-    .currency-btn {
-      background: transparent;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #aaa;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .currency-btn.active {
-      background-color: #007aff;
-      color: #fff;
-    }
-
-    .chart-type-selector {
-      display: flex;
-      gap: 4px;
-    }
-
-    .chart-type-btn {
-      background: transparent;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 30px;
-      font-size: 18px;
-      color: #aaa;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .chart-type-btn.active {
-      background-color: #007aff;
-      color: #fff;
-    }
-
-    .chart-container {
-      background-color: #2a2a2a;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 20px;
-      height: 250px;
-      position: relative;
-    }
-
-    .timeframe-bar {
-      display: flex;
-      gap: 8px;
-      background-color: #2a2a2a;
-      border-radius: 30px;
-      padding: 4px;
-      margin-bottom: 20px;
-    }
-
-    .timeframe-btn {
-      background: transparent;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #aaa;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex: 1;
-      text-align: center;
-    }
-
-    .timeframe-btn.active {
-      background-color: #007aff;
-      color: #fff;
-    }
-
-    .error-message {
-      text-align: center;
-      color: #ff5252;
-      margin-top: 40px;
-      font-size: 16px;
-    }
+    .error-message { text-align: center; color: #ff5252; margin-top: 40px; font-size: 16px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Верхняя панель -->
     <div class="top-bar">
-      <div class="back-button" id="backBtn">
-        <span>←</span> Назад
-      </div>
+      <div class="back-button" id="backBtn"><span>←</span> Назад</div>
       <div class="right-actions">
         <button class="action-btn active" id="overviewBtn">Overview</button>
         <button class="action-btn" id="modelsBtn">Models</button>
       </div>
     </div>
 
-    <!-- Информация о подарке (будет заполнена из URL) -->
-    <div class="gift-info" id="giftInfo"></div>
+    <div id="giftInfoContainer"></div>
 
-    <!-- Панель выбора валюты и типа графика -->
     <div class="control-panel">
       <div class="currency-selector">
         <button class="currency-btn active" data-currency="TON">💎TON</button>
@@ -272,12 +79,10 @@
       </div>
     </div>
 
-    <!-- Контейнер для графика -->
     <div class="chart-container">
       <canvas id="priceChart"></canvas>
     </div>
 
-    <!-- Панель временных интервалов -->
     <div class="timeframe-bar">
       <button class="timeframe-btn active" data-timeframe="all">Все</button>
       <button class="timeframe-btn" data-timeframe="1y">1 год</button>
@@ -288,7 +93,6 @@
   </div>
 
   <script>
-    // Получаем параметры из URL
     const urlParams = new URLSearchParams(window.location.search);
     const giftName = urlParams.get('name');
     const giftEmoji = urlParams.get('emoji');
@@ -296,44 +100,25 @@
     const giftPrice = urlParams.get('price');
     const giftPercent = urlParams.get('percent');
 
-    // Элементы
-    const giftInfoDiv = document.getElementById('giftInfo');
+    const comparisonData = sessionStorage.getItem('comparisonGifts');
+    let comparisonGifts = null;
+    if (comparisonData) {
+      try { comparisonGifts = JSON.parse(comparisonData); } catch (e) {}
+    }
+
+    const isComparisonMode = comparisonGifts && Array.isArray(comparisonGifts) && comparisonGifts.length > 0;
+
+    const giftInfoContainer = document.getElementById('giftInfoContainer');
     const backBtn = document.getElementById('backBtn');
     const currencyBtns = document.querySelectorAll('.currency-btn');
     const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
     const timeframeBtns = document.querySelectorAll('.timeframe-btn');
     const ctx = document.getElementById('priceChart').getContext('2d');
 
-    // Если нет данных, показываем ошибку
-    if (!giftName) {
-      giftInfoDiv.innerHTML = `<div class="error-message">Данные не переданы</div>`;
-    } else {
-      // Определяем класс для процента
-      let percentClass = 'neutral';
-      if (giftPercent && giftPercent.startsWith('+')) percentClass = 'positive';
-      else if (giftPercent && giftPercent.startsWith('-')) percentClass = 'negative';
-
-      giftInfoDiv.innerHTML = `
-        <div class="gift-emoji">${giftEmoji || '🎁'}</div>
-        <div class="gift-details">
-          <div class="gift-name">${giftName}</div>
-          <div class="gift-stats">${giftStats || '0тыс. / 0тыс.'}</div>
-        </div>
-        <div class="gift-price-block">
-          <div class="gift-price">
-            <span class="coin-icon">💎</span>${giftPrice || '0.00'}
-          </div>
-          <div class="gift-percent ${percentClass}">${giftPercent || '0%'}</div>
-        </div>
-      `;
-    }
-
-    // Функция для генерации случайных данных (имитация)
-    function generateChartData(points = 50, basePrice = parseFloat(giftPrice?.replace(/,/g, '') || 7000)) {
+    function generateChartData(points = 50, basePrice = 7000) {
       const data = [];
       let price = basePrice;
       for (let i = 0; i < points; i++) {
-        // Случайное изменение от -2% до +2%
         const change = (Math.random() * 4 - 2) / 100;
         price = price * (1 + change);
         data.push(price);
@@ -341,93 +126,202 @@
       return data;
     }
 
+    function parsePrice(priceStr) {
+      if (!priceStr) return 7000;
+      return parseFloat(priceStr.replace(/,/g, '')) || 7000;
+    }
+
+    // Рендерим информацию
+    if (isComparisonMode) {
+      let html = '<div class="comparison-info">';
+      const colors = ['color-blue', 'color-orange', 'color-purple'];
+      comparisonGifts.forEach((gift, index) => {
+        const price = gift.price || '0.00';
+        const percent = gift.percent || '0%';
+        let percentClass = 'neutral';
+        if (percent.startsWith('+')) percentClass = 'positive';
+        else if (percent.startsWith('-')) percentClass = 'negative';
+        html += `
+          <div class="comparison-gift-row">
+            <span class="color-dot ${colors[index % colors.length]}"></span>
+            <span class="gift-mini-emoji">${gift.emoji || '🎁'}</span>
+            <span class="gift-mini-name">${gift.name}</span>
+            <span class="gift-mini-price"><span class="coin-icon">💎</span>${price}</span>
+            <span class="gift-percent ${percentClass}">${percent}</span>
+          </div>
+        `;
+      });
+      html += '</div>';
+      giftInfoContainer.innerHTML = html;
+    } else {
+      if (!giftName) {
+        giftInfoContainer.innerHTML = `<div class="error-message">Данные не переданы</div>`;
+      } else {
+        let percentClass = 'neutral';
+        if (giftPercent && giftPercent.startsWith('+')) percentClass = 'positive';
+        else if (giftPercent && giftPercent.startsWith('-')) percentClass = 'negative';
+        giftInfoContainer.innerHTML = `
+          <div class="gift-info">
+            <div class="gift-emoji">${giftEmoji || '🎁'}</div>
+            <div class="gift-details">
+              <div class="gift-name">${giftName}</div>
+              <div class="gift-stats">${giftStats || '0тыс. / 0тыс.'}</div>
+            </div>
+            <div class="gift-price-block">
+              <div class="gift-price"><span class="coin-icon">💎</span>${giftPrice || '0.00'}</div>
+              <div class="gift-percent ${percentClass}">${giftPercent || '0%'}</div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
     // Создаём график
-    let chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: Array.from({ length: 50 }, (_, i) => i + 1),
-        datasets: [{
-          label: 'Цена (TON)',
-          data: generateChartData(50),
-          borderColor: '#007aff',
-          backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    let chart;
+    const points = 50;
+
+    if (isComparisonMode) {
+      const datasets = [];
+      const colors = ['#007AFF', '#FF9F0A', '#BF5AF2'];
+      comparisonGifts.forEach((gift, index) => {
+        const basePrice = parsePrice(gift.price);
+        datasets.push({
+          label: gift.name,
+          data: generateChartData(points, basePrice),
+          borderColor: colors[index % colors.length],
+          backgroundColor: 'transparent',
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.2,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: true }
+          fill: false
+        });
+      });
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: points }, (_, i) => i + 1),
+          datasets: datasets
         },
-        scales: {
-          x: { display: false },
-          y: { 
-            grid: { color: '#333' },
-            ticks: { color: '#aaa' }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, labels: { color: '#fff' } },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            x: { display: false },
+            y: { grid: { color: '#333' }, ticks: { color: '#aaa' } }
           }
         }
+      });
+    } else {
+      const basePrice = parsePrice(giftPrice);
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: points }, (_, i) => i + 1),
+          datasets: [{
+            label: 'Цена (TON)',
+            data: generateChartData(points, basePrice),
+            borderColor: '#007aff',
+            backgroundColor: 'rgba(0,122,255,0.1)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.2,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            x: { display: false },
+            y: { grid: { color: '#333' }, ticks: { color: '#aaa' } }
+          }
+        }
+      });
+    }
+
+    // Обновление данных (каждые 10 мин)
+    function updateChartData() {
+      if (isComparisonMode) {
+        comparisonGifts.forEach((gift, index) => {
+          const basePrice = parsePrice(gift.price);
+          chart.data.datasets[index].data = generateChartData(points, basePrice);
+        });
+      } else {
+        const basePrice = parsePrice(giftPrice);
+        chart.data.datasets[0].data = generateChartData(points, basePrice);
+      }
+      chart.update();
+    }
+    setInterval(updateChartData, 600000);
+
+    // Назад
+    backBtn.addEventListener('click', () => {
+      if (isComparisonMode) {
+        window.parent.postMessage({ type: 'CLOSE_COMPARISON' }, '*');
+      } else {
+        window.parent.postMessage({ type: 'CLOSE_GRAPH' }, '*');
       }
     });
 
-    // Функция обновления данных графика (каждые 10 минут)
-    function updateChartData() {
-      const newData = generateChartData(50, parseFloat(giftPrice?.replace(/,/g, '') || 7000));
-      chart.data.datasets[0].data = newData;
-      chart.update();
-    }
-
-    // Запускаем обновление каждые 10 минут (600000 мс)
-    setInterval(updateChartData, 600000);
-
-    // Обработчик кнопки "Назад"
-    backBtn.addEventListener('click', () => {
-      window.parent.postMessage({ type: 'CLOSE_GRAPH' }, '*');
-    });
-
-    // Переключение валют (пока только изменение цвета)
+    // Валюта (заглушка)
     currencyBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         currencyBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        // Здесь можно будет менять данные графика под выбранную валюту
       });
     });
 
-    // Переключение типа графика
+    // Тип графика (заглушка для свечного)
     chartTypeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         chartTypeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const chartType = btn.dataset.chart;
-        if (chartType === 'line') {
+        if (btn.dataset.chart === 'line') {
           chart.config.type = 'line';
           chart.update();
-        } else if (chartType === 'candle') {
-          // Свечной график пока не реализован, показываем заглушку
-          alert('Свечной график будет добавлен позже');
-          // Возвращаем активность обратно на линейный
+        } else {
+          alert('Свечной график пока не реализован');
           document.querySelector('[data-chart="line"]').classList.add('active');
           btn.classList.remove('active');
         }
       });
     });
 
-    // Переключение временных интервалов
+    // Таймфреймы
     timeframeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         timeframeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        // Здесь можно менять количество точек данных
-        const points = 50; // по умолчанию
-        // В реальности нужно подгружать данные за выбранный период
-        chart.data.datasets[0].data = generateChartData(points, parseFloat(giftPrice?.replace(/,/g, '') || 7000));
+        const newPoints = 50;
+        if (isComparisonMode) {
+          comparisonGifts.forEach((gift, index) => {
+            const basePrice = parsePrice(gift.price);
+            chart.data.datasets[index].data = generateChartData(newPoints, basePrice);
+          });
+        } else {
+          const basePrice = parsePrice(giftPrice);
+          chart.data.datasets[0].data = generateChartData(newPoints, basePrice);
+        }
         chart.update();
       });
+    });
+
+    // Overview / Models (заглушка)
+    document.getElementById('overviewBtn').addEventListener('click', () => {
+      document.getElementById('overviewBtn').classList.add('active');
+      document.getElementById('modelsBtn').classList.remove('active');
+    });
+    document.getElementById('modelsBtn').addEventListener('click', () => {
+      document.getElementById('modelsBtn').classList.add('active');
+      document.getElementById('overviewBtn').classList.remove('active');
     });
   </script>
 </body>
