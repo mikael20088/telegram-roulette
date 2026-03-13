@@ -19,29 +19,24 @@
       font-family: 'Inter', Arial, sans-serif;
       color: #fff;
       height: 100%;
-      overflow-y: auto;
-      padding: 8px; /* Уменьшенные отступы */
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    body::-webkit-scrollbar {
-      display: none;
+      overflow-y: hidden; /* Убираем прокрутку, всё должно поместиться */
+      padding: 2px;
     }
 
     .header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 8px; /* Уменьшен отступ */
+      gap: 8px;
+      margin-bottom: 2px;
+      padding: 2px;
     }
 
     .back-btn {
-      font-size: 28px;
+      font-size: 20px;
       cursor: pointer;
       color: #fff;
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -55,79 +50,51 @@
     }
 
     .title {
-      font-size: 24px;
+      font-size: 18px;
       font-weight: 700;
     }
 
     .heatmap-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 0; /* Без отступов */
+      gap: 0; /* Без промежутков */
       justify-content: flex-start;
     }
 
     .heatmap-item {
-      background-color: #2a2a2a;
-      border: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая граница */
-      padding: 10px; /* Немного уменьшим внутренний отступ */
+      width: 45px;          /* Фиксированный размер */
+      height: 45px;
+      border: 0.5px solid rgba(255, 255, 255, 0.15); /* Очень тонкая граница для разделения */
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      flex-shrink: 0;
+      transition: transform 0.1s;
+      position: relative;
     }
 
     .heatmap-item:active {
-      transform: scale(0.98);
+      transform: scale(0.96);
     }
 
     .heatmap-emoji {
-      font-size: 28px; /* Чуть меньше */
+      font-size: 22px;
       line-height: 1;
-    }
-
-    .heatmap-name {
-      font-size: 13px; /* Уменьшен */
-      font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-
-    .heatmap-price {
-      font-size: 12px; /* Уменьшен */
-      color: #aaa;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      margin-bottom: 2px;
     }
 
     .heatmap-percent {
-      font-size: 15px; /* Уменьшен */
-      font-weight: 700;
-    }
-
-    .heatmap-percent.positive {
-      color: #4caf50;
-    }
-    .heatmap-percent.negative {
-      color: #ff5252;
-    }
-    .heatmap-percent.neutral {
-      color: #fff;
-    }
-
-    .heatmap-bg-positive {
-      background-color: rgba(76, 175, 80, 0.15);
-    }
-    .heatmap-bg-negative {
-      background-color: rgba(255, 82, 82, 0.15);
-    }
-    .heatmap-bg-neutral {
-      background-color: #2a2a2a;
+      font-size: 8px;
+      font-weight: 600;
+      line-height: 1;
+      background-color: rgba(0,0,0,0.5); /* Полупрозрачный фон для читаемости */
+      padding: 1px 2px;
+      border-radius: 2px;
+      color: #fff; /* цвет будет переопределён через style */
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
     }
 
     .empty-message {
@@ -161,13 +128,22 @@
         return isNaN(num) ? 0 : num;
       }
 
-      function getItemSize(percentValue) {
-        const absPercent = Math.abs(percentValue);
-        const baseSize = 100;        // Уменьшен базовый размер
-        const maxExtra = 60;          // Максимальная добавка
-        const maxPercent = 20;        // Порог, после которого размер не растёт
-        const extra = Math.min(absPercent, maxPercent) / maxPercent * maxExtra;
-        return baseSize + extra;      // Диапазон: 100–160px
+      function getBackgroundColor(percentValue) {
+        const absPercent = Math.min(Math.abs(percentValue), 20); // насыщенность до 20%
+        const intensity = 0.1 + (absPercent / 20) * 0.7; // от 0.1 до 0.8
+        if (percentValue > 0) {
+          return `rgba(76, 175, 80, ${intensity})`; // зелёный
+        } else if (percentValue < 0) {
+          return `rgba(255, 82, 82, ${intensity})`; // красный
+        } else {
+          return '#2a2a2a'; // нейтральный
+        }
+      }
+
+      function getPercentColor(percentValue) {
+        if (percentValue > 0) return '#4caf50';
+        if (percentValue < 0) return '#ff5252';
+        return '#ffffff';
       }
 
       function renderHeatmap() {
@@ -194,26 +170,15 @@
           gifts.forEach(gift => {
             const percentStr = gift.percent || '0%';
             const percentValue = getPercentValue(percentStr);
-            const size = getItemSize(percentValue);
+            const bgColor = getBackgroundColor(percentValue);
+            const percentColor = getPercentColor(percentValue);
 
-            let bgClass = 'heatmap-bg-neutral';
-            let percentClass = 'neutral';
-            if (percentValue > 0) {
-              bgClass = 'heatmap-bg-positive';
-              percentClass = 'positive';
-            } else if (percentValue < 0) {
-              bgClass = 'heatmap-bg-negative';
-              percentClass = 'negative';
-            }
-
-            const style = `width: ${size}px; height: ${size}px;`;
+            const style = `background-color: ${bgColor};`;
 
             html += `
-              <div class="heatmap-item ${bgClass}" style="${style}" data-name="${gift.name}">
+              <div class="heatmap-item" style="${style}" data-name="${gift.name}">
                 <span class="heatmap-emoji">${gift.emoji || '🎁'}</span>
-                <span class="heatmap-name">${gift.name}</span>
-                <span class="heatmap-price"><span class="coin-icon">💎</span>${gift.price || '0.00'}</span>
-                <span class="heatmap-percent ${percentClass}">${percentStr}</span>
+                <span class="heatmap-percent" style="color: ${percentColor};">${percentStr}</span>
               </div>
             `;
           });
