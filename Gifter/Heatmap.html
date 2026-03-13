@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Тепловая карта</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #1a1a1a;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #fff;
+      height: 100%;
+      overflow-y: auto;
+      padding: 8px; /* Уменьшенные отступы */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px; /* Уменьшен отступ */
+    }
+
+    .back-btn {
+      font-size: 28px;
+      cursor: pointer;
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: #2a2a2a;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover {
+      background-color: #3a3a3a;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .heatmap-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0; /* Без отступов */
+      justify-content: flex-start;
+    }
+
+    .heatmap-item {
+      background-color: #2a2a2a;
+      border: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая граница */
+      padding: 10px; /* Немного уменьшим внутренний отступ */
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .heatmap-item:active {
+      transform: scale(0.98);
+    }
+
+    .heatmap-emoji {
+      font-size: 28px; /* Чуть меньше */
+      line-height: 1;
+    }
+
+    .heatmap-name {
+      font-size: 13px; /* Уменьшен */
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .heatmap-price {
+      font-size: 12px; /* Уменьшен */
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .heatmap-percent {
+      font-size: 15px; /* Уменьшен */
+      font-weight: 700;
+    }
+
+    .heatmap-percent.positive {
+      color: #4caf50;
+    }
+    .heatmap-percent.negative {
+      color: #ff5252;
+    }
+    .heatmap-percent.neutral {
+      color: #fff;
+    }
+
+    .heatmap-bg-positive {
+      background-color: rgba(76, 175, 80, 0.15);
+    }
+    .heatmap-bg-negative {
+      background-color: rgba(255, 82, 82, 0.15);
+    }
+    .heatmap-bg-neutral {
+      background-color: #2a2a2a;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 40px;
+      color: #aaa;
+      font-size: 16px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="back-btn" id="backBtn">←</div>
+    <div class="title">Тепловая карта</div>
+  </div>
+  <div class="heatmap-grid" id="heatmapGrid"></div>
+
+  <script>
+    (function() {
+      const backBtn = document.getElementById('backBtn');
+      const grid = document.getElementById('heatmapGrid');
+
+      backBtn.addEventListener('click', () => {
+        window.parent.postMessage({ type: 'CLOSE_HEATMAP' }, '*');
+      });
+
+      function getPercentValue(percentStr) {
+        if (!percentStr) return 0;
+        const num = parseFloat(percentStr.replace('%', '').replace('+', ''));
+        return isNaN(num) ? 0 : num;
+      }
+
+      function getItemSize(percentValue) {
+        const absPercent = Math.abs(percentValue);
+        const baseSize = 100;        // Уменьшен базовый размер
+        const maxExtra = 60;          // Максимальная добавка
+        const maxPercent = 20;        // Порог, после которого размер не растёт
+        const extra = Math.min(absPercent, maxPercent) / maxPercent * maxExtra;
+        return baseSize + extra;      // Диапазон: 100–160px
+      }
+
+      function renderHeatmap() {
+        try {
+          const stored = localStorage.getItem('giftData');
+          if (!stored) {
+            grid.innerHTML = '<div class="empty-message">Нет данных</div>';
+            return;
+          }
+          let gifts = JSON.parse(stored);
+          if (!Array.isArray(gifts) || gifts.length === 0) {
+            grid.innerHTML = '<div class="empty-message">Нет данных</div>';
+            return;
+          }
+
+          // Сортировка по убыванию модуля процента (самые сильные изменения — вверху слева)
+          gifts = gifts.sort((a, b) => {
+            const aVal = Math.abs(getPercentValue(a.percent));
+            const bVal = Math.abs(getPercentValue(b.percent));
+            return bVal - aVal;
+          });
+
+          let html = '';
+          gifts.forEach(gift => {
+            const percentStr = gift.percent || '0%';
+            const percentValue = getPercentValue(percentStr);
+            const size = getItemSize(percentValue);
+
+            let bgClass = 'heatmap-bg-neutral';
+            let percentClass = 'neutral';
+            if (percentValue > 0) {
+              bgClass = 'heatmap-bg-positive';
+              percentClass = 'positive';
+            } else if (percentValue < 0) {
+              bgClass = 'heatmap-bg-negative';
+              percentClass = 'negative';
+            }
+
+            const style = `width: ${size}px; height: ${size}px;`;
+
+            html += `
+              <div class="heatmap-item ${bgClass}" style="${style}" data-name="${gift.name}">
+                <span class="heatmap-emoji">${gift.emoji || '🎁'}</span>
+                <span class="heatmap-name">${gift.name}</span>
+                <span class="heatmap-price"><span class="coin-icon">💎</span>${gift.price || '0.00'}</span>
+                <span class="heatmap-percent ${percentClass}">${percentStr}</span>
+              </div>
+            `;
+          });
+
+          grid.innerHTML = html;
+
+          document.querySelectorAll('.heatmap-item').forEach(item => {
+            item.addEventListener('click', () => {
+              const name = item.dataset.name;
+              const gift = gifts.find(g => g.name === name);
+              if (gift) {
+                window.parent.postMessage({ type: 'OPEN_GRAPH', gift: gift }, '*');
+              }
+            });
+          });
+        } catch (e) {
+          console.error('Ошибка рендера тепловой карты:', e);
+          grid.innerHTML = '<div class="empty-message">Ошибка загрузки</div>';
+        }
+      }
+
+      renderHeatmap();
+
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'giftData') {
+          renderHeatmap();
+        }
+      });
+
+      setInterval(renderHeatmap, 300000);
+    })();
+  </script>
+</body>
+</html>

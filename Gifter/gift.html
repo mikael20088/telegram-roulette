@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
+    /* Все стили без изменений (полностью из вашего кода) */
     * {
       margin: 0;
       padding: 0;
@@ -418,7 +419,7 @@
     <iframe src="Filter.html"></iframe>
   </div>
 
-  <!-- Оверлей для графика -->
+  <!-- Оверлей для графика и тепловой карты -->
   <div class="fullscreen-overlay" id="graphOverlay">
     <iframe id="graphFrame" src=""></iframe>
   </div>
@@ -790,12 +791,16 @@
       graphOverlay.classList.add('active');
     });
 
+    // ========== ИЗМЕНЕНИЯ ЗДЕСЬ ==========
     // Обработчик сообщений от iframe
     window.addEventListener('message', (event) => {
-      if (event.data.type === 'CLOSE_GRAPH') {
+      // Закрытие оверлея (как для графика, так и для тепловой карты)
+      if (event.data.type === 'CLOSE_GRAPH' || event.data.type === 'CLOSE_HEATMAP') {
         graphOverlay.classList.remove('active');
         graphFrame.src = '';
-      } else if (event.data.type === 'OPEN_GRAPH') {
+      }
+      // Открыть график конкретного подарка
+      else if (event.data.type === 'OPEN_GRAPH') {
         const gift = event.data.gift;
         const params = new URLSearchParams({
           name: gift.name,
@@ -805,6 +810,11 @@
           percent: gift.percent
         });
         graphFrame.src = `Grafik.html?${params.toString()}`;
+        graphOverlay.classList.add('active');
+      }
+      // Открыть тепловую карту
+      else if (event.data.type === 'OPEN_HEATMAP') {
+        graphFrame.src = 'Heatmap.html';
         graphOverlay.classList.add('active');
       }
     });

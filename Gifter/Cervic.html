@@ -2,12 +2,13 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Сервисы</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
+    /* Полностью копируем стили из предыдущей версии Cervic.html */
     * {
       margin: 0;
       padding: 0;
@@ -121,23 +122,24 @@
     }
 
     .value {
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 700;
       color: #fff;
       display: flex;
       align-items: center;
       gap: 4px;
-      line-height: 1.2;
+      line-height: 1.3;
       flex-wrap: wrap;
+      word-break: break-word;
     }
 
     .value .icon {
-      font-size: 18px;
+      font-size: 16px;
       margin-right: 2px;
     }
 
     .sub-value {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       color: #fff;
       display: flex;
@@ -150,7 +152,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       flex-wrap: wrap;
     }
@@ -159,13 +161,22 @@
       color: #4caf50;
     }
 
+    .change.negative {
+      color: #ff5252;
+    }
+
     .green-arrow {
-      font-size: 14px;
+      font-size: 13px;
       color: #4caf50;
     }
 
+    .red-arrow {
+      font-size: 13px;
+      color: #ff5252;
+    }
+
     .coin-icon, .user-icon {
-      font-size: 16px;
+      font-size: 14px;
       margin-right: 2px;
     }
 
@@ -184,8 +195,8 @@
       <span class="text">Инструменты аналитики</span>
     </div>
 
-    <!-- Карточка "Тепловая карта" -->
-    <div class="feature-card">
+    <!-- Карточка "Тепловая карта" (кликабельная) -->
+    <div class="feature-card" id="heatmapCard">
       <div class="feature-title">Тепловая карта</div>
       <div class="feature-subtitle">Состояние всего рынка в одном изображении.</div>
     </div>
@@ -201,16 +212,16 @@
 
     <!-- Первая пара квадратов: Market Cap и Trading Volume -->
     <div class="squares-row">
-      <div class="square-card">
+      <div class="square-card" id="marketCapCard">
         <div class="square-header">
           Market Cap
           <span class="arrow-right">→</span>
         </div>
-        <div class="value">
-          <span class="coin-icon">💎</span>134,672.78
+        <div class="value" id="marketCapValue">
+          <span class="coin-icon">💎</span>0
         </div>
-        <div class="change positive">
-          <span class="green-arrow">↑</span> 20%
+        <div class="change" id="marketCapChange">
+          <span class="green-arrow">↑</span> 0%
         </div>
       </div>
       <div class="square-card">
@@ -241,16 +252,16 @@
           <span class="green-arrow">↑</span> 6%
         </div>
       </div>
-      <div class="square-card">
+      <div class="square-card" id="fdvCard">
         <div class="square-header">
           FDV
           <span class="arrow-right">→</span>
         </div>
-        <div class="value">
-          <span class="coin-icon">💎</span>115,893,916.64
+        <div class="value" id="fdvValue">
+          <span class="coin-icon">💎</span>0
         </div>
-        <div class="change positive">
-          <span class="green-arrow">↑</span> 0.15%
+        <div class="change" id="fdvChange">
+          <span class="green-arrow">↑</span> 0%
         </div>
       </div>
     </div>
@@ -284,5 +295,152 @@
     <!-- Дополнительный отступ для скролла -->
     <div class="last-element"></div>
   </div>
+
+  <script>
+    (function() {
+      // ================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (для индексов) ==================
+      function parseStats(statsStr) {
+        if (!statsStr) return { supply: 0, maxSupply: 0 };
+        const parts = statsStr.split('/').map(s => s.trim());
+        const supplyStr = parts[0] || '0';
+        const maxSupplyStr = parts[1] || '0';
+
+        function parseSingle(str) {
+          let clean = str.replace(/\s*тыс\.?\s*/g, '').trim();
+          clean = clean.replace(',', '.');
+          const num = parseFloat(clean);
+          return isNaN(num) ? 0 : num * 1000;
+        }
+
+        return {
+          supply: parseSingle(supplyStr),
+          maxSupply: parseSingle(maxSupplyStr)
+        };
+      }
+
+      function parsePrice(priceStr) {
+        if (!priceStr) return 0;
+        const clean = priceStr.replace(/,/g, '');
+        const num = parseFloat(clean);
+        return isNaN(num) ? 0 : num;
+      }
+
+      function formatNumber(num) {
+        if (num === 0) return '0';
+        const rounded = Math.round(num);
+        return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+
+      function formatPercent(change) {
+        if (change === 0) return '0%';
+        return (change > 0 ? '+' : '') + change.toFixed(2) + '%';
+      }
+
+      function getChangeInfo(percent) {
+        if (percent > 0) return { className: 'positive', arrow: '↑' };
+        if (percent < 0) return { className: 'negative', arrow: '↓' };
+        return { className: 'neutral', arrow: '' };
+      }
+
+      // Ключи для localStorage
+      const PREV_MARKET_CAP_KEY = 'prevMarketCap';
+      const PREV_FDV_KEY = 'prevFDV';
+
+      function loadPrevValues() {
+        let prevMarketCap = localStorage.getItem(PREV_MARKET_CAP_KEY);
+        let prevFDV = localStorage.getItem(PREV_FDV_KEY);
+        return {
+          marketCap: prevMarketCap ? parseFloat(prevMarketCap) : null,
+          fdv: prevFDV ? parseFloat(prevFDV) : null
+        };
+      }
+
+      function saveCurrentValues(marketCap, fdv) {
+        localStorage.setItem(PREV_MARKET_CAP_KEY, marketCap.toString());
+        localStorage.setItem(PREV_FDV_KEY, fdv.toString());
+      }
+
+      function updateIndices() {
+        try {
+          const stored = localStorage.getItem('giftData');
+          if (!stored) return;
+          const gifts = JSON.parse(stored);
+          if (!Array.isArray(gifts)) return;
+
+          let totalMarketCap = 0;
+          let totalFDV = 0;
+
+          gifts.forEach(gift => {
+            if (gift && gift.stats && gift.price) {
+              const { supply, maxSupply } = parseStats(gift.stats);
+              const price = parsePrice(gift.price);
+              totalMarketCap += price * supply;
+              totalFDV += price * maxSupply;
+            }
+          });
+
+          const prev = loadPrevValues();
+
+          let marketCapPercent = 0;
+          let fdvPercent = 0;
+          if (prev.marketCap !== null && prev.marketCap !== 0) {
+            marketCapPercent = ((totalMarketCap - prev.marketCap) / prev.marketCap) * 100;
+          }
+          if (prev.fdv !== null && prev.fdv !== 0) {
+            fdvPercent = ((totalFDV - prev.fdv) / prev.fdv) * 100;
+          }
+
+          const marketCapEl = document.getElementById('marketCapValue');
+          const fdvEl = document.getElementById('fdvValue');
+          const marketCapChangeEl = document.getElementById('marketCapChange');
+          const fdvChangeEl = document.getElementById('fdvChange');
+
+          if (marketCapEl) {
+            marketCapEl.innerHTML = `<span class="coin-icon">💎</span>${formatNumber(totalMarketCap)}`;
+          }
+          if (fdvEl) {
+            fdvEl.innerHTML = `<span class="coin-icon">💎</span>${formatNumber(totalFDV)}`;
+          }
+
+          if (marketCapChangeEl) {
+            const info = getChangeInfo(marketCapPercent);
+            marketCapChangeEl.className = `change ${info.className}`;
+            marketCapChangeEl.innerHTML = info.arrow ? `<span class="${info.className}-arrow">${info.arrow}</span> ${formatPercent(marketCapPercent)}` : formatPercent(marketCapPercent);
+          }
+
+          if (fdvChangeEl) {
+            const info = getChangeInfo(fdvPercent);
+            fdvChangeEl.className = `change ${info.className}`;
+            fdvChangeEl.innerHTML = info.arrow ? `<span class="${info.className}-arrow">${info.arrow}</span> ${formatPercent(fdvPercent)}` : formatPercent(fdvPercent);
+          }
+
+          saveCurrentValues(totalMarketCap, totalFDV);
+        } catch (e) {
+          console.error('Ошибка обновления индексов:', e);
+        }
+      }
+
+      // ================== ОСНОВНОЙ КОД ==================
+      const heatmapCard = document.getElementById('heatmapCard');
+
+      // При клике на "Тепловая карта" отправляем сообщение родителю
+      heatmapCard.addEventListener('click', () => {
+        window.parent.postMessage({ type: 'OPEN_HEATMAP' }, '*');
+      });
+
+      // Обновляем индексы при загрузке
+      updateIndices();
+
+      // Слушаем изменения localStorage (для обновления индексов на этой странице)
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'giftData' || event.key === PREV_MARKET_CAP_KEY || event.key === PREV_FDV_KEY) {
+          updateIndices();
+        }
+      });
+
+      // Периодическое обновление каждые 5 минут
+      setInterval(updateIndices, 300000);
+    })();
+  </script>
 </body>
 </html>
