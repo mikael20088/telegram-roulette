@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>Тепловая карта</title>
+  <title>Тепловая карта — TradingView стиль</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
@@ -15,101 +15,152 @@
     }
 
     body {
-      background-color: #1a1a1a;
-      font-family: 'Inter', Arial, sans-serif;
+      background-color: #0B0E0F; /* Тёмный фон как у TradingView */
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       color: #fff;
       height: 100%;
-      overflow-y: hidden; /* Убираем прокрутку, всё должно поместиться */
-      padding: 2px;
+      overflow-y: auto;
+      padding: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: #4B4F54 #1E2124;
+    }
+
+    body::-webkit-scrollbar {
+      width: 6px;
+    }
+    body::-webkit-scrollbar-track {
+      background: #1E2124;
+    }
+    body::-webkit-scrollbar-thumb {
+      background: #4B4F54;
+      border-radius: 3px;
     }
 
     .header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 2px;
-      padding: 2px;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 4px 8px;
+      background: #1E2124;
+      border-radius: 8px;
     }
 
     .back-btn {
-      font-size: 20px;
+      font-size: 22px;
       cursor: pointer;
-      color: #fff;
-      width: 32px;
-      height: 32px;
+      color: #D1D4DC;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
-      background-color: #2a2a2a;
-      transition: background 0.2s;
+      border-radius: 6px;
+      background: #2A2E33;
+      transition: all 0.15s;
     }
 
     .back-btn:hover {
-      background-color: #3a3a3a;
+      background: #3C4045;
+      color: #FFF;
     }
 
     .title {
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 600;
+      color: #F0F3FA;
+      letter-spacing: -0.2px;
     }
 
     .heatmap-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 0; /* Без промежутков */
+      gap: 2px; /* Небольшой зазор для читаемости, как в TradingView */
       justify-content: flex-start;
+      margin-bottom: 20px;
     }
 
+    /* Базовый стиль ячейки — TradingView-like */
     .heatmap-item {
-      width: 45px;          /* Фиксированный размер */
-      height: 45px;
-      border: 0.5px solid rgba(255, 255, 255, 0.15); /* Очень тонкая граница для разделения */
+      border-radius: 3px; /* Лёгкое скругление */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: all 0.1s ease;
       position: relative;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.03); /* Очень тонкая граница */
+      background-color: #1E2124; /* Базовый фон для нейтральных */
     }
 
-    .heatmap-item:active {
-      transform: scale(0.96);
+    .heatmap-item:hover {
+      filter: brightness(1.15);
+      transform: scale(1.02);
+      z-index: 10;
+      border: 1px solid rgba(255,255,255,0.15);
     }
 
     .heatmap-emoji {
-      font-size: 22px;
+      font-size: 18px;
       line-height: 1;
       margin-bottom: 2px;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
     }
 
     .heatmap-percent {
-      font-size: 8px;
+      font-size: 10px;
       font-weight: 600;
       line-height: 1;
-      background-color: rgba(0,0,0,0.5); /* Полупрозрачный фон для читаемости */
-      padding: 1px 2px;
-      border-radius: 2px;
-      color: #fff; /* цвет будет переопределён через style */
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
+      background-color: rgba(0,0,0,0.5);
+      padding: 2px 4px;
+      border-radius: 4px;
+      letter-spacing: -0.2px;
+      color: #fff; /* будет переопределено через style */
+      backdrop-filter: blur(1px);
+      border: 1px solid rgba(255,255,255,0.05);
     }
 
     .empty-message {
       text-align: center;
-      padding: 40px;
-      color: #aaa;
-      font-size: 16px;
-      width: 100%;
+      padding: 60px 20px;
+      color: #9598A1;
+      font-size: 15px;
+      background: #1E2124;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    /* Цвета для процентных значений — TradingView палитра */
+    .positive-text {
+      color: #089981 !important; /* TradingView зелёный */
+    }
+    .negative-text {
+      color: #F23645 !important; /* TradingView красный */
+    }
+    .neutral-text {
+      color: #D1D4DC !important;
+    }
+
+    /* Дополнительный контейнер для статистики */
+    .stats-badge {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      font-size: 8px;
+      background: rgba(0,0,0,0.5);
+      padding: 1px 3px;
+      border-radius: 3px;
+      color: #9598A1;
     }
   </style>
 </head>
 <body>
   <div class="header">
     <div class="back-btn" id="backBtn">←</div>
-    <div class="title">Тепловая карта</div>
+    <div class="title">Тепловая карта · Gift Charts</div>
   </div>
   <div class="heatmap-grid" id="heatmapGrid"></div>
 
@@ -122,69 +173,143 @@
         window.parent.postMessage({ type: 'CLOSE_HEATMAP' }, '*');
       });
 
+      // ---- Парсинг данных (как в Cervic.html) ----
+      function parseStats(statsStr) {
+        if (!statsStr) return { supply: 0, maxSupply: 0 };
+        const parts = statsStr.split('/').map(s => s.trim());
+        const supplyStr = parts[0] || '0';
+        const maxSupplyStr = parts[1] || '0';
+
+        function parseSingle(str) {
+          let clean = str.replace(/\s*тыс\.?\s*/g, '').trim();
+          clean = clean.replace(',', '.');
+          const num = parseFloat(clean);
+          return isNaN(num) ? 0 : num * 1000;
+        }
+
+        return {
+          supply: parseSingle(supplyStr),
+          maxSupply: parseSingle(maxSupplyStr)
+        };
+      }
+
+      function parsePrice(priceStr) {
+        if (!priceStr) return 0;
+        const clean = priceStr.replace(/,/g, '');
+        const num = parseFloat(clean);
+        return isNaN(num) ? 0 : num;
+      }
+
       function getPercentValue(percentStr) {
         if (!percentStr) return 0;
         const num = parseFloat(percentStr.replace('%', '').replace('+', ''));
         return isNaN(num) ? 0 : num;
       }
 
+      // ---- ТradingView стиль: цвет фона зависит от изменения и насыщенности ----
       function getBackgroundColor(percentValue) {
-        const absPercent = Math.min(Math.abs(percentValue), 20); // насыщенность до 20%
-        const intensity = 0.1 + (absPercent / 20) * 0.7; // от 0.1 до 0.8
+        const absPercent = Math.min(Math.abs(percentValue), 20); // насыщенность растёт до 20%
+        const intensity = 0.2 + (absPercent / 20) * 0.8; // от 0.2 до 1.0
+
         if (percentValue > 0) {
-          return `rgba(76, 175, 80, ${intensity})`; // зелёный
+          // Зелёный TradingView: #089981
+          return `rgba(8, 153, 129, ${intensity})`;
         } else if (percentValue < 0) {
-          return `rgba(255, 82, 82, ${intensity})`; // красный
+          // Красный TradingView: #F23645
+          return `rgba(242, 54, 69, ${intensity})`;
         } else {
-          return '#2a2a2a'; // нейтральный
+          // Нейтральный — тёмно-серый
+          return '#1E2124';
         }
       }
 
-      function getPercentColor(percentValue) {
-        if (percentValue > 0) return '#4caf50';
-        if (percentValue < 0) return '#ff5252';
-        return '#ffffff';
+      // ---- TradingView стиль: размер ячейки зависит от капитализации (логарифмическая шкала) ----
+      const MIN_SIZE = 36;      // минимальный размер (px) — очень компактно
+      const MAX_SIZE = 110;     // максимальный размер
+
+      function getCellSize(marketCap) {
+        if (marketCap <= 0) return MIN_SIZE;
+
+        // Логарифмическая шкала, чтобы крупные активы были заметно больше
+        // cap обычно от тысяч до миллиардов
+        const logCap = Math.log10(marketCap + 1);
+        const logMin = 3; // log10(1000) = 3
+        const logMax = 9; // log10(1_000_000_000) = 9
+        let t = (logCap - logMin) / (logMax - logMin);
+        t = Math.min(1, Math.max(0, t)); // ограничиваем [0,1]
+
+        // Нелинейное масштабирование: квадратичная кривая для большей разницы
+        t = Math.pow(t, 0.8); // чуть выпуклая, чтобы выделять крупные
+
+        return Math.round(MIN_SIZE + t * (MAX_SIZE - MIN_SIZE));
       }
 
+      // ---- Основной рендер ----
       function renderHeatmap() {
         try {
           const stored = localStorage.getItem('giftData');
           if (!stored) {
-            grid.innerHTML = '<div class="empty-message">Нет данных</div>';
+            grid.innerHTML = '<div class="empty-message">📊 Нет данных для отображения</div>';
             return;
           }
           let gifts = JSON.parse(stored);
           if (!Array.isArray(gifts) || gifts.length === 0) {
-            grid.innerHTML = '<div class="empty-message">Нет данных</div>';
+            grid.innerHTML = '<div class="empty-message">📦 Список подарков пуст</div>';
             return;
           }
 
-          // Сортировка по убыванию модуля процента (самые сильные изменения — вверху слева)
-          gifts = gifts.sort((a, b) => {
-            const aVal = Math.abs(getPercentValue(a.percent));
-            const bVal = Math.abs(getPercentValue(b.percent));
-            return bVal - aVal;
+          // Рассчитываем капитализацию для каждого подарка
+          const giftsWithCap = gifts.map(gift => {
+            const { supply } = parseStats(gift.stats);
+            const price = parsePrice(gift.price);
+            const marketCap = price * supply;
+            const percentValue = getPercentValue(gift.percent);
+            return {
+              ...gift,
+              marketCap,
+              percentValue,
+              cellSize: getCellSize(marketCap)
+            };
+          });
+
+          // Сортировка: сначала по убыванию модуля процента (самые сильные изменения),
+          // затем по убыванию капитализации
+          giftsWithCap.sort((a, b) => {
+            const aAbs = Math.abs(a.percentValue);
+            const bAbs = Math.abs(b.percentValue);
+            if (bAbs !== aAbs) return bAbs - aAbs;
+            return b.marketCap - a.marketCap;
           });
 
           let html = '';
-          gifts.forEach(gift => {
+          giftsWithCap.forEach(gift => {
             const percentStr = gift.percent || '0%';
-            const percentValue = getPercentValue(percentStr);
+            const percentValue = gift.percentValue;
             const bgColor = getBackgroundColor(percentValue);
-            const percentColor = getPercentColor(percentValue);
+            const size = gift.cellSize;
 
-            const style = `background-color: ${bgColor};`;
+            // Определяем класс для цвета процента
+            let percentClass = 'neutral-text';
+            if (percentValue > 0) percentClass = 'positive-text';
+            else if (percentValue < 0) percentClass = 'negative-text';
+
+            const style = `width: ${size}px; height: ${size}px; background-color: ${bgColor};`;
+
+            // Краткая статистика для подсказки (необязательно)
+            const supplyK = Math.round(gift.marketCap / 1000).toLocaleString();
 
             html += `
               <div class="heatmap-item" style="${style}" data-name="${gift.name}">
                 <span class="heatmap-emoji">${gift.emoji || '🎁'}</span>
-                <span class="heatmap-percent" style="color: ${percentColor};">${percentStr}</span>
+                <span class="heatmap-percent ${percentClass}">${percentStr}</span>
+                <span class="stats-badge">💎${supplyK}K</span>
               </div>
             `;
           });
 
           grid.innerHTML = html;
 
+          // Обработчик клика для открытия графика
           document.querySelectorAll('.heatmap-item').forEach(item => {
             item.addEventListener('click', () => {
               const name = item.dataset.name;
@@ -196,18 +321,20 @@
           });
         } catch (e) {
           console.error('Ошибка рендера тепловой карты:', e);
-          grid.innerHTML = '<div class="empty-message">Ошибка загрузки</div>';
+          grid.innerHTML = '<div class="empty-message">⚠️ Ошибка загрузки данных</div>';
         }
       }
 
       renderHeatmap();
 
+      // Обновление при изменении localStorage
       window.addEventListener('storage', (event) => {
         if (event.key === 'giftData') {
           renderHeatmap();
         }
       });
 
+      // Периодическое обновление каждые 5 минут
       setInterval(renderHeatmap, 300000);
     })();
   </script>
