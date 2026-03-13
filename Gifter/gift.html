@@ -587,14 +587,30 @@
         const collections = await response.json();
         console.log('✅ Данные от API получены');
 
-        // Обновляем allGiftsFull, берём stats из baseGifts, цену и процент из API
         const updatedGifts = baseGifts.map(base => {
           const found = collections.find(c => c.name === base.name);
           if (found) {
             const priceTon = nanotonToTon(found.stats.floor);
-            const previousPrice = previousPrices[base.name] || priceTon;
-            const percent = calculatePercent(priceTon, previousPrice);
-            previousPrices[base.name] = priceTon;
+            const oldPrice = previousPrices[base.name]; // может быть undefined
+
+            let percent;
+            if (oldPrice === undefined) {
+              // Первый раз – процент 0%, запоминаем цену
+              percent = '0%';
+              previousPrices[base.name] = priceTon;
+            } else {
+              if (priceTon !== oldPrice) {
+                // Цена изменилась – вычисляем процент и обновляем previousPrice
+                percent = calculatePercent(priceTon, oldPrice);
+                previousPrices[base.name] = priceTon;
+              } else {
+                // Цена не изменилась – берём процент из существующих данных (если есть)
+                const existing = allGiftsFull.find(g => g.name === base.name);
+                percent = existing ? existing.percent : '0%';
+                // previousPrices не трогаем – оставляем старую цену для будущих сравнений
+              }
+            }
+
             return {
               ...base,
               price: priceTon,
