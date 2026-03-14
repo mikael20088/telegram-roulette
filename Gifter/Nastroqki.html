@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Настройки</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: transparent; /* Фон задаётся родителем */
+      font-family: 'Inter', sans-serif;
+      color: inherit;
+      height: 100%;
+      padding: 20px 16px;
+    }
+
+    .settings-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .settings-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: inherit;
+    }
+
+    .settings-item {
+      background-color: rgba(42, 42, 42, 0.9); /* Полупрозрачный фон для универсальности */
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .settings-label {
+      font-size: 16px;
+      font-weight: 500;
+      color: inherit;
+    }
+
+    .settings-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle, .lang-toggle, .currency-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 30px;
+      padding: 4px;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      padding: 6px 12px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: inherit;
+      opacity: 0.6;
+    }
+
+    .toggle-btn.active {
+      background: #007aff;
+      color: white;
+      opacity: 1;
+    }
+
+    .slider-indicator {
+      width: 4px;
+      height: 24px;
+      background: #007aff;
+      border-radius: 2px;
+    }
+
+    /* Адаптация под светлую тему (будет применяться через класс на body) */
+    body.light .settings-item {
+      background-color: rgba(240, 240, 240, 0.9);
+      border-color: rgba(0,0,0,0.1);
+    }
+
+    body.light .settings-label {
+      color: #000;
+    }
+
+    body.light .toggle-btn {
+      color: #000;
+    }
+
+    body.light .toggle-btn.active {
+      background: #007aff;
+      color: white;
+    }
+
+    .currency-symbol {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-title">Общие настройки</div>
+
+    <!-- Цветовая тема -->
+    <div class="settings-item">
+      <span class="settings-label">Цветовая тема</span>
+      <div class="settings-control">
+        <div class="theme-toggle" id="themeToggle">
+          <button class="toggle-btn" id="themeDark">🌙</button>
+          <span class="slider-indicator"></span>
+          <button class="toggle-btn" id="themeLight">☀️</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Язык -->
+    <div class="settings-item">
+      <span class="settings-label">Язык</span>
+      <div class="settings-control">
+        <div class="lang-toggle" id="langToggle">
+          <button class="toggle-btn" id="langRu">RU</button>
+          <span class="slider-indicator"></span>
+          <button class="toggle-btn" id="langEn">EN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Валюта -->
+    <div class="settings-item">
+      <span class="settings-label">Валюта</span>
+      <div class="settings-control">
+        <div class="currency-toggle" id="currencyToggle">
+          <button class="toggle-btn" id="currencyTon">💎</button>
+          <span class="slider-indicator"></span>
+          <button class="toggle-btn" id="currencyUsd">$</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Текущие настройки (загружаем из localStorage или по умолчанию)
+      let theme = localStorage.getItem('theme') || 'dark'; // 'dark' или 'light'
+      let lang = localStorage.getItem('lang') || 'ru';
+      let currency = localStorage.getItem('currency') || 'TON';
+
+      // Элементы
+      const themeDark = document.getElementById('themeDark');
+      const themeLight = document.getElementById('themeLight');
+      const langRu = document.getElementById('langRu');
+      const langEn = document.getElementById('langEn');
+      const currencyTon = document.getElementById('currencyTon');
+      const currencyUsd = document.getElementById('currencyUsd');
+
+      // Функция обновления активных классов
+      function updateUI() {
+        // Тема
+        if (theme === 'dark') {
+          themeDark.classList.add('active');
+          themeLight.classList.remove('active');
+        } else {
+          themeLight.classList.add('active');
+          themeDark.classList.remove('active');
+        }
+
+        // Язык
+        if (lang === 'ru') {
+          langRu.classList.add('active');
+          langEn.classList.remove('active');
+        } else {
+          langEn.classList.add('active');
+          langRu.classList.remove('active');
+        }
+
+        // Валюта
+        if (currency === 'TON') {
+          currencyTon.classList.add('active');
+          currencyUsd.classList.remove('active');
+        } else {
+          currencyUsd.classList.add('active');
+          currencyTon.classList.remove('active');
+        }
+      }
+
+      // Сохранение настроек и уведомление родителя
+      function saveAndNotify() {
+        localStorage.setItem('theme', theme);
+        localStorage.setItem('lang', lang);
+        localStorage.setItem('currency', currency);
+
+        // Отправляем родительскому окну сообщение об изменении настроек
+        window.parent.postMessage({
+          type: 'SETTINGS_CHANGED',
+          theme: theme,
+          lang: lang,
+          currency: currency
+        }, '*');
+
+        updateUI();
+      }
+
+      // Обработчики
+      themeDark.addEventListener('click', () => {
+        if (theme !== 'dark') {
+          theme = 'dark';
+          saveAndNotify();
+        }
+      });
+
+      themeLight.addEventListener('click', () => {
+        if (theme !== 'light') {
+          theme = 'light';
+          saveAndNotify();
+        }
+      });
+
+      langRu.addEventListener('click', () => {
+        if (lang !== 'ru') {
+          lang = 'ru';
+          saveAndNotify();
+        }
+      });
+
+      langEn.addEventListener('click', () => {
+        if (lang !== 'en') {
+          lang = 'en';
+          saveAndNotify();
+        }
+      });
+
+      currencyTon.addEventListener('click', () => {
+        if (currency !== 'TON') {
+          currency = 'TON';
+          saveAndNotify();
+        }
+      });
+
+      currencyUsd.addEventListener('click', () => {
+        if (currency !== 'USD') {
+          currency = 'USD';
+          saveAndNotify();
+        }
+      });
+
+      // Инициализация UI
+      updateUI();
+
+      // Применяем тему к body (для локального отображения)
+      if (theme === 'light') {
+        document.body.classList.add('light');
+      } else {
+        document.body.classList.remove('light');
+      }
+
+      // Слушаем изменения темы извне (например, если другой iframe изменил)
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'theme') {
+          theme = e.newValue || 'dark';
+          if (theme === 'light') {
+            document.body.classList.add('light');
+          } else {
+            document.body.classList.remove('light');
+          }
+          updateUI();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -33,6 +33,57 @@
       display: none;
     }
 
+    /* Светлая тема */
+    body.light {
+      background-color: #ffffff;
+      color: #000000;
+    }
+    body.light .top-nav {
+      border-bottom-color: rgba(0,0,0,0.1);
+    }
+    body.light .nav-item {
+      color: #000;
+    }
+    body.light .nav-item.active {
+      color: #4caf50;
+    }
+    body.light .search-input {
+      background-color: #f0f0f0;
+      color: #000;
+      border-color: #ddd;
+    }
+    body.light .circle-btn {
+      background-color: #f0f0f0;
+      color: #000;
+    }
+    body.light .category-item {
+      background-color: #f9f9f9;
+      border-bottom-color: #ddd;
+    }
+    body.light .category-name {
+      color: #000;
+    }
+    body.light .category-stats {
+      color: #555;
+    }
+    body.light .gift-price {
+      color: #000;
+    }
+    body.light .bottom-nav {
+      background-color: #ffffff;
+      border-top-color: rgba(0,0,0,0.1);
+    }
+    body.light .bottom-nav-item {
+      color: #000;
+    }
+    body.light .panel {
+      background-color: #ffffff;
+    }
+    body.light .close-panel {
+      background-color: #f0f0f0;
+      color: #000;
+    }
+
     .top-nav {
       display: flex;
       gap: 20px;
@@ -189,6 +240,9 @@
       font-size: 20px;
       text-align: center;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .category-info {
@@ -277,6 +331,8 @@
       border-top: 1px solid rgba(255, 255, 255, 0.5);
       background-color: #1a1a1a;
       flex-shrink: 0;
+      z-index: 2000;
+      position: relative;
     }
 
     .bottom-nav-item {
@@ -370,6 +426,135 @@
       border: none;
       background: transparent;
     }
+
+    /* Оверлей настроек */
+    .settings-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: calc(100% - 70px); /* высота нижней панели */
+      background-color: #1a1a1a;
+      z-index: 1500;
+      display: none;
+      flex-direction: column;
+    }
+    body.light .settings-overlay {
+      background-color: #ffffff;
+    }
+    .settings-overlay.active {
+      display: flex;
+    }
+    .settings-overlay iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+    }
+
+    /* ---------- Стили для мини-версии Plush Pepe ---------- */
+    .mini-pepe {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: inline-block;
+    }
+
+    .mini-pepe .head {
+      width: 20px;
+      height: 17px;
+      background: linear-gradient(#56d64c, #2e8c2e);
+      border-radius: 50% 50% 45% 45%;
+      position: absolute;
+      top: 0;
+      left: 4px;
+      box-shadow: inset 0 -1px 2px rgba(0,0,0,0.2);
+    }
+
+    .mini-pepe .eye {
+      width: 5px;
+      height: 5px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 4px;
+      box-shadow: inset 0 0 1px rgba(0,0,0,0.3);
+    }
+    .mini-pepe .eye.left { left: 5px; }
+    .mini-pepe .eye.right { right: 5px; }
+
+    .mini-pepe .pupil {
+      width: 2px;
+      height: 2px;
+      background: #111;
+      border-radius: 50%;
+      margin: 1.5px;
+    }
+
+    .mini-pepe .mouth {
+      width: 8px;
+      height: 3px;
+      border-bottom: 1px solid #173a17;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 2px;
+      left: 6px;
+    }
+
+    .mini-pepe .body {
+      width: 18px;
+      height: 14px;
+      background: linear-gradient(#56d64c, #2e8c2e);
+      border-radius: 45%;
+      position: absolute;
+      top: 15px;
+      left: 5px;
+      box-shadow: inset 0 -1px 2px rgba(0,0,0,0.2);
+    }
+
+    .mini-pepe .arm {
+      width: 3px;
+      height: 8px;
+      background: linear-gradient(#56d64c, #2e8c2e);
+      border-radius: 40%;
+      position: absolute;
+      top: 14px;
+    }
+    .mini-pepe .arm.left { left: 3px; transform: rotate(20deg); }
+    .mini-pepe .arm.right { right: 3px; transform: rotate(-20deg); }
+
+    .mini-pepe .leg {
+      width: 4px;
+      height: 6px;
+      background: linear-gradient(#56d64c, #2e8c2e);
+      border-radius: 40%;
+      position: absolute;
+      bottom: -1px;
+    }
+    .mini-pepe .leg.left { left: 8px; }
+    .mini-pepe .leg.right { right: 8px; }
+
+    .mini-pepe .heart {
+      width: 6px;
+      height: 6px;
+      background: #ff4d6d;
+      transform: rotate(-45deg);
+      position: absolute;
+      top: 19px;
+      left: 11px;
+      box-shadow: 0 0 3px rgba(255, 77, 109, 0.5);
+    }
+    .mini-pepe .heart:before,
+    .mini-pepe .heart:after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ff4d6d;
+      border-radius: 50%;
+    }
+    .mini-pepe .heart:before { top: -3px; left: 0; }
+    .mini-pepe .heart:after { left: 3px; top: 0; }
   </style>
 </head>
 <body>
@@ -399,6 +584,11 @@
     </div>
   </div>
 
+  <!-- Оверлей для настроек -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <iframe src="Nastroqki.html"></iframe>
+  </div>
+
   <!-- Нижняя панель -->
   <div class="bottom-nav">
     <div class="bottom-nav-item" id="homeBottomBtn"><span class="bottom-nav-emoji">🏠</span><span>Главная</span></div>
@@ -425,7 +615,7 @@
   </div>
 
   <script>
-    // ========== БАЗОВЫЕ ДАННЫЕ (только эмодзи, название, статистика) ==========
+    // ========== БАЗОВЫЕ ДАННЫЕ (полный список подарков) ==========
     const baseGifts = [
       { emoji: '🎁', name: 'Plush Pepe', stats: '2.8тыс. / 2.9тыс.' },
       { emoji: '🎂', name: 'Heart Locket', stats: '1.9тыс. / 2.0тыс.' },
@@ -658,25 +848,73 @@
       return 'neutral';
     }
 
+    // Курс TON/USD
+    let tonToUsdRate = 2.5; // по умолчанию
+    async function updateTonUsdRate() {
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
+        const data = await response.json();
+        tonToUsdRate = data['the-open-network'].usd;
+        console.log('Курс TON/USD обновлён:', tonToUsdRate);
+      } catch (e) {
+        console.warn('Не удалось получить курс TON/USD, используется значение по умолчанию 2.5');
+      }
+    }
+    updateTonUsdRate();
+    setInterval(updateTonUsdRate, 600000); // каждые 10 минут
+
     function renderGifts(giftsArray) {
       const container = document.getElementById('giftList');
       if (!giftsArray || giftsArray.length === 0) {
         container.innerHTML = '<div class="empty-message">Загрузка данных...</div>';
         return;
       }
+      const currency = localStorage.getItem('currency') || 'TON';
       let html = '';
       giftsArray.forEach(gift => {
         const percentClass = getPercentClass(gift.percent);
+        let priceDisplay = gift.price || '0.00';
+        let symbol = '💎';
+        if (currency === 'USD' && gift.price) {
+          const priceNum = parseFloat(gift.price.replace(/,/g, ''));
+          const usdPrice = priceNum * tonToUsdRate;
+          priceDisplay = usdPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          symbol = '$';
+        }
+
+        // Для Plush Pepe заменяем эмодзи на мини-изображение
+        let emojiHtml;
+        if (gift.name === 'Plush Pepe') {
+          emojiHtml = `
+            <div class="mini-pepe">
+              <div class="head">
+                <div class="eye left"><div class="pupil"></div></div>
+                <div class="eye right"><div class="pupil"></div></div>
+                <div class="mouth"></div>
+              </div>
+              <div class="body">
+                <div class="arm left"></div>
+                <div class="arm right"></div>
+                <div class="heart"></div>
+                <div class="leg left"></div>
+                <div class="leg right"></div>
+              </div>
+            </div>
+          `;
+        } else {
+          emojiHtml = gift.emoji;
+        }
+
         html += `
           <div class="category-item" data-name="${gift.name}">
-            <div class="category-emoji">${gift.emoji}</div>
+            <div class="category-emoji">${emojiHtml}</div>
             <div class="category-info">
               <div class="category-name">${gift.name}</div>
               <div class="category-stats">${gift.stats}</div>
             </div>
             <div class="gift-price">
-              <span class="coin-icon">💎</span>
-              <span class="price">${gift.price || '0.00'}</span>
+              <span class="coin-icon">${symbol}</span>
+              <span class="price">${priceDisplay}</span>
             </div>
             <div class="gift-percent ${percentClass}">${gift.percent || '0%'}</div>
           </div>
@@ -707,6 +945,7 @@
     const closeFilter = document.getElementById('closeFilter');
     const graphOverlay = document.getElementById('graphOverlay');
     const graphFrame = document.getElementById('graphFrame');
+    const settingsOverlay = document.getElementById('settingsOverlay');
 
     function setTopVisibility(visible) {
       if (visible) {
@@ -727,6 +966,7 @@
       giftList.style.display = 'none';
       favoriteContent.style.display = 'none';
       servicesContent.style.display = 'none';
+      settingsOverlay.classList.remove('active');
 
       setTopVisibility(true);
 
@@ -737,9 +977,8 @@
       } else if (tab === 'favorite') {
         favoriteBtn.classList.add('active');
         favoriteContent.style.display = 'block';
-        // Данные в LOVE.html обновятся автоматически через событие storage, перезагрузка iframe не требуется
-        // const loveFrame = document.querySelector('#favoriteContent iframe');
-        // if (loveFrame) loveFrame.contentWindow.location.reload();
+        const loveFrame = document.querySelector('#favoriteContent iframe');
+        if (loveFrame) loveFrame.contentWindow.location.reload();
       } else if (tab === 'growth') {
         growthBtn.classList.add('active');
         giftList.style.display = 'block';
@@ -757,6 +996,7 @@
       giftList.style.display = 'none';
       favoriteContent.style.display = 'none';
       servicesContent.style.display = 'none';
+      settingsOverlay.classList.remove('active');
 
       if (tab === 'home') {
         setTopVisibility(true);
@@ -769,7 +1009,10 @@
       } else if (tab === 'account') {
         console.log('Аккаунт');
       } else if (tab === 'settings') {
-        console.log('Настройки');
+        setTopVisibility(false);
+        settingsOverlay.classList.add('active');
+        const settingsFrame = document.querySelector('#settingsOverlay iframe');
+        if (settingsFrame) settingsFrame.contentWindow.location.reload();
       }
     }
 
@@ -781,7 +1024,6 @@
       const gift = allGiftsFull.find(g => g.name === giftName);
       if (!gift) return;
 
-      // Очищаем данные сравнения, чтобы открылся обычный график
       sessionStorage.removeItem('comparisonGifts');
 
       const params = new URLSearchParams({
@@ -836,26 +1078,40 @@
       // Открыть график для индекса (Market Cap, FDV и т.д.)
       else if (event.data.type === 'OPEN_INDEX_GRAPH') {
         const { indexType, value, change } = event.data;
-        const params = new URLSearchParams({
-          index: indexType,
-          value: value,
-          change: change
-        });
+        const params = new URLSearchParams({ index: indexType, value, change });
         graphFrame.src = `Grafik.html?${params.toString()}`;
         graphOverlay.classList.add('active');
       }
+      // Настройки изменились
+      else if (event.data.type === 'SETTINGS_CHANGED') {
+        const { theme, lang, currency } = event.data;
+        if (theme === 'light') {
+          document.body.classList.add('light');
+        } else {
+          document.body.classList.remove('light');
+        }
+        localStorage.setItem('theme', theme);
+        localStorage.setItem('lang', lang);
+        localStorage.setItem('currency', currency);
+        if (allGiftsFull.length > 0) {
+          renderGifts(allGiftsFull);
+        }
+      }
     });
 
+    // ========== ОБРАБОТЧИКИ КНОПОК ВЕРХНЕЙ ПАНЕЛИ ==========
     allGiftsBtn.addEventListener('click', () => setActiveMainTab('all'));
     favoriteBtn.addEventListener('click', () => setActiveMainTab('favorite'));
     growthBtn.addEventListener('click', () => setActiveMainTab('growth'));
     fallBtn.addEventListener('click', () => setActiveMainTab('fall'));
 
+    // ========== ОБРАБОТЧИКИ КНОПОК НИЖНЕЙ ПАНЕЛИ ==========
     homeBottomBtn.addEventListener('click', () => setActiveBottomTab('home'));
     servicesBottomBtn.addEventListener('click', () => setActiveBottomTab('services'));
     accountBottomBtn.addEventListener('click', () => setActiveBottomTab('account'));
     settingsBottomBtn.addEventListener('click', () => setActiveBottomTab('settings'));
 
+    // ========== ОБРАБОТЧИКИ СОРТИРОВКИ/ФИЛЬТРА ==========
     sortBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       sortPanel.classList.add('active');
@@ -878,6 +1134,12 @@
       if (e.target === sortPanel) sortPanel.classList.remove('active');
       if (e.target === filterPanel) filterPanel.classList.remove('active');
     });
+
+    // Инициализация темы из localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light');
+    }
 
     // Инициализация
     renderGifts(allGiftsFull);

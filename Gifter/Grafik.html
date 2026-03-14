@@ -9,60 +9,276 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Те же стили, что и ранее */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background-color: #1a1a1a; font-family: 'Inter', sans-serif; color: #fff; height: 100vh; overflow-y: auto; scrollbar-width: none; }
-    body::-webkit-scrollbar { display: none; }
-    .container { padding: 20px 16px; max-width: 600px; margin: 0 auto; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .back-button { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 500; color: #fff; cursor: pointer; background: none; border: none; padding: 8px 0; }
-    .back-button span { font-size: 20px; }
-    .right-actions { display: flex; gap: 16px; }
-    .action-btn { background: none; border: none; color: #aaa; font-size: 16px; font-weight: 500; cursor: pointer; }
-    .action-btn.active { color: #fff; }
-    .gift-info { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-    .gift-emoji { font-size: 32px; width: 48px; text-align: center; }
-    .gift-details { flex: 1; }
-    .gift-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-    .gift-stats { font-size: 14px; color: #aaa; }
-    .gift-price-block { text-align: right; }
-    .gift-price { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
-    .gift-percent { font-size: 16px; font-weight: 600; margin-top: 2px; }
-    .gift-percent.positive { color: #4caf50; }
-    .gift-percent.negative { color: #ff5252; }
-    .comparison-info { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-    .comparison-gift-row { display: flex; align-items: center; gap: 12px; background-color: #2a2a2a; border-radius: 12px; padding: 8px 12px; }
-    .color-dot { width: 16px; height: 16px; border-radius: 4px; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', Arial, sans-serif;
+      background: radial-gradient(circle at top left, #0c4f17, #000);
+      color: white;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Верхняя панель с кнопкой назад и Overview/Models */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #fff;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 8px 0;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .back-button:hover {
+      opacity: 1;
+    }
+
+    .back-button span {
+      font-size: 24px;
+    }
+
+    .right-actions {
+      display: flex;
+      gap: 20px;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .action-btn.active {
+      color: #39ff14;
+    }
+
+    /* Заголовок и изображение */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+    }
+
+    .title-section {
+      flex: 1;
+    }
+
+    .title {
+      font-size: 60px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .price {
+      font-size: 70px;
+      font-weight: 800;
+      margin-bottom: 15px;
+    }
+
+    .stats {
+      font-size: 22px;
+      color: #aaa;
+    }
+
+    .stats span {
+      color: #ff4d4d;
+      margin-left: 10px;
+    }
+
+    .coin-img {
+      width: 160px;
+      height: 160px;
+      border-radius: 25px;
+      object-fit: cover;
+      background: #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+      box-shadow: 0 0 30px rgba(0,255,0,0.3);
+    }
+
+    /* Для режима сравнения - другой блок */
+    .comparison-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .comparison-gift-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background-color: rgba(0,0,0,0.5);
+      border-radius: 12px;
+      padding: 8px 12px;
+      backdrop-filter: blur(5px);
+    }
+
+    .color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
     .color-blue { background-color: #007AFF; }
     .color-orange { background-color: #FF9F0A; }
     .color-purple { background-color: #BF5AF2; }
+
     .gift-mini-emoji { font-size: 24px; }
     .gift-mini-name { flex: 1; font-size: 16px; font-weight: 500; color: #fff; }
     .gift-mini-price { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
-    .control-panel { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background-color: #2a2a2a; border-radius: 40px; padding: 4px; }
-    .currency-selector, .chart-type-selector { display: flex; gap: 4px; }
-    .currency-btn, .chart-type-btn { background: transparent; border: none; padding: 8px 16px; border-radius: 30px; font-size: 14px; font-weight: 500; color: #aaa; cursor: pointer; }
-    .currency-btn.active, .chart-type-btn.active { background-color: #007aff; color: #fff; }
-    .chart-type-btn { padding: 8px 12px; font-size: 18px; }
-    .chart-container { background-color: #2a2a2a; border-radius: 16px; padding: 16px; margin-bottom: 20px; height: 250px; position: relative; }
-    .timeframe-bar { display: flex; gap: 8px; background-color: #2a2a2a; border-radius: 30px; padding: 4px; margin-bottom: 20px; }
-    .timeframe-btn { background: transparent; border: none; padding: 8px 16px; border-radius: 30px; font-size: 14px; font-weight: 500; color: #aaa; cursor: pointer; flex: 1; text-align: center; }
-    .timeframe-btn.active { background-color: #007aff; color: #fff; }
-    .error-message { text-align: center; color: #ff5252; margin-top: 40px; font-size: 16px; }
+
+    /* Панели управления (валюта, тип графика, таймфреймы) */
+    .control-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 30px 0 20px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 40px;
+      padding: 4px;
+      backdrop-filter: blur(5px);
+    }
+
+    .currency-selector, .chart-type-selector {
+      display: flex;
+      gap: 4px;
+    }
+
+    .currency-btn, .chart-type-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .currency-btn.active, .chart-type-btn.active {
+      background-color: #39ff14;
+      color: #000;
+    }
+
+    .chart-type-btn {
+      padding: 8px 12px;
+      font-size: 18px;
+    }
+
+    .timeframe-bar {
+      display: flex;
+      gap: 8px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 30px;
+      padding: 4px;
+      margin: 20px 0;
+      backdrop-filter: blur(5px);
+    }
+
+    .timeframe-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #aaa;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .timeframe-btn.active {
+      background-color: #39ff14;
+      color: #000;
+    }
+
+    /* Контейнер для графика */
+    .chart-container {
+      margin-top: 20px;
+      background: transparent;
+      padding: 0;
+      height: 260px;
+      position: relative;
+    }
+
+    /* Убираем оси и сетку через настройки Chart.js, но добавим свой блок с датами */
+    .dates {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      color: #76ff7a;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      color: #777;
+      font-size: 14px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 15px;
+    }
+
+    .error-message {
+      text-align: center;
+      color: #ff5252;
+      margin-top: 40px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Верхняя панель -->
     <div class="top-bar">
-      <div class="back-button" id="backBtn"><span>←</span> Назад</div>
+      <div class="back-button" id="backBtn">
+        <span>←</span> Назад
+      </div>
       <div class="right-actions">
         <button class="action-btn active" id="overviewBtn">Overview</button>
         <button class="action-btn" id="modelsBtn">Models</button>
       </div>
     </div>
 
+    <!-- Контейнер для информации (заполняется динамически) -->
     <div id="giftInfoContainer"></div>
 
+    <!-- Панели управления -->
     <div class="control-panel">
       <div class="currency-selector">
         <button class="currency-btn active" data-currency="TON">💎TON</button>
@@ -75,10 +291,28 @@
       </div>
     </div>
 
+    <!-- График -->
     <div class="chart-container">
       <canvas id="priceChart"></canvas>
     </div>
 
+    <!-- Даты (будут обновляться динамически) -->
+    <div class="dates" id="datesContainer">
+      <span>01.02</span>
+      <span>07.02</span>
+      <span>14.02</span>
+      <span>21.02</span>
+      <span>28.02</span>
+    </div>
+
+    <!-- Нижний блок с информацией -->
+    <div class="footer" id="footerContainer">
+      <span>UTC time zone</span>
+      <span>Floor price</span>
+      <span id="footerTag">@PlushPepe</span>
+    </div>
+
+    <!-- Таймфреймы -->
     <div class="timeframe-bar">
       <button class="timeframe-btn active" data-timeframe="all">Все</button>
       <button class="timeframe-btn" data-timeframe="1y">1 год</button>
@@ -111,12 +345,15 @@
     const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
     const timeframeBtns = document.querySelectorAll('.timeframe-btn');
     const ctx = document.getElementById('priceChart').getContext('2d');
+    const datesContainer = document.getElementById('datesContainer');
+    const footerTag = document.getElementById('footerTag');
 
+    // Функция генерации данных (имитация)
     function generateChartData(points = 50, basePrice = 7000) {
       const data = [];
       let price = basePrice;
       for (let i = 0; i < points; i++) {
-        const change = (Math.random() * 4 - 2) / 100;
+        const change = (Math.random() * 4 - 2) / 100; // -2% до +2%
         price = price * (1 + change);
         data.push(price);
       }
@@ -128,9 +365,50 @@
       return parseFloat(priceStr.replace(/,/g, '')) || 7000;
     }
 
+    // Функция форматирования дат для подписей (можно адаптировать под выбранный таймфрейм)
+    function updateDates(timeframe) {
+      const now = new Date();
+      const dates = [];
+      if (timeframe === 'all' || timeframe === '1y') {
+        // показываем месяцы
+        for (let i = 0; i < 5; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          dates.unshift(d.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' }));
+        }
+      } else if (timeframe === '6m') {
+        for (let i = 0; i < 5; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i*1.5, 1);
+          dates.unshift(d.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' }));
+        }
+      } else {
+        // для коротких интервалов показываем дни
+        for (let i = 0; i < 5; i++) {
+          const d = new Date(now.getTime() - i*7*24*60*60*1000);
+          dates.unshift(d.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' }));
+        }
+      }
+      datesContainer.innerHTML = dates.map(d => `<span>${d}</span>`).join('');
+    }
+
+    // Инициализация дат
+    updateDates('all');
+
     let chart;
 
-    // Определяем режим
+    // Функция для обновления нижнего тега
+    function updateFooterTag() {
+      if (indexParam) {
+        footerTag.textContent = '@' + indexParam;
+      } else if (isComparisonMode) {
+        footerTag.textContent = '@Comparison';
+      } else if (giftName) {
+        footerTag.textContent = '@' + giftName.replace(/\s/g, '');
+      } else {
+        footerTag.textContent = '@Gift';
+      }
+    }
+
+    // Отрисовка информации в зависимости от режима
     if (indexParam) {
       // Режим индекса
       const indexData = {
@@ -143,19 +421,16 @@
       };
       const info = indexData[indexParam] || { name: 'Индекс', emoji: '📊', unit: '' };
       giftInfoContainer.innerHTML = `
-        <div class="gift-info">
-          <div class="gift-emoji">${info.emoji}</div>
-          <div class="gift-details">
-            <div class="gift-name">${info.name}</div>
-            <div class="gift-stats">График индекса</div>
+        <div class="header">
+          <div class="title-section">
+            <div class="title">${info.name}</div>
+            <div class="price">—</div>
+            <div class="stats">— <span>—</span></div>
           </div>
-          <div class="gift-price-block">
-            <div class="gift-price"><span class="coin-icon">${info.emoji}</span> —</div>
-            <div class="gift-percent neutral">—</div>
-          </div>
+          <div class="coin-img">${info.emoji}</div>
         </div>
       `;
-      const basePrice = 10000; // условная базовая цена
+      const basePrice = 10000;
       chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -163,12 +438,12 @@
           datasets: [{
             label: info.name,
             data: generateChartData(50, basePrice),
-            borderColor: '#007aff',
-            backgroundColor: 'rgba(0,122,255,0.1)',
-            borderWidth: 2,
+            borderColor: '#39ff14',
+            backgroundColor: 'transparent',
+            borderWidth: 4,
             pointRadius: 0,
             tension: 0.2,
-            fill: true
+            fill: false
           }]
         },
         options: {
@@ -176,12 +451,13 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            tooltip: { enabled: true }
+            tooltip: { enabled: true, backgroundColor: '#000', titleColor: '#fff', bodyColor: '#39ff14' }
           },
           scales: {
             x: { display: false },
-            y: { grid: { color: '#333' }, ticks: { color: '#aaa' } }
-          }
+            y: { display: false } // полностью убираем оси
+          },
+          elements: { line: { borderWidth: 4 } }
         }
       });
     } else if (isComparisonMode) {
@@ -200,7 +476,7 @@
             <span class="gift-mini-emoji">${gift.emoji || '🎁'}</span>
             <span class="gift-mini-name">${gift.name}</span>
             <span class="gift-mini-price"><span class="coin-icon">💎</span>${price}</span>
-            <span class="gift-percent ${percentClass}">${percent}</span>
+            <span class="gift-percent ${percentClass}" style="color: ${percentClass === 'positive' ? '#4caf50' : (percentClass === 'negative' ? '#ff5252' : '#fff')}">${percent}</span>
           </div>
         `;
       });
@@ -208,7 +484,7 @@
       giftInfoContainer.innerHTML = html;
 
       const datasets = [];
-      const colors2 = ['#007AFF', '#FF9F0A', '#BF5AF2'];
+      const colors2 = ['#39ff14', '#FF9F0A', '#BF5AF2']; // ярко-зелёный для первой линии
       comparisonGifts.forEach((gift, index) => {
         const basePrice = parsePrice(gift.price);
         datasets.push({
@@ -216,7 +492,7 @@
           data: generateChartData(50, basePrice),
           borderColor: colors2[index % colors2.length],
           backgroundColor: 'transparent',
-          borderWidth: 2,
+          borderWidth: 4,
           pointRadius: 0,
           tension: 0.2,
           fill: false
@@ -232,13 +508,10 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: true, labels: { color: '#fff' } },
-            tooltip: { enabled: true }
+            legend: { display: true, labels: { color: '#fff', font: { size: 12 } } },
+            tooltip: { enabled: true, backgroundColor: '#000', titleColor: '#fff' }
           },
-          scales: {
-            x: { display: false },
-            y: { grid: { color: '#333' }, ticks: { color: '#aaa' } }
-          }
+          scales: { x: { display: false }, y: { display: false } }
         }
       });
     } else {
@@ -249,17 +522,15 @@
         let percentClass = 'neutral';
         if (giftPercent && giftPercent.startsWith('+')) percentClass = 'positive';
         else if (giftPercent && giftPercent.startsWith('-')) percentClass = 'negative';
+        const percentValue = giftPercent ? giftPercent.replace('%', '') : '0';
         giftInfoContainer.innerHTML = `
-          <div class="gift-info">
-            <div class="gift-emoji">${giftEmoji || '🎁'}</div>
-            <div class="gift-details">
-              <div class="gift-name">${giftName}</div>
-              <div class="gift-stats">${giftStats || '0тыс. / 0тыс.'}</div>
+          <div class="header">
+            <div class="title-section">
+              <div class="title">${giftName}</div>
+              <div class="price">$${giftPrice || '0.00'}</div>
+              <div class="stats">${giftStats ? giftStats.split('/')[0].trim() : '0тыс.'} <span>${giftPercent || '0%'}</span></div>
             </div>
-            <div class="gift-price-block">
-              <div class="gift-price"><span class="coin-icon">💎</span>${giftPrice || '0.00'}</div>
-              <div class="gift-percent ${percentClass}">${giftPercent || '0%'}</div>
-            </div>
+            <div class="coin-img">${giftEmoji || '🎁'}</div>
           </div>
         `;
       }
@@ -269,14 +540,14 @@
         data: {
           labels: Array.from({ length: 50 }, (_, i) => i + 1),
           datasets: [{
-            label: 'Цена (TON)',
+            label: 'Цена',
             data: generateChartData(50, basePrice),
-            borderColor: '#007aff',
-            backgroundColor: 'rgba(0,122,255,0.1)',
-            borderWidth: 2,
+            borderColor: '#39ff14',
+            backgroundColor: 'transparent',
+            borderWidth: 4,
             pointRadius: 0,
             tension: 0.2,
-            fill: true
+            fill: false
           }]
         },
         options: {
@@ -284,20 +555,18 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            tooltip: { enabled: true }
+            tooltip: { enabled: true, backgroundColor: '#000', titleColor: '#fff', bodyColor: '#39ff14' }
           },
-          scales: {
-            x: { display: false },
-            y: { grid: { color: '#333' }, ticks: { color: '#aaa' } }
-          }
+          scales: { x: { display: false }, y: { display: false } }
         }
       });
     }
 
+    updateFooterTag();
+
     // Функция обновления данных (каждые 10 мин)
     function updateChartData() {
       if (indexParam) {
-        // Для индекса обновляем данные (можно тоже случайные)
         const basePrice = 10000;
         chart.data.datasets[0].data = generateChartData(50, basePrice);
       } else if (isComparisonMode) {
@@ -316,7 +585,7 @@
     // Обработчик кнопки "Назад"
     backBtn.addEventListener('click', () => {
       if (indexParam) {
-        window.parent.postMessage({ type: 'CLOSE_GRAPH' }, '*'); // или CLOSE_INDEX? можно использовать CLOSE_GRAPH
+        window.parent.postMessage({ type: 'CLOSE_GRAPH' }, '*');
       } else if (isComparisonMode) {
         window.parent.postMessage({ type: 'CLOSE_COMPARISON' }, '*');
       } else {
@@ -329,10 +598,12 @@
       btn.addEventListener('click', () => {
         currencyBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        // Здесь можно пересчитывать цену и обновлять график
+        // Пока оставим заглушку
       });
     });
 
-    // Тип графика (заглушка)
+    // Тип графика (только линия работает)
     chartTypeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         chartTypeBtns.forEach(b => b.classList.remove('active'));
@@ -353,6 +624,8 @@
       btn.addEventListener('click', () => {
         timeframeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        const timeframe = btn.dataset.timeframe;
+        updateDates(timeframe);
         const newPoints = 50;
         if (indexParam) {
           const basePrice = 10000;
