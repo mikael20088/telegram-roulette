@@ -230,7 +230,7 @@
       background: transparent;
     }
 
-    /* Меню с квадратами (5 элементов) */
+    /* Меню с квадратами (4 элемента, без Angry Birds) */
     .menu-container {
       position: absolute;
       top: 35%;
@@ -1181,7 +1181,7 @@
     </div>
   </div>
 
-  <!-- Меню с квадратами (5 пунктов) -->
+  <!-- Меню с квадратами (4 пункта, без Angry Birds) -->
   <div class="menu-container" id="menuContainer">
     <div class="menu-item" id="craftMenuItem">
       <div class="menu-icon">
@@ -1189,18 +1189,12 @@
       </div>
       <span class="menu-label">Craft</span>
     </div>
-    <!-- НОВЫЙ ПУНКТ: Gift_Charts -->
+    <!-- Gift_Charts -->
     <div class="menu-item" id="giftChartsMenuItem">
       <div class="menu-icon">
         <span class="emoji-large">🎁</span>
       </div>
       <span class="menu-label">Gift_Charts</span>
-    </div>
-    <div class="menu-item" id="angryMenuItem">
-      <div class="menu-icon">
-        <span class="emoji-large">🐦</span>
-      </div>
-      <span class="menu-label">Angry Birds</span>
     </div>
     <div class="menu-item" id="priceMenuItem">
       <div class="menu-icon">
@@ -1260,12 +1254,6 @@
     <div class="blue-counter" id="blueCounter">4</div>
   </div>
 
-  <!-- Оверлей для Angry Birds -->
-  <div class="game-overlay" id="gameOverlay">
-    <div class="close-btn" id="gameCloseBtn">×</div>
-    <iframe id="gameIframe" src="https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm"></iframe>
-  </div>
-
   <!-- Оверлей для списка монет -->
   <div class="coin-list-overlay" id="coinListOverlay">
     <div class="coin-list-box">
@@ -1286,10 +1274,9 @@
     <iframe id="starsIframe" src="stars.html"></iframe>
   </div>
 
-  <!-- НОВЫЙ ОВЕРЛЕЙ ДЛЯ GIFT CHARTS (gift.html) -->
+  <!-- Оверлей для GIFT CHARTS -->
   <div class="game-overlay" id="giftOverlay">
     <div class="close-btn" id="giftCloseBtn">×</div>
-    <!-- ИСПРАВЛЕННЫЙ ПУТЬ: теперь с папкой Gifter -->
     <iframe id="giftIframe" src="Gifter/gift.html"></iframe>
   </div>
 
@@ -1355,7 +1342,7 @@
 </div>
 
 <script>
-  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД (с добавлением обработчика для Gift_Charts) ==========
+  // ========== ВЕСЬ ОРИГИНАЛЬНЫЙ КОД (без Angry Birds) ==========
   const tg = Telegram.WebApp;
   tg.ready();
   tg.expand();
@@ -2069,9 +2056,6 @@
   // Управление экранами после анимации
   const menuContainer = document.getElementById('menuContainer');
   const mainSquare = document.getElementById('mainSquare');
-  const gameOverlay = document.getElementById('gameOverlay');
-  const gameIframe = document.getElementById('gameIframe');
-  const gameCloseBtn = document.getElementById('gameCloseBtn');
   const priceOverlay = document.getElementById('priceOverlay');
   const priceIframe = document.getElementById('priceIframe');
   const priceCloseBtn = document.getElementById('priceCloseBtn');
@@ -2081,7 +2065,7 @@
   const starsIframe = document.getElementById('starsIframe');
   const starsCloseBtn = document.getElementById('starsCloseBtn');
 
-  // НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ GIFT CHARTS
+  // Переменные для GIFT CHARTS
   const giftOverlay = document.getElementById('giftOverlay');
   const giftIframe = document.getElementById('giftIframe');
   const giftCloseBtn = document.getElementById('giftCloseBtn');
@@ -2096,7 +2080,6 @@
   // Сначала скрываем всё
   menuContainer.classList.remove('visible');
   mainSquare.classList.remove('visible');
-  gameOverlay.classList.remove('active');
   priceOverlay.classList.remove('active');
   coinListOverlay.classList.remove('active');
   passwordOverlay.classList.remove('active');
@@ -2148,17 +2131,11 @@
     mainSquare.classList.add('visible');
   });
 
-  // НОВЫЙ ОБРАБОТЧИК ДЛЯ GIFT_CHARTS
+  // Обработчик для GIFT_CHARTS
   document.getElementById('giftChartsMenuItem').addEventListener('click', () => {
     menuContainer.classList.remove('visible');
-    giftIframe.src = 'Gifter/gift.html';  // путь с папкой
+    giftIframe.src = 'Gifter/gift.html';
     giftOverlay.classList.add('active');
-  });
-
-  document.getElementById('angryMenuItem').addEventListener('click', () => {
-    menuContainer.classList.remove('visible');
-    gameIframe.src = 'https://mikael20088.github.io/telegram-roulette/angry/AngryBirdsGame.htm';
-    gameOverlay.classList.add('active');
   });
 
   document.getElementById('priceMenuItem').addEventListener('click', () => {
@@ -2171,21 +2148,6 @@
     menuContainer.classList.remove('visible');
     starsIframe.src = 'stars.html';
     starsOverlay.classList.add('active');
-  });
-
-  // Закрытие Angry Birds
-  gameCloseBtn.addEventListener('click', () => {
-    gameOverlay.classList.remove('active');
-    gameIframe.src = '';
-    menuContainer.classList.add('visible');
-  });
-
-  gameOverlay.addEventListener('click', (e) => {
-    if (e.target === gameOverlay) {
-      gameOverlay.classList.remove('active');
-      gameIframe.src = '';
-      menuContainer.classList.add('visible');
-    }
   });
 
   // Закрытие Price
@@ -2545,6 +2507,7 @@
     });
 
     function initTonConnect() {
+      // URL обновлён на новый репозиторий
       const manifestUrl = 'https://mikael20088.github.io/telegram-roulette/tonconnect-manifest.json';
       try {
         tonConnectUI = new TonConnectUI({ manifestUrl: manifestUrl });
